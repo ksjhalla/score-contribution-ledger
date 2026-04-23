@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, FileText } from "lucide-react";
+import { LogOut, FileText, Plus, FileSignature } from "lucide-react";
+import { NewContractDialog } from "@/components/contracts/NewContractDialog";
+import { ContractCard, ContractRow } from "@/components/contracts/ContractCard";
 
 type Profile = {
   full_name: string | null;
@@ -32,6 +34,17 @@ const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [contracts, setContracts] = useState<ContractRow[]>([]);
+  const [newOpen, setNewOpen] = useState(false);
+
+  const loadContracts = useCallback(async (uid: string) => {
+    const { data } = await supabase
+      .from("contracts")
+      .select("id, name, counterparty_name, counterparty_type, stake_type, contract_type, attestation_required")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    setContracts((data ?? []) as ContractRow[]);
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -50,9 +63,10 @@ const Index = () => {
         return;
       }
       setProfile(data);
+      await loadContracts(user.id);
       setProfileLoading(false);
     })();
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, loadContracts]);
 
   if (loading || profileLoading || !profile) {
     return (
@@ -98,8 +112,35 @@ const Index = () => {
               <StatCard label="Total attributed value" value="0" />
               <StatCard label="Settled" value="0" />
               <StatCard label="Pending" value="0" />
-              <StatCard label="Contracts" value="0" />
+              <StatCard label="Contracts" value={String(contracts.length)} />
             </div>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold tracking-tight">Contracts</h2>
+                <Button size="sm" onClick={() => setNewOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> New Contract
+                </Button>
+              </div>
+
+              {contracts.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-8 pb-8 flex flex-col items-center text-center space-y-2">
+                    <div className="rounded-full bg-muted p-3">
+                      <FileSignature className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="text-sm font-medium">No contracts recorded</div>
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      Record an agreement to start tracking what you are owed and what triggers it.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {contracts.map((c) => <ContractCard key={c.id} contract={c} />)}
+                </div>
+              )}
+            </section>
           </TabsContent>
 
           <TabsContent value="log" className="mt-6">
@@ -118,6 +159,14 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {user && (
+        <NewContractDialog
+          open={newOpen}
+          onOpenChange={setNewOpen}
+          onCreated={() => loadContracts(user.id)}
+        />
+      )}
     </div>
   );
 };
