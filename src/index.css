@@ -103,3 +103,30 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Print stylesheet for the shareable Passport.
+   When `printing-passport` is on <body>, hide everything except the passport
+   article so window.print() yields a one-page document. */
+@media print {
+  body.printing-passport > *:not(#passport-printable):not(script):not(style) {
+    display: none !important;
+  }
+  body.printing-passport #passport-printable,
+  body.printing-passport #passport-printable * {
+    visibility: visible;
+  }
+  body.printing-passport #passport-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0.5in;
+    margin: 0;
+    background: white;
+    color: black;
+  }
+  /* Find the passport even when nested deep in dialogs/portals */
+  body.printing-passport #passport-printable {
+    z-index: 9999;
+  }
+}
