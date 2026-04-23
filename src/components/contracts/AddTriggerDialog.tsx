@@ -20,7 +20,7 @@ type Props = {
   onCreated: () => void;
 };
 
-const SUPABASE_URL = "https://2eff3d4d-c5b7-4ba3-b052-9522405a22db.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 export const AddTriggerDialog = ({ open, onOpenChange, contractId, onCreated }: Props) => {
   const { user } = useAuth();
