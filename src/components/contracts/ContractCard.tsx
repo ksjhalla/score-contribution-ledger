@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ShieldCheck, FileSearch } from "lucide-react";
+import { Plus, ShieldCheck, FileSearch, Activity } from "lucide-react";
 import { AttachEvidenceDialog } from "./AttachEvidenceDialog";
+import { LogExecutionDialog } from "./LogExecutionDialog";
+import { MarkSettledDialog } from "./MarkSettledDialog";
 
 type StakeType = "Financial" | "Attribution" | "Governance" | "Mixed";
 
@@ -34,10 +36,34 @@ type EvidenceRow = {
   timestamp_created: string;
 };
 
+type ExecutionRow = {
+  id: string;
+  title: string;
+  work_description: string;
+  trigger_met: boolean;
+  status: "Pending" | "Attested" | "Settled" | "Intent logged";
+  evidence_ids: string[];
+  settlement_channel: string | null;
+  settled_amount: number | null;
+  currency: string;
+  execution_date: string;
+};
+
+const statusDot: Record<ExecutionRow["status"], string> = {
+  Pending: "bg-amber-500",
+  Attested: "bg-blue-500",
+  Settled: "bg-green-500",
+  "Intent logged": "bg-gray-400",
+};
+
 export const ContractCard = ({ contract }: { contract: ContractRow }) => {
   const [evidence, setEvidence] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [executions, setExecutions] = useState<ExecutionRow[]>([]);
+  const [exLoading, setExLoading] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
+  const [settleFor, setSettleFor] = useState<ExecutionRow | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,7 +76,18 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
     setLoading(false);
   }, [contract.id]);
 
-  useEffect(() => { load(); }, [load]);
+  const loadExecutions = useCallback(async () => {
+    setExLoading(true);
+    const { data } = await supabase
+      .from("executions")
+      .select("id, title, work_description, trigger_met, status, evidence_ids, settlement_channel, settled_amount, currency, execution_date")
+      .eq("contract_id", contract.id)
+      .order("execution_date", { ascending: false });
+    setExecutions((data ?? []) as ExecutionRow[]);
+    setExLoading(false);
+  }, [contract.id]);
+
+  useEffect(() => { load(); loadExecutions(); }, [load, loadExecutions]);
 
   return (
     <Card>
@@ -76,13 +113,68 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
           )}
         </div>
 
-        <Tabs defaultValue="details" className="pt-1">
-          <TabsList className="grid grid-cols-2 h-8">
+        <Tabs defaultValue="executions" className="pt-1">
+          <TabsList className="grid grid-cols-3 h-8">
+            <TabsTrigger value="executions" className="text-xs">
+              Executions{executions.length > 0 ? ` (${executions.length})` : ""}
+            </TabsTrigger>
             <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
             <TabsTrigger value="evidence" className="text-xs">
               Evidence{evidence.length > 0 ? ` (${evidence.length})` : ""}
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="executions" className="pt-3 space-y-3">
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={() => setLogOpen(true)}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Log execution
+              </Button>
+            </div>
+            {exLoading ? (
+              <p className="text-xs text-muted-foreground">Loading…</p>
+            ) : executions.length === 0 ? (
+              <div className="rounded-md border border-dashed p-4 flex flex-col items-center text-center gap-1">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">No executions logged yet.</p>
+              </div>
+            ) : (
+              <ol className="relative border-l pl-4 ml-1 space-y-3">
+                {executions.map((ex) => (
+                  <li key={ex.id} className="relative">
+                    <span className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-background ${statusDot[ex.status]}`} />
+                    <div className="rounded-md border p-2.5 space-y-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">{ex.title}</div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2">{ex.work_description}</p>
+                        </div>
+                        <Badge variant="secondary" className="shrink-0 text-[10px]">{ex.status}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <span>
+                          {new Date(ex.execution_date).toLocaleDateString()} ·{" "}
+                          {ex.evidence_ids?.length ?? 0} evidence
+                        </span>
+                        {ex.settled_amount != null && (
+                          <span className="font-medium text-foreground">
+                            {ex.settled_amount.toLocaleString()} {ex.currency}
+                          </span>
+                        )}
+                      </div>
+                      {ex.status === "Pending" && (
+                        <div className="pt-1 flex justify-end">
+                          <Button size="sm" variant="ghost" className="h-7 text-xs"
+                            onClick={() => setSettleFor(ex)}>
+                            Mark as settled
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </TabsContent>
 
           <TabsContent value="details" className="pt-3 text-xs text-muted-foreground">
             <p>Stake type: {contract.stake_type}. Contract type: {contract.contract_type}.</p>
@@ -137,6 +229,26 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
         contractId={contract.id}
         onCreated={load}
       />
+
+      <LogExecutionDialog
+        open={logOpen}
+        onOpenChange={setLogOpen}
+        contractId={contract.id}
+        contractStakeType={contract.stake_type}
+        onCreated={() => { loadExecutions(); load(); }}
+      />
+
+      {settleFor && (
+        <MarkSettledDialog
+          open={!!settleFor}
+          onOpenChange={(v) => !v && setSettleFor(null)}
+          executionId={settleFor.id}
+          defaultAmount={settleFor.settled_amount}
+          defaultCurrency={settleFor.currency}
+          defaultChannel={settleFor.settlement_channel}
+          onSettled={() => { loadExecutions(); setSettleFor(null); }}
+        />
+      )}
     </Card>
   );
 };

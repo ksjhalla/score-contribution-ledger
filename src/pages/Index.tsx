@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, FileText, Plus, FileSignature } from "lucide-react";
 import { NewContractDialog } from "@/components/contracts/NewContractDialog";
 import { ContractCard, ContractRow } from "@/components/contracts/ContractCard";
+import { ledgerEvents } from "@/lib/ledgerEvents";
 
 type Profile = {
   full_name: string | null;
@@ -36,6 +37,7 @@ const Index = () => {
   const [profileLoading, setProfileLoading] = useState(true);
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [newOpen, setNewOpen] = useState(false);
+  const [stats, setStats] = useState({ total: 0, settled: 0, pending: 0, currency: "USD" });
 
   const loadContracts = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -44,6 +46,24 @@ const Index = () => {
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
     setContracts((data ?? []) as ContractRow[]);
+  }, []);
+
+  const loadStats = useCallback(async (uid: string) => {
+    const { data } = await supabase
+      .from("executions")
+      .select("status, trigger_met, settled_amount, currency")
+      .eq("user_id", uid);
+    const rows = data ?? [];
+    let total = 0, settled = 0, pending = 0;
+    let currency = "USD";
+    for (const r of rows) {
+      const amt = Number(r.settled_amount ?? 0);
+      if (r.currency) currency = r.currency;
+      if (r.trigger_met) total += amt;
+      if (r.status === "Settled") settled += amt;
+      if (r.status === "Pending" && r.trigger_met) pending += amt;
+    }
+    setStats({ total, settled, pending, currency });
   }, []);
 
   useEffect(() => {
@@ -63,10 +83,20 @@ const Index = () => {
         return;
       }
       setProfile(data);
-      await loadContracts(user.id);
+      await Promise.all([loadContracts(user.id), loadStats(user.id)]);
       setProfileLoading(false);
     })();
-  }, [user, loading, navigate, loadContracts]);
+  }, [user, loading, navigate, loadContracts, loadStats]);
+
+  // Refetch stats whenever any ledger entity changes (executions/evidence).
+  useEffect(() => {
+    if (!user) return;
+    const off = ledgerEvents.on(() => {
+      loadStats(user.id);
+      loadContracts(user.id);
+    });
+    return () => { off(); };
+  }, [user, loadStats, loadContracts]);
 
   if (loading || profileLoading || !profile) {
     return (
@@ -109,9 +139,9 @@ const Index = () => {
             </Card>
 
             <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Total attributed value" value="0" />
-              <StatCard label="Settled" value="0" />
-              <StatCard label="Pending" value="0" />
+              <StatCard label="Total attributed value" value={`${stats.total.toLocaleString()} ${stats.currency}`} />
+              <StatCard label="Settled" value={`${stats.settled.toLocaleString()} ${stats.currency}`} />
+              <StatCard label="Pending" value={`${stats.pending.toLocaleString()} ${stats.currency}`} />
               <StatCard label="Contracts" value={String(contracts.length)} />
             </div>
 
