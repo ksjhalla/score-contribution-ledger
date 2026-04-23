@@ -130,3 +130,10 @@ All colors MUST be HSL.
     z-index: 9999;
   }
 }
+
+/* Multi-page report (PassportReport): each .report-page begins on a new sheet */
+@media print {
+  .report-page { page-break-after: always; break-after: page; }
+  .report-page:last-child { page-break-after: auto; }
+  body { background: white !important; color: black !important; }
+}
