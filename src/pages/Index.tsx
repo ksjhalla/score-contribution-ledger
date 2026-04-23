@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, FileText, Plus, FileSignature, Share2 } from "lucide-react";
+import { LogOut, FileText, Plus, FileSignature, Share2, Settings, Shield, Printer } from "lucide-react";
 import { NewContractDialog } from "@/components/contracts/NewContractDialog";
 import { ContractCard, ContractRow } from "@/components/contracts/ContractCard";
 import { ledgerEvents } from "@/lib/ledgerEvents";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SettingsDialog } from "@/components/SettingsDialog";
 
 type Profile = {
   full_name: string | null;
@@ -45,6 +46,8 @@ const Index = () => {
   const [newOpen, setNewOpen] = useState(false);
   const [stats, setStats] = useState({ total: 0, settled: 0, pending: 0, currency: "USD" });
   const [shareOpen, setShareOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const loadContracts = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -91,6 +94,8 @@ const Index = () => {
       }
       setProfile(data as Profile);
       await Promise.all([loadContracts(user.id), loadStats(user.id)]);
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
+      setIsAdmin((roles ?? []).length > 0);
       setProfileLoading(false);
     })();
   }, [user, loading, navigate, loadContracts, loadStats]);
@@ -123,6 +128,14 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-1">
             {user && <NotificationBell userId={user.id} />}
+            {isAdmin && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
+                <Shield className="h-4 w-4 mr-2" /> Admin
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => setSettingsOpen(true)}>
+              <Settings className="h-4 w-4 mr-2" /> Settings
+            </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" /> Sign out
             </Button>
@@ -144,9 +157,14 @@ const Index = () => {
                 <div className="text-sm text-muted-foreground">{profile.professional_role}</div>
                 <div className="pt-2 flex items-center justify-between gap-2">
                   <div className="text-xs font-mono text-muted-foreground">{profile.contributor_id}</div>
-                  <Button size="sm" variant="outline" onClick={() => setShareOpen(true)}>
-                    <Share2 className="h-3.5 w-3.5 mr-1" /> Share Passport
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => navigate("/report")}>
+                      <Printer className="h-3.5 w-3.5 mr-1" /> Generate report
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setShareOpen(true)}>
+                      <Share2 className="h-3.5 w-3.5 mr-1" /> Share Passport
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -226,6 +244,8 @@ const Index = () => {
           onPrivacyChange={(p) => setProfile((prev) => prev ? { ...prev, ...p } : prev)}
         />
       )}
+
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 };
