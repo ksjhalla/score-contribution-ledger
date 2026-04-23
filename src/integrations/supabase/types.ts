@@ -216,6 +216,94 @@ export type Database = {
         }
         Relationships: []
       }
+      trigger_events: {
+        Row: {
+          id: string
+          received_at: string
+          source_ip: string | null
+          trigger_id: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          received_at?: string
+          source_ip?: string | null
+          trigger_id: string
+          value: number
+        }
+        Update: {
+          id?: string
+          received_at?: string
+          source_ip?: string | null
+          trigger_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trigger_events_trigger_id_fkey"
+            columns: ["trigger_id"]
+            isOneToOne: false
+            referencedRelation: "triggers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      triggers: {
+        Row: {
+          contract_id: string
+          created_at: string
+          current_value: number
+          direction: Database["public"]["Enums"]["trigger_direction"]
+          id: string
+          label: string
+          last_updated: string | null
+          notes: string | null
+          source_type: Database["public"]["Enums"]["trigger_source"]
+          threshold_value: number
+          unit: string | null
+          user_id: string
+          webhook_url: string | null
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          current_value?: number
+          direction?: Database["public"]["Enums"]["trigger_direction"]
+          id?: string
+          label: string
+          last_updated?: string | null
+          notes?: string | null
+          source_type?: Database["public"]["Enums"]["trigger_source"]
+          threshold_value: number
+          unit?: string | null
+          user_id: string
+          webhook_url?: string | null
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          current_value?: number
+          direction?: Database["public"]["Enums"]["trigger_direction"]
+          id?: string
+          label?: string
+          last_updated?: string | null
+          notes?: string | null
+          source_type?: Database["public"]["Enums"]["trigger_source"]
+          threshold_value?: number
+          unit?: string | null
+          user_id?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "triggers_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -261,6 +349,8 @@ export type Database = {
         | "Other"
         | "Not applicable"
       stake_type: "Financial" | "Attribution" | "Governance" | "Mixed"
+      trigger_direction: "Above" | "Below"
+      trigger_source: "Manual" | "Webhook" | "File import"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -429,6 +519,8 @@ export const Constants = {
         "Not applicable",
       ],
       stake_type: ["Financial", "Attribution", "Governance", "Mixed"],
+      trigger_direction: ["Above", "Below"],
+      trigger_source: ["Manual", "Webhook", "File import"],
     },
   },
 } as const

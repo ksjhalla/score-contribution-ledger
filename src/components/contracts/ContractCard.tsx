@@ -8,6 +8,7 @@ import { Plus, ShieldCheck, FileSearch, Activity } from "lucide-react";
 import { AttachEvidenceDialog } from "./AttachEvidenceDialog";
 import { LogExecutionDialog } from "./LogExecutionDialog";
 import { MarkSettledDialog } from "./MarkSettledDialog";
+import { TriggersList } from "./TriggersList";
 
 type StakeType = "Financial" | "Attribution" | "Governance" | "Mixed";
 
@@ -114,10 +115,11 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
         </div>
 
         <Tabs defaultValue="executions" className="pt-1">
-          <TabsList className="grid grid-cols-3 h-8">
+          <TabsList className="grid grid-cols-4 h-8">
             <TabsTrigger value="executions" className="text-xs">
               Executions{executions.length > 0 ? ` (${executions.length})` : ""}
             </TabsTrigger>
+            <TabsTrigger value="triggers" className="text-xs">Triggers</TabsTrigger>
             <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
             <TabsTrigger value="evidence" className="text-xs">
               Evidence{evidence.length > 0 ? ` (${evidence.length})` : ""}
@@ -178,6 +180,13 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
 
           <TabsContent value="details" className="pt-3 text-xs text-muted-foreground">
             <p>Stake type: {contract.stake_type}. Contract type: {contract.contract_type}.</p>
+          </TabsContent>
+
+          <TabsContent value="triggers" className="pt-3">
+            <TriggersList
+              contractId={contract.id}
+              onLogExecution={() => setLogOpen(true)}
+            />
           </TabsContent>
 
           <TabsContent value="evidence" className="pt-3 space-y-3">
