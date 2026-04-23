@@ -109,6 +109,30 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
     if (error) { toast.error(error.message); return; }
     toast.success("Execution recorded");
 
+    // If contract requires attestation, create per-attestor rows for this execution.
+    if (created?.id) {
+      const { data: contractRow } = await supabase
+        .from("contracts").select("attestation_required").eq("id", contractId).maybeSingle();
+      if (contractRow?.attestation_required) {
+        const { data: attestors } = await supabase
+          .from("contract_attestors")
+          .select("attestor_email, attestor_name")
+          .eq("contract_id", contractId);
+        if (attestors && attestors.length > 0) {
+          await supabase.from("execution_attestations").insert(
+            attestors.map((a) => ({
+              execution_id: created.id,
+              contract_id: contractId,
+              user_id: user.id,
+              attestor_email: a.attestor_email,
+              attestor_name: a.attestor_name,
+            }))
+          );
+          toast.info(`${attestors.length} attestation link${attestors.length > 1 ? "s" : ""} ready to share`);
+        }
+      }
+    }
+
     // settlement_due notification when work met the trigger but is awaiting settlement.
     if (triggerMet && status === "Pending" && created?.id) {
       const { data: c } = await supabase
