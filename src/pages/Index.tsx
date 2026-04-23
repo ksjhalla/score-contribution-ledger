@@ -5,16 +5,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, FileText, Plus, FileSignature } from "lucide-react";
+import { LogOut, FileText, Plus, FileSignature, Share2 } from "lucide-react";
 import { NewContractDialog } from "@/components/contracts/NewContractDialog";
 import { ContractCard, ContractRow } from "@/components/contracts/ContractCard";
 import { ledgerEvents } from "@/lib/ledgerEvents";
+import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
 
 type Profile = {
   full_name: string | null;
   professional_role: string | null;
   contributor_id: string | null;
   profile_completed: boolean;
+  passport_visible: boolean;
+  show_amounts: boolean;
+  show_counterparties: boolean;
+  show_contracts: boolean;
 };
 
 const StatCard = ({ label, value }: { label: string; value: string }) => (
@@ -38,6 +43,7 @@ const Index = () => {
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [newOpen, setNewOpen] = useState(false);
   const [stats, setStats] = useState({ total: 0, settled: 0, pending: 0, currency: "USD" });
+  const [shareOpen, setShareOpen] = useState(false);
 
   const loadContracts = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -75,14 +81,14 @@ const Index = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, professional_role, contributor_id, profile_completed")
+        .select("full_name, professional_role, contributor_id, profile_completed, passport_visible, show_amounts, show_counterparties, show_contracts")
         .eq("id", user.id)
         .maybeSingle();
       if (!data || !data.profile_completed) {
         navigate("/complete-profile", { replace: true });
         return;
       }
-      setProfile(data);
+      setProfile(data as Profile);
       await Promise.all([loadContracts(user.id), loadStats(user.id)]);
       setProfileLoading(false);
     })();
@@ -132,8 +138,11 @@ const Index = () => {
               <CardContent className="pt-6 space-y-1">
                 <div className="text-xl font-semibold">{profile.full_name}</div>
                 <div className="text-sm text-muted-foreground">{profile.professional_role}</div>
-                <div className="pt-2 text-xs font-mono text-muted-foreground">
-                  {profile.contributor_id}
+                <div className="pt-2 flex items-center justify-between gap-2">
+                  <div className="text-xs font-mono text-muted-foreground">{profile.contributor_id}</div>
+                  <Button size="sm" variant="outline" onClick={() => setShareOpen(true)}>
+                    <Share2 className="h-3.5 w-3.5 mr-1" /> Share Passport
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -195,6 +204,22 @@ const Index = () => {
           open={newOpen}
           onOpenChange={setNewOpen}
           onCreated={() => loadContracts(user.id)}
+        />
+      )}
+
+      {user && profile.contributor_id && (
+        <SharePassportDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          contributorId={profile.contributor_id}
+          userId={user.id}
+          initialPrivacy={{
+            passport_visible: profile.passport_visible,
+            show_amounts: profile.show_amounts,
+            show_counterparties: profile.show_counterparties,
+            show_contracts: profile.show_contracts,
+          }}
+          onPrivacyChange={(p) => setProfile((prev) => prev ? { ...prev, ...p } : prev)}
         />
       )}
     </div>
