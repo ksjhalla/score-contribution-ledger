@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ledgerEvents } from "@/lib/ledgerEvents";
+import { sendNotification, sha256Hex, notificationEvents } from "@/lib/notifications";
 
 const CHANNELS = ["Bank transfer","Stripe","Coinbase","USDC","Other"] as const;
 type Channel = typeof CHANNELS[number];
@@ -39,21 +40,77 @@ export const MarkSettledDialog = ({
       return;
     }
     setBusy(true);
-    const { error } = await supabase
+    const settledAt = new Date().toISOString();
+    const ref = reference.trim();
+    const amt = Number(amount);
+    const cur = (currency || "USD").toUpperCase();
+
+    // 1. Update the execution row.
+    const { data: updated, error } = await supabase
       .from("executions")
       .update({
         status: "Settled",
         settlement_channel: channel,
-        settlement_reference: reference.trim(),
-        settled_amount: Number(amount),
-        currency: currency || "USD",
+        settlement_reference: ref,
+        settled_amount: amt,
+        currency: cur,
       })
-      .eq("id", executionId);
+      .eq("id", executionId)
+      .select("id, contract_id, user_id, evidence_ids")
+      .maybeSingle();
+
+    if (error || !updated) {
+      setBusy(false);
+      toast.error(error?.message ?? "Failed to update execution");
+      return;
+    }
+
+    // 2. Look up contract name for the evidence title + notification message.
+    const { data: contract } = await supabase
+      .from("contracts")
+      .select("name")
+      .eq("id", updated.contract_id)
+      .maybeSingle();
+    const contractName = contract?.name ?? "Contract";
+
+    // 3. Auto-create immutable evidence record proving the settlement happened.
+    const fingerprint = await sha256Hex(`${ref}${amt}${cur}${settledAt}`);
+    const { data: ev, error: evErr } = await supabase
+      .from("evidence")
+      .insert({
+        contract_id: updated.contract_id,
+        user_id: updated.user_id,
+        title: `Settlement confirmed — ${contractName}`,
+        evidence_type: "Document",
+        fingerprint,
+        timestamp_created: settledAt,
+        notes: `Auto-generated on settlement confirmation. Reference: ${ref}`,
+      })
+      .select("id")
+      .maybeSingle();
+
+    // 4. Append the new evidence id to the execution's evidence_ids array.
+    if (ev?.id) {
+      const nextIds = [...(updated.evidence_ids ?? []), ev.id];
+      await supabase.from("executions").update({ evidence_ids: nextIds }).eq("id", executionId);
+    } else if (evErr) {
+      console.warn("[MarkSettled] auto-evidence failed:", evErr.message);
+    }
+
+    // 5. Notify the user (in-app).
+    await sendNotification({
+      userId: updated.user_id,
+      type: "system",
+      contractId: updated.contract_id,
+      executionId: updated.id,
+      message: `${contractName} — settlement of ${amt.toLocaleString()} ${cur} confirmed.`,
+    });
+
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Marked as settled");
+    toast.success("Settlement confirmed");
     onSettled();
     ledgerEvents.emit();
+    notificationEvents.emit();
     onOpenChange(false);
   };
 

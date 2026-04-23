@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Webhook, Copy, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { AddTriggerDialog } from "./AddTriggerDialog";
+import { sendNotification, notificationEvents } from "@/lib/notifications";
+import { useAuth } from "@/hooks/useAuth";
 
 type TriggerRow = {
   id: string;
@@ -41,6 +43,7 @@ type Props = {
 };
 
 export const TriggersList = ({ contractId, onLogExecution }: Props) => {
+  const { user } = useAuth();
   const [triggers, setTriggers] = useState<TriggerRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -64,11 +67,25 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
     if (raw === undefined || raw === "") return;
     const val = Number(raw);
     if (!Number.isFinite(val)) { toast.error("Enter a number"); return; }
+    const wasMet = isMet(t);
     const { error } = await supabase
       .from("triggers")
       .update({ current_value: val, last_updated: new Date().toISOString() })
       .eq("id", t.id);
     if (error) { toast.error(error.message); return; }
+    // Threshold-crossing notification (only fires when crossing from not-met → met).
+    const nowMet = t.direction === "Above" ? val >= t.threshold_value : val <= t.threshold_value;
+    if (!wasMet && nowMet && user) {
+      const { data: c } = await supabase
+        .from("contracts").select("name").eq("id", contractId).maybeSingle();
+      await sendNotification({
+        userId: user.id,
+        type: "trigger_met",
+        contractId,
+        message: `${c?.name ?? "Contract"} — trigger condition met. Log an execution?`,
+      });
+      notificationEvents.emit();
+    }
     setDraftValues((p) => ({ ...p, [t.id]: "" }));
     load();
   };

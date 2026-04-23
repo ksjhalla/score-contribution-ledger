@@ -180,6 +180,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          email_sent: boolean
+          email_sent_at: string | null
+          execution_id: string | null
+          id: string
+          message: string
+          read: boolean
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          email_sent_at?: string | null
+          execution_id?: string | null
+          id?: string
+          message: string
+          read?: boolean
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          email_sent_at?: string | null
+          execution_id?: string | null
+          id?: string
+          message?: string
+          read?: boolean
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           contributor_id: string | null
@@ -346,6 +385,12 @@ export type Database = {
         | "Session file"
         | "Other"
       execution_status: "Pending" | "Attested" | "Settled" | "Intent logged"
+      notification_type:
+        | "trigger_met"
+        | "execution_pending"
+        | "settlement_due"
+        | "attestation_requested"
+        | "system"
       sector_type:
         | "Software"
         | "Pharma & Biotech"
@@ -514,6 +559,13 @@ export const Constants = {
         "Other",
       ],
       execution_status: ["Pending", "Attested", "Settled", "Intent logged"],
+      notification_type: [
+        "trigger_met",
+        "execution_pending",
+        "settlement_due",
+        "attestation_requested",
+        "system",
+      ],
       sector_type: [
         "Software",
         "Pharma & Biotech",

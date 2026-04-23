@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ledgerEvents } from "@/lib/ledgerEvents";
 import { AttachEvidenceDialog } from "./AttachEvidenceDialog";
+import { sendNotification, notificationEvents } from "@/lib/notifications";
 
 const CHANNELS = ["Bank transfer","Stripe","Coinbase","USDC","Other","Not applicable"] as const;
 type Channel = typeof CHANNELS[number];
@@ -89,7 +90,7 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
     else if (!isGovernance && channel && channel !== "Not applicable" && reference.trim() && amount) status = "Settled";
 
     const settledAmount = amount ? Number(amount) : null;
-    const { error } = await supabase.from("executions").insert({
+    const { data: created, error } = await supabase.from("executions").insert({
       contract_id: contractId,
       user_id: user.id,
       title: title.trim(),
@@ -103,10 +104,29 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
       currency: currency || "USD",
       execution_date: executionDate,
       notes: notes.trim() || null,
-    });
+    }).select("id").maybeSingle();
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Execution recorded");
+
+    // settlement_due notification when work met the trigger but is awaiting settlement.
+    if (triggerMet && status === "Pending" && created?.id) {
+      const { data: c } = await supabase
+        .from("contracts").select("name").eq("id", contractId).maybeSingle();
+      const name = c?.name ?? "Contract";
+      const amtStr = settledAmount != null
+        ? ` — ${settledAmount.toLocaleString()} ${currency || "USD"}`
+        : "";
+      await sendNotification({
+        userId: user.id,
+        type: "settlement_due",
+        contractId,
+        executionId: created.id,
+        message: `${name}${amtStr} awaiting settlement confirmation`,
+      });
+      notificationEvents.emit();
+    }
+
     onCreated();
     ledgerEvents.emit();
     close(false);
