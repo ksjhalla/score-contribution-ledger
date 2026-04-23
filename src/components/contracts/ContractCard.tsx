@@ -11,6 +11,10 @@ import { MarkSettledDialog } from "./MarkSettledDialog";
 import { TriggersList } from "./TriggersList";
 import { AttestorsSection } from "./AttestorsSection";
 import { ExecutionAttestations } from "./ExecutionAttestations";
+import { Download } from "lucide-react";
+import { exportContractRecord } from "@/lib/contractExport";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 type StakeType = "Financial" | "Attribution" | "Governance" | "Mixed";
 
@@ -61,6 +65,7 @@ const statusDot: Record<ExecutionRow["status"], string> = {
 };
 
 export const ContractCard = ({ contract }: { contract: ContractRow }) => {
+  const { user } = useAuth();
   const [evidence, setEvidence] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -68,6 +73,19 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
   const [exLoading, setExLoading] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [settleFor, setSettleFor] = useState<ExecutionRow | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("contributor_id").eq("id", user.id).maybeSingle();
+      await exportContractRecord(contract.id, prof?.contributor_id ?? null);
+      toast.success("Record exported");
+    } catch (e) {
+      toast.error("Export failed");
+    } finally { setExporting(false); }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,6 +133,9 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
           {contract.attestation_required && (
             <span className="text-muted-foreground">· Attestation required</span>
           )}
+          <Button size="sm" variant="ghost" className="ml-auto h-7 text-xs" onClick={handleExport} disabled={exporting}>
+            <Download className="h-3.5 w-3.5 mr-1" /> {exporting ? "Exporting…" : "Export record"}
+          </Button>
         </div>
 
         <Tabs defaultValue="executions" className="pt-1">
