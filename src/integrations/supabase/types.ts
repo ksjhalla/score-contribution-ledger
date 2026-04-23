@@ -187,9 +187,14 @@ export type Database = {
           full_name: string | null
           id: string
           organisation: string | null
+          passport_first_shared_at: string | null
+          passport_visible: boolean
           professional_role: string | null
           profile_completed: boolean
           sector: Database["public"]["Enums"]["sector_type"] | null
+          show_amounts: boolean
+          show_contracts: boolean
+          show_counterparties: boolean
           updated_at: string
         }
         Insert: {
@@ -198,9 +203,14 @@ export type Database = {
           full_name?: string | null
           id: string
           organisation?: string | null
+          passport_first_shared_at?: string | null
+          passport_visible?: boolean
           professional_role?: string | null
           profile_completed?: boolean
           sector?: Database["public"]["Enums"]["sector_type"] | null
+          show_amounts?: boolean
+          show_contracts?: boolean
+          show_counterparties?: boolean
           updated_at?: string
         }
         Update: {
@@ -209,9 +219,14 @@ export type Database = {
           full_name?: string | null
           id?: string
           organisation?: string | null
+          passport_first_shared_at?: string | null
+          passport_visible?: boolean
           professional_role?: string | null
           profile_completed?: boolean
           sector?: Database["public"]["Enums"]["sector_type"] | null
+          show_amounts?: boolean
+          show_contracts?: boolean
+          show_counterparties?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -309,7 +324,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_public_passport: { Args: { p_contributor_id: string }; Returns: Json }
     }
     Enums: {
       contract_type: "Off-chain" | "On-chain reference"
