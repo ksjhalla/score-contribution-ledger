@@ -9,6 +9,8 @@ import { AttachEvidenceDialog } from "./AttachEvidenceDialog";
 import { LogExecutionDialog } from "./LogExecutionDialog";
 import { MarkSettledDialog } from "./MarkSettledDialog";
 import { TriggersList } from "./TriggersList";
+import { AttestorsSection } from "./AttestorsSection";
+import { ExecutionAttestations } from "./ExecutionAttestations";
 
 type StakeType = "Financial" | "Attribution" | "Governance" | "Mixed";
 
@@ -42,7 +44,7 @@ type ExecutionRow = {
   title: string;
   work_description: string;
   trigger_met: boolean;
-  status: "Pending" | "Attested" | "Settled" | "Intent logged";
+  status: "Pending" | "Attested" | "Settled" | "Intent logged" | "Declined";
   evidence_ids: string[];
   settlement_channel: string | null;
   settled_amount: number | null;
@@ -55,6 +57,7 @@ const statusDot: Record<ExecutionRow["status"], string> = {
   Attested: "bg-blue-500",
   Settled: "bg-green-500",
   "Intent logged": "bg-gray-400",
+  Declined: "bg-red-500",
 };
 
 export const ContractCard = ({ contract }: { contract: ContractRow }) => {
@@ -115,7 +118,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
         </div>
 
         <Tabs defaultValue="executions" className="pt-1">
-          <TabsList className="grid grid-cols-4 h-8">
+          <TabsList className="grid grid-cols-5 h-8">
             <TabsTrigger value="executions" className="text-xs">
               Executions{executions.length > 0 ? ` (${executions.length})` : ""}
             </TabsTrigger>
@@ -124,6 +127,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
             <TabsTrigger value="evidence" className="text-xs">
               Evidence{evidence.length > 0 ? ` (${evidence.length})` : ""}
             </TabsTrigger>
+            <TabsTrigger value="attestors" className="text-xs">Attestors</TabsTrigger>
           </TabsList>
 
           <TabsContent value="executions" className="pt-3 space-y-3">
@@ -170,6 +174,9 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                             Confirm settlement
                           </Button>
                         </div>
+                      )}
+                      {contract.attestation_required && (
+                        <ExecutionAttestations executionId={ex.id} />
                       )}
                     </div>
                   </li>
