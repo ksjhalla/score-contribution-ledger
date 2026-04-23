@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      contracts: {
+        Row: {
+          attestation_required: boolean
+          contract_type: Database["public"]["Enums"]["contract_type"]
+          counterparty_name: string
+          counterparty_type: Database["public"]["Enums"]["counterparty_type"]
+          created_at: string
+          entitlement_description: string
+          id: string
+          name: string
+          reference: string | null
+          stake_type: Database["public"]["Enums"]["stake_type"]
+          trigger_description: string
+          user_id: string
+        }
+        Insert: {
+          attestation_required?: boolean
+          contract_type: Database["public"]["Enums"]["contract_type"]
+          counterparty_name: string
+          counterparty_type: Database["public"]["Enums"]["counterparty_type"]
+          created_at?: string
+          entitlement_description: string
+          id?: string
+          name: string
+          reference?: string | null
+          stake_type: Database["public"]["Enums"]["stake_type"]
+          trigger_description: string
+          user_id: string
+        }
+        Update: {
+          attestation_required?: boolean
+          contract_type?: Database["public"]["Enums"]["contract_type"]
+          counterparty_name?: string
+          counterparty_type?: Database["public"]["Enums"]["counterparty_type"]
+          created_at?: string
+          entitlement_description?: string
+          id?: string
+          name?: string
+          reference?: string | null
+          stake_type?: Database["public"]["Enums"]["stake_type"]
+          trigger_description?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           contributor_id: string | null
@@ -58,6 +103,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      contract_type: "Off-chain" | "On-chain reference"
+      counterparty_type:
+        | "Company"
+        | "Cooperative"
+        | "University"
+        | "Platform"
+        | "Individual"
+        | "Government"
       sector_type:
         | "Software"
         | "Pharma & Biotech"
@@ -68,6 +121,7 @@ export type Database = {
         | "AI & Data"
         | "College Athletics"
         | "Other"
+      stake_type: "Financial" | "Attribution" | "Governance" | "Mixed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -195,6 +249,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      contract_type: ["Off-chain", "On-chain reference"],
+      counterparty_type: [
+        "Company",
+        "Cooperative",
+        "University",
+        "Platform",
+        "Individual",
+        "Government",
+      ],
       sector_type: [
         "Software",
         "Pharma & Biotech",
@@ -206,6 +269,7 @@ export const Constants = {
         "College Athletics",
         "Other",
       ],
+      stake_type: ["Financial", "Attribution", "Governance", "Mixed"],
     },
   },
 } as const
