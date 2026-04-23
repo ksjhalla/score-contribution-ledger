@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          contributor_id: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          organisation: string | null
+          professional_role: string | null
+          profile_completed: boolean
+          sector: Database["public"]["Enums"]["sector_type"] | null
+          updated_at: string
+        }
+        Insert: {
+          contributor_id?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          organisation?: string | null
+          professional_role?: string | null
+          profile_completed?: boolean
+          sector?: Database["public"]["Enums"]["sector_type"] | null
+          updated_at?: string
+        }
+        Update: {
+          contributor_id?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          organisation?: string | null
+          professional_role?: string | null
+          profile_completed?: boolean
+          sector?: Database["public"]["Enums"]["sector_type"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +58,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      sector_type:
+        | "Software"
+        | "Pharma & Biotech"
+        | "Agriculture"
+        | "Manufacturing"
+        | "Music & Publishing"
+        | "Film & Television"
+        | "AI & Data"
+        | "College Athletics"
+        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +194,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      sector_type: [
+        "Software",
+        "Pharma & Biotech",
+        "Agriculture",
+        "Manufacturing",
+        "Music & Publishing",
+        "Film & Television",
+        "AI & Data",
+        "College Athletics",
+        "Other",
+      ],
+    },
   },
 } as const
