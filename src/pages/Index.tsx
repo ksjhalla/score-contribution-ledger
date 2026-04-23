@@ -10,6 +10,7 @@ import { NewContractDialog } from "@/components/contracts/NewContractDialog";
 import { ContractCard, ContractRow } from "@/components/contracts/ContractCard";
 import { ledgerEvents } from "@/lib/ledgerEvents";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type Profile = {
   full_name: string | null;
@@ -120,9 +121,12 @@ const Index = () => {
             <h1 className="text-lg font-semibold tracking-tight">SCORE</h1>
             <p className="text-xs text-muted-foreground">Contribution Ledger</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" /> Sign out
-          </Button>
+          <div className="flex items-center gap-1">
+            {user && <NotificationBell userId={user.id} />}
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" /> Sign out
+            </Button>
+          </div>
         </div>
       </header>
 
