@@ -16,15 +16,19 @@ const SECTORS = [
 
 type Sector = typeof SECTORS[number];
 
-const buildContributorId = (fullName: string) => {
-  const initials = fullName
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("")
-    .slice(0, 4) || "X";
-  const year = new Date().getFullYear();
-  return `SCR-${initials}-${year}-001`;
+const buildContributorId = (fullName: string, signupYear: number) => {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  let initials: string;
+  if (parts.length === 0) {
+    initials = "XX";
+  } else if (parts.length === 1) {
+    initials = (parts[0].slice(0, 2) || "X").toUpperCase().padEnd(2, "X");
+  } else {
+    const first = parts[0][0] ?? "X";
+    const last = parts[parts.length - 1][0] ?? "X";
+    initials = `${first}${last}`.toUpperCase();
+  }
+  return `SCR-${initials}-${signupYear}-001`;
 };
 
 const CompleteProfile = () => {
@@ -44,7 +48,8 @@ const CompleteProfile = () => {
     e.preventDefault();
     if (!user || !sector) return;
     setBusy(true);
-    const contributorId = buildContributorId(fullName);
+    const signupYear = new Date(user.created_at).getFullYear();
+    const contributorId = buildContributorId(fullName, signupYear);
     const { error } = await supabase
       .from("profiles")
       .update({
