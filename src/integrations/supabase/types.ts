@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      contract_attestors: {
+        Row: {
+          added_at: string
+          attestor_email: string
+          attestor_name: string
+          attestor_role: string | null
+          contract_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          attestor_email: string
+          attestor_name: string
+          attestor_role?: string | null
+          contract_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          attestor_email?: string
+          attestor_name?: string
+          attestor_role?: string | null
+          contract_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_attestors_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           attestation_required: boolean
@@ -105,6 +143,72 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execution_attestations: {
+        Row: {
+          attestor_email: string
+          attestor_name: string
+          contract_id: string
+          email_sent: boolean
+          email_sent_at: string | null
+          execution_id: string
+          id: string
+          last_nudged_at: string | null
+          notes: string | null
+          requested_at: string
+          responded_at: string | null
+          status: Database["public"]["Enums"]["attestation_status"]
+          token: string
+          user_id: string
+        }
+        Insert: {
+          attestor_email: string
+          attestor_name: string
+          contract_id: string
+          email_sent?: boolean
+          email_sent_at?: string | null
+          execution_id: string
+          id?: string
+          last_nudged_at?: string | null
+          notes?: string | null
+          requested_at?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["attestation_status"]
+          token?: string
+          user_id: string
+        }
+        Update: {
+          attestor_email?: string
+          attestor_name?: string
+          contract_id?: string
+          email_sent?: boolean
+          email_sent_at?: string | null
+          execution_id?: string
+          id?: string
+          last_nudged_at?: string | null
+          notes?: string | null
+          requested_at?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["attestation_status"]
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execution_attestations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execution_attestations_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "executions"
             referencedColumns: ["id"]
           },
         ]
@@ -363,9 +467,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_passport: { Args: { p_contributor_id: string }; Returns: Json }
+      submit_attestation: {
+        Args: { p_decision: string; p_notes?: string; p_token: string }
+        Returns: Json
+      }
     }
     Enums: {
+      attestation_status: "Pending" | "Confirmed" | "Declined"
       contract_type: "Off-chain" | "On-chain reference"
       counterparty_type:
         | "Company"
@@ -384,7 +494,12 @@ export type Database = {
         | "Batch record"
         | "Session file"
         | "Other"
-      execution_status: "Pending" | "Attested" | "Settled" | "Intent logged"
+      execution_status:
+        | "Pending"
+        | "Attested"
+        | "Settled"
+        | "Intent logged"
+        | "Declined"
       notification_type:
         | "trigger_met"
         | "execution_pending"
@@ -538,6 +653,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      attestation_status: ["Pending", "Confirmed", "Declined"],
       contract_type: ["Off-chain", "On-chain reference"],
       counterparty_type: [
         "Company",
@@ -558,7 +674,13 @@ export const Constants = {
         "Session file",
         "Other",
       ],
-      execution_status: ["Pending", "Attested", "Settled", "Intent logged"],
+      execution_status: [
+        "Pending",
+        "Attested",
+        "Settled",
+        "Intent logged",
+        "Declined",
+      ],
       notification_type: [
         "trigger_met",
         "execution_pending",
