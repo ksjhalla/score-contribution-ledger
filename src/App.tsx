@@ -9,6 +9,8 @@ import Auth from "./pages/Auth.tsx";
 import CompleteProfile from "./pages/CompleteProfile.tsx";
 import PublicPassport from "./pages/PublicPassport.tsx";
 import PublicAttest from "./pages/PublicAttest.tsx";
+import Admin from "./pages/Admin.tsx";
+import PassportReport from "./pages/PassportReport.tsx";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/passport/:contributorId" element={<PublicPassport />} />
             <Route path="/attest/:token" element={<PublicAttest />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/report" element={<PassportReport />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

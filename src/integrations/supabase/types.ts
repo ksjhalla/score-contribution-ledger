@@ -325,8 +325,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          anonymised: boolean
           contributor_id: string | null
           created_at: string
+          deleted_at: string | null
           full_name: string | null
           id: string
           organisation: string | null
@@ -341,8 +343,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymised?: boolean
           contributor_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           full_name?: string | null
           id: string
           organisation?: string | null
@@ -357,8 +361,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymised?: boolean
           contributor_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           full_name?: string | null
           id?: string
           organisation?: string | null
@@ -462,19 +468,54 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_admin_stats: { Args: never; Returns: Json }
+      get_admin_user_list: { Args: never; Returns: Json }
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_passport: { Args: { p_contributor_id: string }; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      soft_delete_account: { Args: never; Returns: Json }
       submit_attestation: {
         Args: { p_decision: string; p_notes?: string; p_token: string }
         Returns: Json
       }
     }
     Enums: {
+      app_role: "admin" | "support"
       attestation_status: "Pending" | "Confirmed" | "Declined"
       contract_type: "Off-chain" | "On-chain reference"
       counterparty_type:
@@ -653,6 +694,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "support"],
       attestation_status: ["Pending", "Confirmed", "Declined"],
       contract_type: ["Off-chain", "On-chain reference"],
       counterparty_type: [
