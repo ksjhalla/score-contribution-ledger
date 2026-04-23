@@ -109,6 +109,77 @@ export type Database = {
           },
         ]
       }
+      executions: {
+        Row: {
+          contract_id: string
+          created_at: string
+          currency: string
+          evidence_ids: string[]
+          execution_date: string
+          id: string
+          notes: string | null
+          settled_amount: number | null
+          settlement_channel:
+            | Database["public"]["Enums"]["settlement_channel"]
+            | null
+          settlement_reference: string | null
+          status: Database["public"]["Enums"]["execution_status"]
+          title: string
+          trigger_met: boolean
+          updated_at: string
+          user_id: string
+          work_description: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          currency?: string
+          evidence_ids?: string[]
+          execution_date?: string
+          id?: string
+          notes?: string | null
+          settled_amount?: number | null
+          settlement_channel?:
+            | Database["public"]["Enums"]["settlement_channel"]
+            | null
+          settlement_reference?: string | null
+          status?: Database["public"]["Enums"]["execution_status"]
+          title: string
+          trigger_met?: boolean
+          updated_at?: string
+          user_id: string
+          work_description: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          currency?: string
+          evidence_ids?: string[]
+          execution_date?: string
+          id?: string
+          notes?: string | null
+          settled_amount?: number | null
+          settlement_channel?:
+            | Database["public"]["Enums"]["settlement_channel"]
+            | null
+          settlement_reference?: string | null
+          status?: Database["public"]["Enums"]["execution_status"]
+          title?: string
+          trigger_met?: boolean
+          updated_at?: string
+          user_id?: string
+          work_description?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "executions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           contributor_id: string | null
@@ -171,6 +242,7 @@ export type Database = {
         | "Batch record"
         | "Session file"
         | "Other"
+      execution_status: "Pending" | "Attested" | "Settled" | "Intent logged"
       sector_type:
         | "Software"
         | "Pharma & Biotech"
@@ -181,6 +253,13 @@ export type Database = {
         | "AI & Data"
         | "College Athletics"
         | "Other"
+      settlement_channel:
+        | "Bank transfer"
+        | "Stripe"
+        | "Coinbase"
+        | "USDC"
+        | "Other"
+        | "Not applicable"
       stake_type: "Financial" | "Attribution" | "Governance" | "Mixed"
     }
     CompositeTypes: {
@@ -329,6 +408,7 @@ export const Constants = {
         "Session file",
         "Other",
       ],
+      execution_status: ["Pending", "Attested", "Settled", "Intent logged"],
       sector_type: [
         "Software",
         "Pharma & Biotech",
@@ -339,6 +419,14 @@ export const Constants = {
         "AI & Data",
         "College Athletics",
         "Other",
+      ],
+      settlement_channel: [
+        "Bank transfer",
+        "Stripe",
+        "Coinbase",
+        "USDC",
+        "Other",
+        "Not applicable",
       ],
       stake_type: ["Financial", "Attribution", "Governance", "Mixed"],
     },
