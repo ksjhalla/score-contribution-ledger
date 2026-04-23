@@ -12,6 +12,8 @@ import { ledgerEvents } from "@/lib/ledgerEvents";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
+import { GuaranteeNotice } from "@/components/onboarding/GuaranteeNotice";
 
 type Profile = {
   full_name: string | null;
@@ -22,6 +24,7 @@ type Profile = {
   show_amounts: boolean;
   show_counterparties: boolean;
   show_contracts: boolean;
+  sector: string | null;
 };
 
 const StatCard = ({ label, value }: { label: string; value: string }) => (
@@ -48,6 +51,8 @@ const Index = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [guaranteeTick, setGuaranteeTick] = useState(0);
 
   const loadContracts = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -85,7 +90,7 @@ const Index = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, professional_role, contributor_id, profile_completed, passport_visible, show_amounts, show_counterparties, show_contracts")
+        .select("full_name, professional_role, contributor_id, profile_completed, passport_visible, show_amounts, show_counterparties, show_contracts, sector")
         .eq("id", user.id)
         .maybeSingle();
       if (!data || !data.profile_completed) {
@@ -96,9 +101,20 @@ const Index = () => {
       await Promise.all([loadContracts(user.id), loadStats(user.id)]);
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
       setIsAdmin((roles ?? []).length > 0);
+      // First-run onboarding: shown once per user/device, dismissible.
+      const seenKey = `score.onboarding.seen.${user.id}`;
+      if (!localStorage.getItem(seenKey)) {
+        setOnboardingOpen(true);
+      }
       setProfileLoading(false);
     })();
   }, [user, loading, navigate, loadContracts, loadStats]);
+
+  useEffect(() => {
+    const handler = () => setGuaranteeTick((t) => t + 1);
+    window.addEventListener("score:guarantee-dismissed", handler);
+    return () => window.removeEventListener("score:guarantee-dismissed", handler);
+  }, []);
 
   // Refetch stats whenever any ledger entity changes (executions/evidence).
   useEffect(() => {
@@ -151,6 +167,7 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="passport" className="space-y-6 mt-6">
+            <GuaranteeNotice key={guaranteeTick} />
             <Card>
               <CardContent className="pt-6 space-y-1">
                 <div className="text-xl font-semibold">{profile.full_name}</div>
@@ -226,6 +243,7 @@ const Index = () => {
           open={newOpen}
           onOpenChange={setNewOpen}
           onCreated={() => loadContracts(user.id)}
+          sector={profile.sector}
         />
       )}
 
@@ -246,6 +264,20 @@ const Index = () => {
       )}
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      <OnboardingDialog
+        open={onboardingOpen}
+        sector={profile.sector}
+        onDismiss={() => {
+          if (user) localStorage.setItem(`score.onboarding.seen.${user.id}`, "1");
+          setOnboardingOpen(false);
+        }}
+        onAddContract={() => setNewOpen(true)}
+        onLogContribution={() => {
+          // Scroll to contracts; user can open a contract → Evidence tab.
+          document.querySelector('[value="passport"]')?.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
     </div>
   );
 };

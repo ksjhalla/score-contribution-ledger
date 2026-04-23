@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import { ContractTemplate, templatesForSector } from "@/lib/sectorTemplates";
 
 const COUNTERPARTY_TYPES = ["Company", "Cooperative", "University", "Platform", "Individual", "Government"] as const;
 const STAKE_TYPES = ["Financial", "Attribution", "Governance", "Mixed"] as const;
@@ -24,6 +25,8 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
+  sector?: string | null;
+  initialTemplateId?: string | null;
 };
 
 const initial = {
@@ -38,15 +41,39 @@ const initial = {
   attestation_required: false,
 };
 
-export const NewContractDialog = ({ open, onOpenChange, onCreated }: Props) => {
+export const NewContractDialog = ({ open, onOpenChange, onCreated, sector, initialTemplateId }: Props) => {
   const { user } = useAuth();
-  const [step, setStep] = useState(1);
+  // step 0 = template picker (only when sector has templates and no template chosen)
+  const templates = templatesForSector(sector);
+  const [step, setStep] = useState<number>(templates.length > 0 && !initialTemplateId ? 0 : 1);
   const [data, setData] = useState(initial);
   const [busy, setBusy] = useState(false);
+  const [templateTitle, setTemplateTitle] = useState<string | null>(null);
+
+  const applyTemplate = (t: ContractTemplate) => {
+    setData((d) => ({
+      ...d,
+      name: d.name || t.name_suggestion,
+      stake_type: t.stake_type,
+      entitlement_description: d.entitlement_description || t.entitlement_placeholder,
+      trigger_description: d.trigger_description || t.trigger_placeholder,
+    }));
+    setTemplateTitle(t.title);
+    setStep(1);
+  };
+
+  // Apply preselected template on open
+  useEffect(() => {
+    if (!open || !initialTemplateId) return;
+    const t = templates.find((x) => x.id === initialTemplateId);
+    if (t) applyTemplate(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialTemplateId]);
 
   const reset = () => {
-    setStep(1);
+    setStep(templates.length > 0 && !initialTemplateId ? 0 : 1);
     setData(initial);
+    setTemplateTitle(null);
   };
 
   const close = (v: boolean) => {
@@ -93,8 +120,11 @@ export const NewContractDialog = ({ open, onOpenChange, onCreated }: Props) => {
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Contract — Step {step} of 5</DialogTitle>
+          <DialogTitle>
+            {step === 0 ? "Start from a template" : `New Contract — Step ${step} of 5`}
+          </DialogTitle>
           <DialogDescription>
+            {step === 0 && `Templates relevant to ${sector}. You can edit everything afterwards.`}
             {step === 1 && "Identify the contract and the other party."}
             {step === 2 && "Describe what you are owed."}
             {step === 3 && "Describe what triggers the entitlement."}
@@ -104,6 +134,37 @@ export const NewContractDialog = ({ open, onOpenChange, onCreated }: Props) => {
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {step === 0 && (
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => applyTemplate(t)}
+                  className="w-full text-left rounded-md border p-3 hover:bg-accent transition-colors"
+                >
+                  <div className="text-sm font-medium">{t.title}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.summary}</p>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">
+                    {t.stake_type} · evidence: {t.evidence_examples.join(", ")}
+                  </div>
+                </button>
+              ))}
+              <button
+                onClick={() => setStep(1)}
+                className="w-full text-left rounded-md border border-dashed p-3 hover:bg-accent transition-colors"
+              >
+                <div className="text-sm font-medium">Blank contract</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Start from scratch.</p>
+              </button>
+            </div>
+          )}
+
+          {step >= 1 && templateTitle && (
+            <div className="rounded-md bg-muted/40 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+              Using template: <span className="font-medium text-foreground">{templateTitle}</span>
+            </div>
+          )}
+
           {step === 1 && (
             <>
               <div className="space-y-2">
@@ -214,20 +275,22 @@ export const NewContractDialog = ({ open, onOpenChange, onCreated }: Props) => {
           )}
         </div>
 
-        <div className="flex justify-between pt-2">
-          <Button variant="ghost" onClick={() => setStep((s) => Math.max(1, s - 1))} disabled={step === 1 || busy}>
-            <ChevronLeft className="h-4 w-4 mr-1" /> Back
-          </Button>
-          {step < 5 ? (
-            <Button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}>
-              Next <ChevronRight className="h-4 w-4 ml-1" />
+        {step !== 0 && (
+          <div className="flex justify-between pt-2">
+            <Button variant="ghost" onClick={() => setStep((s) => Math.max(templates.length > 0 ? 0 : 1, s - 1))} disabled={(step === 1 && templates.length === 0) || busy}>
+              <ChevronLeft className="h-4 w-4 mr-1" /> Back
             </Button>
-          ) : (
-            <Button onClick={submit} disabled={busy}>
-              {busy ? "Saving…" : "Confirm & Save"}
-            </Button>
-          )}
-        </div>
+            {step < 5 ? (
+              <Button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}>
+                Next <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            ) : (
+              <Button onClick={submit} disabled={busy}>
+                {busy ? "Saving…" : "Confirm & Save"}
+              </Button>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
