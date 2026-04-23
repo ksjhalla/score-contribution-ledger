@@ -236,6 +236,10 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
               </ul>
             )}
           </TabsContent>
+
+          <TabsContent value="attestors" className="pt-3">
+            <AttestorsSection contractId={contract.id} />
+          </TabsContent>
         </Tabs>
       </CardContent>
 
