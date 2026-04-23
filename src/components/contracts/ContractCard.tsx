@@ -167,7 +167,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                         <div className="pt-1 flex justify-end">
                           <Button size="sm" variant="ghost" className="h-7 text-xs"
                             onClick={() => setSettleFor(ex)}>
-                            Mark as settled
+                            Confirm settlement
                           </Button>
                         </div>
                       )}

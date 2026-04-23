@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
   // Trigger must exist, be webhook-sourced, and belong to a real user.
   const { data: trigger, error: tErr } = await supabase
     .from("triggers")
-    .select("id, user_id, source_type")
+    .select("id, user_id, source_type, contract_id, current_value, threshold_value, direction")
     .eq("id", triggerId)
     .maybeSingle();
 
@@ -76,6 +76,26 @@ Deno.serve(async (req) => {
     .from("trigger_events")
     .insert({ trigger_id: triggerId, value, source_ip: sourceIp });
   if (eErr) return json({ error: eErr.message }, 500);
+
+  // Threshold-crossing notification: only on transition not-met → met.
+  const wasMet = trigger.direction === "Above"
+    ? trigger.current_value >= trigger.threshold_value
+    : trigger.current_value <= trigger.threshold_value;
+  const nowMet = trigger.direction === "Above"
+    ? value >= trigger.threshold_value
+    : value <= trigger.threshold_value;
+  if (!wasMet && nowMet) {
+    const { data: contract } = await supabase
+      .from("contracts").select("name").eq("id", trigger.contract_id).maybeSingle();
+    await supabase.from("notifications").insert({
+      user_id: trigger.user_id,
+      type: "trigger_met",
+      contract_id: trigger.contract_id,
+      message: `${contract?.name ?? "Contract"} — trigger condition met. Log an execution?`,
+      read: false,
+      email_sent: false,
+    });
+  }
 
   return json({ ok: true, trigger_id: triggerId, value, received_at: now });
 });
