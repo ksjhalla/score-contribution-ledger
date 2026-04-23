@@ -47,7 +47,10 @@ export const NotificationBell = ({ userId }: Props) => {
   useEffect(() => { load(); }, [load]);
 
   // Refetch on any sendNotification() call.
-  useEffect(() => notificationEvents.on(load), [load]);
+  useEffect(() => {
+    const off = notificationEvents.on(load);
+    return () => { off(); };
+  }, [load]);
 
   // Realtime: new notifications inserted by edge functions / other tabs.
   useEffect(() => {
