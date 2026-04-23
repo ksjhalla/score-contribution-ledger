@@ -24,9 +24,8 @@ type Props = {
   onCreated: () => void;
 };
 
-const sha256Hex = async (buf: ArrayBuffer | Uint8Array) => {
-  const data = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-  const hash = await crypto.subtle.digest("SHA-256", data);
+const sha256Hex = async (buf: ArrayBuffer) => {
+  const hash = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -63,7 +62,9 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
         if (!url.trim()) { setFingerprint(""); return; }
         setHashing(true);
         const enc = new TextEncoder().encode(url.trim());
-        const fp = await sha256Hex(enc);
+        // Copy into a fresh ArrayBuffer to satisfy strict BufferSource typing
+        const ab = enc.buffer.slice(enc.byteOffset, enc.byteOffset + enc.byteLength) as ArrayBuffer;
+        const fp = await sha256Hex(ab);
         if (!cancelled) { setFingerprint(fp); setHashing(false); }
       } else {
         if (!file) { setFingerprint(""); return; }

@@ -119,7 +119,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                       <code className="font-mono text-muted-foreground truncate">
                         {e.fingerprint.slice(0, 16)}…
                       </code>
-                      <span className="inline-flex items-center gap-1 text-green-700 dark:text-green-400">
+                      <span className="inline-flex items-center gap-1 text-primary">
                         <ShieldCheck className="h-3 w-3" /> Verified
                       </span>
                     </div>
