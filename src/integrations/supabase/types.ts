@@ -59,6 +59,56 @@ export type Database = {
         }
         Relationships: []
       }
+      evidence: {
+        Row: {
+          contract_id: string
+          created_at: string
+          description: string | null
+          evidence_type: Database["public"]["Enums"]["evidence_type"]
+          fingerprint: string
+          id: string
+          notes: string | null
+          source_url: string | null
+          timestamp_created: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          description?: string | null
+          evidence_type: Database["public"]["Enums"]["evidence_type"]
+          fingerprint: string
+          id?: string
+          notes?: string | null
+          source_url?: string | null
+          timestamp_created?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          description?: string | null
+          evidence_type?: Database["public"]["Enums"]["evidence_type"]
+          fingerprint?: string
+          id?: string
+          notes?: string | null
+          source_url?: string | null
+          timestamp_created?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           contributor_id: string | null
@@ -111,6 +161,16 @@ export type Database = {
         | "Platform"
         | "Individual"
         | "Government"
+      evidence_type:
+        | "Document"
+        | "Dataset"
+        | "Code"
+        | "Measurement"
+        | "Training record"
+        | "Patent filing"
+        | "Batch record"
+        | "Session file"
+        | "Other"
       sector_type:
         | "Software"
         | "Pharma & Biotech"
@@ -257,6 +317,17 @@ export const Constants = {
         "Platform",
         "Individual",
         "Government",
+      ],
+      evidence_type: [
+        "Document",
+        "Dataset",
+        "Code",
+        "Measurement",
+        "Training record",
+        "Patent filing",
+        "Batch record",
+        "Session file",
+        "Other",
       ],
       sector_type: [
         "Software",
