@@ -448,6 +448,7 @@ export default function Index() {
                 { label: "Thandi Mokoena · Pharma", color: "#2A5C8A" },
                 { label: "Jeremiah Smith · NCAA", color: "#9A3020" },
                 { label: "Ayesha Khan · Supply Chain", color: "#4A784A" },
+                { label: "Mateo Alvarez · AI / Open-source", color: "#5B5FBF" },
               ].map((p) => (
                 <span
                   key={p.label}
