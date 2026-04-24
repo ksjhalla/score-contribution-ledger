@@ -441,6 +441,42 @@ export default function Index() {
               </div>
             ))}
           </div>
+          <div style={{ maxWidth: 760, margin: "32px auto 0", textAlign: "center" }}>
+            <div style={{ ...eyebrowStyle, marginBottom: 14 }}>LIVE EXAMPLES</div>
+            <div className="score-live-examples" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
+              {[
+                { label: "Thandi Mokoena · Pharma", color: "#2A5C8A" },
+                { label: "Jeremiah Smith · NCAA", color: "#9A3020" },
+                { label: "Ayesha Khan · Supply Chain", color: "#4A784A" },
+              ].map((p) => (
+                <span
+                  key={p.label}
+                  className="score-live-chip"
+                  style={{
+                    display: "inline-block",
+                    background: COLORS.card,
+                    border: `1px solid ${COLORS.border}`,
+                    borderLeft: `2px solid ${p.color}`,
+                    borderRadius: 4,
+                    padding: "6px 12px",
+                    fontFamily: FONT_BODY,
+                    fontSize: 12,
+                    color: COLORS.text,
+                    transition: "border-color .15s ease",
+                    ["--chip-accent" as string]: p.color,
+                  } as React.CSSProperties}
+                >
+                  {p.label}
+                </span>
+              ))}
+            </div>
+            <a
+              href="/auth"
+              style={{ display: "inline-block", marginTop: 14, fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber, textDecoration: "none" }}
+            >
+              Sign in to explore all three →
+            </a>
+          </div>
         </div>
       </Section>
 
