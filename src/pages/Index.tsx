@@ -138,6 +138,7 @@ export default function Index() {
       <style>{`
         @media (max-width: 640px) {
           .score-topbar-center { display: none !important; }
+          .score-topbar-signin { display: none !important; }
           .score-hero-h { font-size: 48px !important; }
           .score-cols-3 { grid-template-columns: 1fr !important; }
           .score-cols-2 { grid-template-columns: 1fr !important; }
@@ -160,11 +161,16 @@ export default function Index() {
             border: "1px solid rgba(26,22,14,0.2)", borderRadius: 4,
             padding: "4px 10px", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted,
           }}>→ Now available</div>
-          <a href="#cta" onClick={scrollToCta} style={{
-            background: COLORS.dark, color: COLORS.darkText,
-            fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
-            borderRadius: 4, padding: "9px 18px", textDecoration: "none",
-          }}>REQUEST A DEMO</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link to="/login" className="score-topbar-signin" style={{
+              fontFamily: FONT_MONO, fontSize: 11, color: COLORS.muted, textDecoration: "none",
+            }}>Sign in →</Link>
+            <a href="#cta" onClick={scrollToCta} style={{
+              background: COLORS.dark, color: COLORS.darkText,
+              fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
+              borderRadius: 4, padding: "9px 18px", textDecoration: "none",
+            }}>REQUEST A DEMO</a>
+          </div>
         </div>
       </header>
 
