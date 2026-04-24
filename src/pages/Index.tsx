@@ -417,8 +417,8 @@ export default function Index() {
               { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
               { n: "03", t: "Trigger & payment", b: "When the condition is met — a threshold crossed, a licence executed, a distribution event — SCORE notifies and records settlement. Payment moves through existing channels." },
             ].map((s, i, arr) => (
-              <>
-                <div key={s.n} style={{
+              <Fragment key={s.n}>
+                <div style={{
                   flex: 1, minWidth: 0, padding: "24px 28px", textAlign: "center",
                   wordWrap: "break-word", hyphens: "none",
                 }}>
@@ -427,12 +427,12 @@ export default function Index() {
                   <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7 }}>{s.b}</div>
                 </div>
                 {i < arr.length - 1 && (
-                  <div key={`sep-${s.n}`} style={{
+                  <div style={{
                     flexShrink: 0, alignSelf: "center", padding: "0 8px",
                     fontFamily: FONT_MONO, fontSize: 18, color: COLORS.amber,
                   }}>→</div>
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>
