@@ -513,6 +513,45 @@ export type Database = {
         }
         Relationships: []
       }
+      work_entries: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          hours: number | null
+          id: string
+          reference_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          hours?: number | null
+          id?: string
+          reference_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          work_date?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          hours?: number | null
+          id?: string
+          reference_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
