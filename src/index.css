@@ -137,3 +137,19 @@ All colors MUST be HSL.
   .report-page:last-child { page-break-after: auto; }
   body { background: white !important; color: black !important; }
 }
+
+/* ---------------------------------------------------------------
+   Loading skeletons — used by Dashboard, Contracts, LogWork,
+   Notification panel. Single source of truth for the shimmer.
+   --------------------------------------------------------------- */
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+.skeleton {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background: rgba(26, 22, 14, 0.06);
+  border-radius: 4px;
+  display: block;
+}
