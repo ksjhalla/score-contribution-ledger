@@ -22,7 +22,13 @@ const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_BODY = "'DM Sans', system-ui, sans-serif";
 const FONT_MONO = "'DM Mono', ui-monospace, monospace";
 
-const emailSchema = z.string().trim().email().max(255);
+const emailSchema = z
+  .string()
+  .trim()
+  .min(3, { message: "Email is too short." })
+  .max(255, { message: "Email must be 255 characters or fewer." })
+  .email({ message: "Please enter a valid email address." })
+  .regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, { message: "Please enter a valid email address." });
 
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -105,14 +111,25 @@ export default function Index() {
     e.preventDefault();
     setErr(null);
     const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) { setErr("Please enter a valid email."); return; }
+    if (!parsed.success) {
+      setErr(parsed.error.issues[0]?.message ?? "Please enter a valid email address.");
+      emailInputRef.current?.focus();
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("demo_requests").insert({
       email: parsed.data,
       source: "homepage_cta",
     });
     setSubmitting(false);
-    if (error) { setErr("Something went wrong. Please try again."); return; }
+    if (error) {
+      // Server-side validation (RLS check constraint) rejected the input.
+      const msg = /check constraint|violates/i.test(error.message)
+        ? "That email doesn't look valid. Please double-check and try again."
+        : "Something went wrong. Please try again.";
+      setErr(msg);
+      return;
+    }
     setSubmitted(true);
   };
 
