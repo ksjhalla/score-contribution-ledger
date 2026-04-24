@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,14 +39,40 @@ const CompleteProfile = () => {
   const [organisation, setOrganisation] = useState("");
   const [sector, setSector] = useState<Sector | "">("");
   const [busy, setBusy] = useState(false);
+  const [touched, setTouched] = useState<{ fullName?: boolean; role?: boolean; sector?: boolean }>({});
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
   }, [user, loading, navigate]);
 
+  const errors = useMemo(() => {
+    const e: { fullName?: string; role?: string; organisation?: string; sector?: string } = {};
+    const name = fullName.trim();
+    if (!name) e.fullName = "Full name is required.";
+    else if (name.length < 2) e.fullName = "Please enter at least 2 characters.";
+    else if (name.length > 100) e.fullName = "Keep your name under 100 characters.";
+    else if (!/\s/.test(name)) e.fullName = "Please enter your first and last name.";
+
+    const r = role.trim();
+    if (!r) e.role = "Professional role is required.";
+    else if (r.length < 2) e.role = "Please enter at least 2 characters.";
+    else if (r.length > 80) e.role = "Keep your role under 80 characters.";
+
+    if (organisation.trim().length > 120) e.organisation = "Keep organisation under 120 characters.";
+
+    if (!sector) e.sector = "Please select a sector.";
+    return e;
+  }, [fullName, role, organisation, sector]);
+
+  const isValid = Object.keys(errors).length === 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !sector) return;
+    setTouched({ fullName: true, role: true, sector: true });
+    if (!user || !isValid) {
+      toast.error("Please fix the highlighted fields before continuing.");
+      return;
+    }
     setBusy(true);
     const signupYear = new Date(user.created_at).getFullYear();
     const contributorId = buildContributorId(fullName, signupYear);
@@ -71,38 +97,93 @@ const CompleteProfile = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader>
+    <div className="min-h-screen flex items-center justify-center px-4 py-6 sm:py-8 bg-background">
+      <Card className="w-full max-w-md sm:rounded-lg rounded-md shadow-sm">
+        <CardHeader className="px-5 sm:px-6 pt-5 sm:pt-6">
           <CardTitle>Complete your profile</CardTitle>
           <CardDescription>This information generates your permanent Contributor ID.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <Input
+                id="fullName"
+                autoComplete="name"
+                inputMode="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, fullName: true }))}
+                aria-invalid={!!(touched.fullName && errors.fullName)}
+                aria-describedby={touched.fullName && errors.fullName ? "fullName-error" : undefined}
+                className={touched.fullName && errors.fullName ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {touched.fullName && errors.fullName && (
+                <p id="fullName-error" className="text-xs text-destructive">{errors.fullName}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Professional role</Label>
-              <Input id="role" required value={role} onChange={(e) => setRole(e.target.value)} />
+              <Input
+                id="role"
+                autoComplete="organization-title"
+                placeholder="e.g. Research Scientist"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, role: true }))}
+                aria-invalid={!!(touched.role && errors.role)}
+                aria-describedby={touched.role && errors.role ? "role-error" : undefined}
+                className={touched.role && errors.role ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {touched.role && errors.role && (
+                <p id="role-error" className="text-xs text-destructive">{errors.role}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="org">Organisation (optional)</Label>
-              <Input id="org" value={organisation} onChange={(e) => setOrganisation(e.target.value)} />
+              <Label htmlFor="org">Organisation <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input
+                id="org"
+                autoComplete="organization"
+                value={organisation}
+                onChange={(e) => setOrganisation(e.target.value)}
+                aria-invalid={!!errors.organisation}
+                aria-describedby={errors.organisation ? "org-error" : undefined}
+                className={errors.organisation ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {errors.organisation && (
+                <p id="org-error" className="text-xs text-destructive">{errors.organisation}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="sector">Sector</Label>
-              <Select value={sector} onValueChange={(v) => setSector(v as Sector)}>
-                <SelectTrigger id="sector"><SelectValue placeholder="Select a sector" /></SelectTrigger>
+              <Select
+                value={sector || undefined}
+                onValueChange={(v) => {
+                  setSector(v as Sector);
+                  setTouched((t) => ({ ...t, sector: true }));
+                }}
+              >
+                <SelectTrigger
+                  id="sector"
+                  aria-invalid={!!(touched.sector && errors.sector)}
+                  className={touched.sector && errors.sector ? "border-destructive focus:ring-destructive" : ""}
+                >
+                  <SelectValue placeholder="Select a sector" />
+                </SelectTrigger>
                 <SelectContent>
                   {SECTORS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+              {touched.sector && errors.sector && (
+                <p className="text-xs text-destructive">{errors.sector}</p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={busy || !sector}>
-              Generate Contributor ID
+            <Button type="submit" className="w-full h-11 sm:h-10" disabled={busy || !isValid}>
+              {busy ? "Generating…" : "Generate Contributor ID"}
             </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Your Contributor ID is permanent and cannot be changed later.
+            </p>
           </form>
         </CardContent>
       </Card>
