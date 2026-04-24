@@ -475,7 +475,7 @@ export default function Index() {
               href="/auth"
               style={{ display: "inline-block", marginTop: 14, fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber, textDecoration: "none" }}
             >
-              Sign in to explore all three →
+              Sign in to explore all four →
             </a>
           </div>
         </div>
