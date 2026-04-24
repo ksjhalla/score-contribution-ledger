@@ -5,7 +5,7 @@ import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
 import { ContractSparkBars } from "@/components/charts/ContractSparkBars";
 import { QuickReadPanel } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc } from "@/components/charts/MilestoneArc";
-import { Droplets, Leaf, Network } from "lucide-react";
+import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -192,7 +192,13 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           }}
         >
           {valueStreams.map((s) => {
-            const Icon = s.icon === "droplets" ? Droplets : s.icon === "leaf" ? Leaf : Network;
+            const Icon =
+              s.icon === "droplets" ? Droplets :
+              s.icon === "leaf" ? Leaf :
+              s.icon === "code" ? Code2 :
+              s.icon === "git-fork" ? GitFork :
+              s.icon === "brain" ? Brain :
+              Network;
             return (
               <div key={s.name} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <Icon size={18} color={s.iconColor} style={{ flexShrink: 0, marginTop: 2 }} />
