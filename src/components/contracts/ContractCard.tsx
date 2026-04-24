@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ShieldCheck, FileSearch, Activity } from "lucide-react";
+import { Plus, FileSearch, Activity } from "lucide-react";
 import { AttachEvidenceDialog } from "./AttachEvidenceDialog";
 import { LogExecutionDialog } from "./LogExecutionDialog";
 import { MarkSettledDialog } from "./MarkSettledDialog";
