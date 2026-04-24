@@ -89,6 +89,23 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         ))}
       </div>
 
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28 }}>
+        <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>Value mix</span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A5C8A", background: "rgba(42,92,138,0.08)", padding: "2px 6px", borderRadius: 3 }}>At a glance</span>
+          </div>
+          <ValueMixDonut {...valueMix} />
+        </div>
+        <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>By contract</span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45", background: "rgba(42,106,69,0.08)", padding: "2px 6px", borderRadius: 3 }}>{bars.length} tracked</span>
+          </div>
+          <ContractSparkBars contracts={bars} currency={valueMix.currency} />
+        </div>
+      </div>
+
       <h3
         style={{
           fontFamily: FONT_DISPLAY,
@@ -99,22 +116,25 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         What changed
       </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-        {whatChanged.map((c, i) => (
-          <ValueEventCard
-            key={`${c.headline}-${i}`}
-            amount={c.amount}
-            currency={c.currency}
-            headline={c.headline}
-            subheadline={c.subheadline}
-            status={c.status}
-            confidence={c.confidence}
-            trigger={c.trigger}
-            resolver={c.resolver}
-            evidence_count={c.evidence_count}
-            expected_resolution={c.expected_resolution}
-          />
-        ))}
+      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 14, marginBottom: 28 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {whatChanged.map((c, i) => (
+            <ValueEventCard
+              key={`${c.headline}-${i}`}
+              amount={c.amount}
+              currency={c.currency}
+              headline={c.headline}
+              subheadline={c.subheadline}
+              status={c.status}
+              confidence={c.confidence}
+              trigger={c.trigger}
+              resolver={c.resolver}
+              evidence_count={c.evidence_count}
+              expected_resolution={c.expected_resolution}
+            />
+          ))}
+        </div>
+        <QuickReadPanel rows={quickRead} />
       </div>
 
       <h3
@@ -127,7 +147,8 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         Contracts
       </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28, alignItems: "start" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {contracts.map((c) => (
           <div
             key={c.name}
@@ -167,6 +188,11 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             </div>
           </div>
         ))}
+      </div>
+        <div>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Milestone arc</div>
+          <MilestoneArc milestones={milestones} />
+        </div>
       </div>
     </div>
   );
