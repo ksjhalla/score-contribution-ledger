@@ -246,13 +246,16 @@ export type Database = {
       }
       executions: {
         Row: {
+          confidence: string | null
           contract_id: string
           created_at: string
           currency: string
           evidence_ids: string[]
           execution_date: string
+          expected_resolution: string | null
           id: string
           notes: string | null
+          resolver_description: string | null
           settled_amount: number | null
           settlement_channel:
             | Database["public"]["Enums"]["settlement_channel"]
@@ -266,13 +269,16 @@ export type Database = {
           work_description: string
         }
         Insert: {
+          confidence?: string | null
           contract_id: string
           created_at?: string
           currency?: string
           evidence_ids?: string[]
           execution_date?: string
+          expected_resolution?: string | null
           id?: string
           notes?: string | null
+          resolver_description?: string | null
           settled_amount?: number | null
           settlement_channel?:
             | Database["public"]["Enums"]["settlement_channel"]
@@ -286,13 +292,16 @@ export type Database = {
           work_description: string
         }
         Update: {
+          confidence?: string | null
           contract_id?: string
           created_at?: string
           currency?: string
           evidence_ids?: string[]
           execution_date?: string
+          expected_resolution?: string | null
           id?: string
           notes?: string | null
+          resolver_description?: string | null
           settled_amount?: number | null
           settlement_channel?:
             | Database["public"]["Enums"]["settlement_channel"]
@@ -445,6 +454,7 @@ export type Database = {
       }
       triggers: {
         Row: {
+          confidence: string | null
           contract_id: string
           created_at: string
           current_value: number
@@ -460,6 +470,7 @@ export type Database = {
           webhook_url: string | null
         }
         Insert: {
+          confidence?: string | null
           contract_id: string
           created_at?: string
           current_value?: number
@@ -475,6 +486,7 @@ export type Database = {
           webhook_url?: string | null
         }
         Update: {
+          confidence?: string | null
           contract_id?: string
           created_at?: string
           current_value?: number

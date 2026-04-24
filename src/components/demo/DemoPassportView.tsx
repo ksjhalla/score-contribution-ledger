@@ -1,5 +1,6 @@
 import type { DemoProfile } from "@/data/demoProfiles";
 import { formatDemoAmount } from "@/data/demoProfiles";
+import { ValueEventCard } from "@/components/value-events/ValueEventCard";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -12,7 +13,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
-  const { contributor, stats, contracts, executions, accent } = profile;
+  const { contributor, stats, contracts, whatChanged, accent } = profile;
   return (
     <div style={{ padding: "32px 24px", maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div style={{ marginBottom: 20 }}>
@@ -87,6 +88,34 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       <h3
         style={{
           fontFamily: FONT_DISPLAY,
+          fontSize: 20,
+          fontWeight: 600,
+          margin: "0 0 12px",
+        }}
+      >
+        What changed
+      </h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
+        {whatChanged.map((c, i) => (
+          <ValueEventCard
+            key={`${c.headline}-${i}`}
+            amount={c.amount}
+            currency={c.currency}
+            headline={c.headline}
+            subheadline={c.subheadline}
+            status={c.status}
+            confidence={c.confidence}
+            trigger={c.trigger}
+            resolver={c.resolver}
+            evidence_count={c.evidence_count}
+            expected_resolution={c.expected_resolution}
+          />
+        ))}
+      </div>
+
+      <h3
+        style={{
+          fontFamily: FONT_DISPLAY,
           fontSize: 18,
           fontWeight: 600,
           margin: "0 0 12px",
@@ -131,59 +160,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             </div>
             <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9A8F84", marginTop: 6 }}>
               Trigger: {c.trigger}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <h3
-        style={{
-          fontFamily: FONT_DISPLAY,
-          fontSize: 18,
-          fontWeight: 600,
-          margin: "0 0 12px",
-        }}
-      >
-        Executions
-      </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {executions.map((e) => (
-          <div
-            key={e.title}
-            style={{
-              border: "1px solid rgba(26,22,14,0.10)",
-              borderRadius: 5,
-              background: "#FDFAF4",
-              padding: "12px 14px",
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: 8,
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "#1A1614" }}>{e.title}</div>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9A8F84", marginTop: 4 }}>
-                {e.proof}
-              </div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div
-                style={{
-                  fontFamily: FONT_MONO,
-                  fontSize: 9,
-                  color: STATUS_COLOR[e.status] ?? "#1A1614",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {e.status}
-              </div>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#1A1614", marginTop: 4 }}>
-                {formatDemoAmount(e.amount, e.currency)}
-              </div>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", marginTop: 2 }}>
-                {e.date}
-              </div>
             </div>
           </div>
         ))}

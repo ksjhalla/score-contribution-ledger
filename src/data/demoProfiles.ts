@@ -7,6 +7,9 @@ export type DemoExecution = {
   currency: string;
   date: string;
   proof: string;
+  resolver_description?: string;
+  expected_resolution?: string;
+  confidence?: "High" | "Medium" | "Low";
 };
 
 export type DemoContract = {
@@ -25,7 +28,21 @@ export type DemoProfile = {
   stats: { settled: number; pending: number; currency: string; contracts: number; executions: number };
   contracts: DemoContract[];
   executions: DemoExecution[];
+  whatChanged: DemoValueEvent[];
   banner: { text: string; bg: string; border: string };
+};
+
+export type DemoValueEvent = {
+  amount: number | null;
+  currency: string;
+  headline: string;
+  subheadline: string;
+  status: "Resolved" | "Under review" | "Watching" | "Pending";
+  confidence: "High" | "Medium" | "Low" | null;
+  trigger?: string;
+  resolver?: string;
+  expected_resolution?: string;
+  evidence_count?: number;
 };
 
 export const demoProfiles: Record<DemoKey, DemoProfile> = {
@@ -74,6 +91,9 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "ZAR",
         date: "2024-11-01",
         proof: "SHA-256: pq-cert-2024-0312.pdf · f3a2c1d9…",
+        resolver_description: "WHO Prequalification authority",
+        expected_resolution: "Resolved",
+        confidence: "High",
       },
       {
         title: "Annual batch volume · 8.2M vials",
@@ -82,6 +102,9 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "ZAR",
         date: "2024-07-01",
         proof: "SHA-256: br-2024-vol-sum.json · b4c2d8f1…",
+        resolver_description: "GMP batch register · auto-confirmed",
+        expected_resolution: "Resolved",
+        confidence: "High",
       },
       {
         title: "Named inventor · SA Patent 2024/08441",
@@ -90,6 +113,9 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "ZAR",
         date: "2024-08-12",
         proof: "SA Pat 2024/08441 · filed 2024-08-12",
+        resolver_description: "SA Patent Office confirmation",
+        expected_resolution: "On filing",
+        confidence: "High",
       },
       {
         title: "GLP-1 TTA extension · pending signature",
@@ -98,6 +124,38 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "ZAR",
         date: "2025-12-01",
         proof: "TTA-ext-2025-GLP1.draft.pdf · pending",
+        resolver_description: "Novo Nordisk A/S · TTA signature",
+        expected_resolution: "30 days",
+        confidence: "High",
+      },
+    ],
+    whatChanged: [
+      {
+        amount: 420000, currency: "ZAR",
+        headline: "on the way",
+        subheadline: "PF-04 validation milestone is awaiting final confirmation.",
+        status: "Under review", confidence: "High",
+        trigger: "Manufacturing validation accepted",
+        resolver: "Regional QA authority",
+        expected_resolution: "30 days", evidence_count: 1,
+      },
+      {
+        amount: 210000, currency: "ZAR",
+        headline: "paid to you",
+        subheadline: "PF-01 licensing milestone was confirmed and released.",
+        status: "Resolved", confidence: "High",
+        trigger: "Regional API licensing milestone",
+        resolver: "Aspen Pharmacare Finance",
+        expected_resolution: "Resolved", evidence_count: 2,
+      },
+      {
+        amount: 530000, currency: "ZAR",
+        headline: "could grow",
+        subheadline: "Filed patent has inventor confirmation but no licence yet.",
+        status: "Watching", confidence: "Medium",
+        trigger: "Commercial licence executed",
+        resolver: "Licensing counterparty",
+        expected_resolution: "Indeterminate", evidence_count: 0,
       },
     ],
     banner: {
@@ -143,6 +201,9 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "USD",
         date: "2025-08-01",
         proof: "SHA-256: osu-rsa-smith-2025.pdf · e4c2a1f8…",
+        resolver_description: "OSU Athletic Department · counter-signed",
+        expected_resolution: "Resolved",
+        confidence: "High",
       },
       {
         title: "Fall 2025–26 distribution settled",
@@ -151,6 +212,9 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "USD",
         date: "2026-01-15",
         proof: "ACH-OSU-SMITH-2026-01 · settled Jan 2026",
+        resolver_description: "OSU Athletics · ACH transfer",
+        expected_resolution: "Resolved",
+        confidence: "High",
       },
       {
         title: "Broadcast evidence log · Season 2025",
@@ -159,6 +223,9 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "USD",
         date: "2025-12-01",
         proof: "SHA-256: snap-log-smith-2025.json · f3a2c1d9…",
+        resolver_description: "Big Ten stats feed · auto-logged",
+        expected_resolution: "Season end",
+        confidence: "High",
       },
       {
         title: "Spring 2026 distribution · pending",
@@ -167,6 +234,38 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         currency: "USD",
         date: "2026-06-01",
         proof: "Seasonal trigger · Jan 2026 · awaiting confirmation",
+        resolver_description: "OSU Athletics · seasonal trigger",
+        expected_resolution: "Jan 2026",
+        confidence: "High",
+      },
+    ],
+    whatChanged: [
+      {
+        amount: 124800, currency: "USD",
+        headline: "pending",
+        subheadline: "Spring 2026 distribution trigger fired. Awaiting OSU settlement.",
+        status: "Under review", confidence: "High",
+        trigger: "Seasonal distribution · Jan 2026",
+        resolver: "OSU Athletics Department",
+        expected_resolution: "Jan 2026", evidence_count: 1,
+      },
+      {
+        amount: 124800, currency: "USD",
+        headline: "received",
+        subheadline: "Fall 2025–26 revenue share payout was recorded and settled.",
+        status: "Resolved", confidence: "High",
+        trigger: "Seasonal distribution · Aug 2025",
+        resolver: "OSU Athletics · ACH",
+        expected_resolution: "Resolved", evidence_count: 1,
+      },
+      {
+        amount: 8500000, currency: "USD",
+        headline: "could grow",
+        subheadline: "Performance incentives may unlock if contract thresholds are met.",
+        status: "Watching", confidence: "Medium",
+        trigger: "Starts, wins, playtime, team performance",
+        resolver: "League stats + contract administrator",
+        expected_resolution: "End of season", evidence_count: 0,
       },
     ],
     banner: {
