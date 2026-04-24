@@ -246,6 +246,7 @@ export default function Index() {
           .score-hero-h { font-size: 48px !important; }
           .score-cols-3 { grid-template-columns: 1fr !important; }
           .score-cols-2 { grid-template-columns: 1fr !important; }
+          .score-platform-grid { grid-template-columns: 1fr !important; }
         }
         .score-link-underline:hover { text-decoration: underline; }
       `}</style>
