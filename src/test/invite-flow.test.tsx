@@ -37,6 +37,12 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+// SEO uses react-helmet-async which requires a HelmetProvider — stub it out
+// since the tests don't assert on document head.
+vi.mock("@/components/SEO", () => ({
+  SEO: () => null,
+}));
+
 import Invite from "@/pages/Invite";
 import { PUBLIC_ROUTES } from "@/lib/routeGuard";
 
