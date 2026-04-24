@@ -208,6 +208,12 @@ export default function Index() {
               fontFamily: FONT_BODY, fontSize: 14, padding: "12px 8px", textDecoration: "none",
             }} className="score-link-underline">See what it does</Link>
           </div>
+          <div style={{
+            display: "block", textAlign: "center", marginTop: 10,
+            fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
+          }}>
+            Already have access? <Link to="/login" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
+          </div>
         </div>
       </Section>
 
