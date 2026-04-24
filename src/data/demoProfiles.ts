@@ -7,6 +7,9 @@ export type DemoExecution = {
   currency: string;
   date: string;
   proof: string;
+  resolver_description?: string;
+  expected_resolution?: string;
+  confidence?: "High" | "Medium" | "Low";
 };
 
 export type DemoContract = {
@@ -25,7 +28,21 @@ export type DemoProfile = {
   stats: { settled: number; pending: number; currency: string; contracts: number; executions: number };
   contracts: DemoContract[];
   executions: DemoExecution[];
+  whatChanged: DemoValueEvent[];
   banner: { text: string; bg: string; border: string };
+};
+
+export type DemoValueEvent = {
+  amount: number | null;
+  currency: string;
+  headline: string;
+  subheadline: string;
+  status: "Resolved" | "Under review" | "Watching" | "Pending";
+  confidence: "High" | "Medium" | "Low" | null;
+  trigger?: string;
+  resolver?: string;
+  expected_resolution?: string;
+  evidence_count?: number;
 };
 
 export const demoProfiles: Record<DemoKey, DemoProfile> = {
