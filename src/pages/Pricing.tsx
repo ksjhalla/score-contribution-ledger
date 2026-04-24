@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { trackEvent } from "@/lib/analytics";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -29,7 +32,7 @@ type Tier = {
   price: string;
   subprice: string;
   features: string[];
-  cta: { text: string; to?: string; href?: string };
+  cta: { text: string; to?: string; href?: string; tier: "early_access" | "pro" | "enterprise"; destination: string };
   dark?: boolean;
 };
 
@@ -46,7 +49,7 @@ const TIERS: Tier[] = [
       "Public passport URL",
       "Basic PDF export",
     ],
-    cta: { text: "Get early access →", to: "/auth" },
+    cta: { text: "Get early access →", to: "/auth", tier: "early_access", destination: "/auth" },
   },
   {
     label: "PRO",
@@ -64,7 +67,7 @@ const TIERS: Tier[] = [
       "Notification system",
       "Priority support",
     ],
-    cta: { text: "Request access →", href: "/#cta" },
+    cta: { text: "Request access →", href: "/#cta", tier: "pro", destination: "/#cta" },
   },
   {
     label: "ENTERPRISE",
@@ -79,7 +82,7 @@ const TIERS: Tier[] = [
       "Dedicated onboarding",
       "SLA + legal review support",
     ],
-    cta: { text: "Talk to us →", href: "#contact" },
+    cta: { text: "Talk to us →", href: "#contact", tier: "enterprise", destination: "#contact" },
   },
 ];
 
@@ -108,6 +111,10 @@ function TierCard({ tier }: { tier: Tier }) {
     ? { background: COLORS.amber, color: "#fff", border: "none" }
     : { background: COLORS.card, color: COLORS.text, border: "1px solid rgba(26,22,14,0.15)" };
 
+  const onCtaClick = () => {
+    trackEvent("pricing_cta_clicked", { tier: tier.cta.tier, destination: tier.cta.destination });
+  };
+
   return (
     <div style={{
       flex: "1 1 240px", maxWidth: 300, minWidth: 240,
@@ -123,18 +130,18 @@ function TierCard({ tier }: { tier: Tier }) {
       <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column" }}>
         <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", flex: 1 }}>
           {tier.features.map((f) => (
-            <li key={f} style={{ fontFamily: FONT_BODY, fontSize: 13, color: featureColor, lineHeight: 1.8, display: "flex", gap: 8 }}>
-              <span style={{ color: COLORS.amber, flexShrink: 0 }}>✓</span><span>{f}</span>
+            <li key={f} style={{ fontFamily: FONT_BODY, fontSize: 13, color: featureColor, lineHeight: 1.8, display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <Check size={14} color="#2A6A45" style={{ flexShrink: 0, marginTop: 6 }} aria-hidden /><span>{f}</span>
             </li>
           ))}
         </ul>
         {tier.cta.to ? (
-          <Link to={tier.cta.to} style={{
+          <Link to={tier.cta.to} onClick={onCtaClick} className="pricing-cta" style={{
             ...ctaStyle, textAlign: "center", textDecoration: "none",
             fontFamily: FONT_MONO, fontSize: 10, borderRadius: 4, padding: 10, display: "block",
           }}>{tier.cta.text}</Link>
         ) : (
-          <a href={tier.cta.href} style={{
+          <a href={tier.cta.href} onClick={onCtaClick} className="pricing-cta" style={{
             ...ctaStyle, textAlign: "center", textDecoration: "none",
             fontFamily: FONT_MONO, fontSize: 10, borderRadius: 4, padding: 10, display: "block",
           }}>{tier.cta.text}</a>
@@ -157,7 +164,15 @@ function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
         aria-expanded={open}
       >
         <span>{q}</span>
-        <span style={{ fontFamily: FONT_MONO, fontSize: 14, color: COLORS.faint, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s ease" }}>›</span>
+        <ChevronDown
+          size={18}
+          color={COLORS.faint}
+          style={{
+            flexShrink: 0,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s ease",
+          }}
+        />
       </button>
       {open && (
         <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, lineHeight: 1.7, margin: "0 0 18px", maxWidth: 680 }}>{a}</p>
@@ -170,25 +185,25 @@ export default function Pricing() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   useEffect(() => {
-    document.title = "Pricing — SCORE";
-    const desc = document.querySelector('meta[name="description"]');
-    const text = "Simple, transparent pricing for SCORE. Start free, scale to Pro, or talk to us about Enterprise.";
-    if (desc) desc.setAttribute("content", text);
-    else {
-      const m = document.createElement("meta");
-      m.name = "description"; m.content = text;
-      document.head.appendChild(m);
-    }
+    trackEvent("pricing_page_viewed");
   }, []);
 
   return (
     <div style={{ background: COLORS.bg, color: COLORS.text, fontFamily: FONT_BODY, minHeight: "100vh" }}>
+      <SEO
+        title="Pricing — SCORE"
+        description="Simple, transparent pricing for SCORE. Start free. Pay when you grow. Cancel any time."
+        url="https://score-contribution-ledger.lovable.app/pricing"
+        ogDescription="Start free with up to 3 contracts. Upgrade to Pro at $29/month for unlimited contracts, triggers, and investor reports."
+      />
       <style>{`
         @media (max-width: 767px) {
           .pricing-tiers { flex-direction: column !important; align-items: stretch !important; }
           .pricing-tiers > * { max-width: none !important; }
           .pricing-h { font-size: 36px !important; }
         }
+        .pricing-link:hover { text-decoration: underline; }
+        .pricing-cta:hover { text-decoration: underline; }
       `}</style>
 
       {/* TOPBAR */}
@@ -203,7 +218,13 @@ export default function Pricing() {
         <div style={{ ...containerStyle, height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link to="/" style={{ fontFamily: FONT_MONO, fontSize: 13, color: COLORS.text, textDecoration: "none" }}>← SCORE</Link>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Link to="/auth" style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.text, textDecoration: "none", padding: "9px 14px" }}>Sign in</Link>
+            <Link to="/pricing" className="pricing-link" style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted, textDecoration: "none", padding: "9px 14px" }}>Pricing</Link>
+            <Link
+              to="/auth"
+              onClick={() => trackEvent("signin_link_clicked", { source: "topbar" })}
+              className="pricing-link"
+              style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.text, textDecoration: "none", padding: "9px 14px" }}
+            >Sign in</Link>
             <Link to="/#cta" style={{
               background: COLORS.dark, color: COLORS.darkText,
               fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
