@@ -536,8 +536,9 @@ const LogWork = () => {
             {loadingList ? (
               <p className="text-sm text-muted-foreground">Loading entries…</p>
             ) : entries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No entries yet. Add your first above.</p>
+              <EmptyEntries onStart={focusTitleInput} />
             ) : (
+              <TooltipProvider delayDuration={150}>
               <ul className="divide-y">
                 {entries.map((e) => (
                   <li key={e.id} className="py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -554,6 +555,33 @@ const LogWork = () => {
                         >
                           {e.status}
                         </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`What does ${e.status} mean?`}
+                              className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+                            >
+                              <HelpCircle className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="border-0"
+                            style={{
+                              fontFamily: "'DM Sans', system-ui, sans-serif",
+                              fontSize: 12,
+                              background: "#1A1614",
+                              color: "#F5F1E8",
+                              borderRadius: 4,
+                              padding: "6px 10px",
+                              maxWidth: 220,
+                              zIndex: 50,
+                            }}
+                          >
+                            {STATUS_TOOLTIP[e.status] ?? STATUS_TOOLTIP.Pending}
+                          </TooltipContent>
+                        </Tooltip>
                         <span className="text-xs text-muted-foreground">{e.work_date}</span>
                         {e.hours != null && <span className="text-xs text-muted-foreground">· {e.hours}h</span>}
                         {e.category && <span className="text-xs text-muted-foreground">· {e.category}</span>}
@@ -608,6 +636,7 @@ const LogWork = () => {
                   </li>
                 ))}
               </ul>
+              </TooltipProvider>
             )}
           </CardContent>
         </Card>
