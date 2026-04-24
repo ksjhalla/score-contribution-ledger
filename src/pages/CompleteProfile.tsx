@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Check, Copy } from "lucide-react";
 
 const SECTORS = [
   "Software", "Pharma & Biotech", "Agriculture", "Manufacturing",
@@ -15,21 +16,6 @@ const SECTORS = [
 ] as const;
 
 type Sector = typeof SECTORS[number];
-
-const buildContributorId = (fullName: string, signupYear: number) => {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  let initials: string;
-  if (parts.length === 0) {
-    initials = "XX";
-  } else if (parts.length === 1) {
-    initials = (parts[0].slice(0, 2) || "X").toUpperCase().padEnd(2, "X");
-  } else {
-    const first = parts[0][0] ?? "X";
-    const last = parts[parts.length - 1][0] ?? "X";
-    initials = `${first}${last}`.toUpperCase();
-  }
-  return `SCR-${initials}-${signupYear}-001`;
-};
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
@@ -40,6 +26,8 @@ const CompleteProfile = () => {
   const [sector, setSector] = useState<Sector | "">("");
   const [busy, setBusy] = useState(false);
   const [touched, setTouched] = useState<{ fullName?: boolean; role?: boolean; sector?: boolean }>({});
+  const [issuedId, setIssuedId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
@@ -74,27 +62,92 @@ const CompleteProfile = () => {
       return;
     }
     setBusy(true);
-    const signupYear = new Date(user.created_at).getFullYear();
-    const contributorId = buildContributorId(fullName, signupYear);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName.trim(),
-        professional_role: role.trim(),
-        organisation: organisation.trim() || null,
-        sector,
-        contributor_id: contributorId,
-        profile_completed: true,
-      })
-      .eq("id", user.id);
+    const { data, error } = await supabase.rpc("complete_profile_with_contributor_id", {
+      p_full_name: fullName.trim(),
+      p_professional_role: role.trim(),
+      p_organisation: organisation.trim() || null,
+      p_sector: sector,
+    });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(`Welcome, your Contributor ID is ${contributorId}`);
-    navigate("/", { replace: true });
+    const contributorId = (data as { contributor_id?: string } | null)?.contributor_id ?? null;
+    if (!contributorId) {
+      toast.error("Profile saved but no Contributor ID was returned. Please refresh.");
+      return;
+    }
+    setIssuedId(contributorId);
+    toast.success("Contributor ID generated");
   };
+
+  const handleCopy = async () => {
+    if (!issuedId) return;
+    try {
+      await navigator.clipboard.writeText(issuedId);
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy. Long-press to select instead.");
+    }
+  };
+
+  if (issuedId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-6 sm:py-8 bg-background">
+        <Card className="w-full max-w-md sm:rounded-lg rounded-md shadow-sm">
+          <CardHeader className="px-5 sm:px-6 pt-5 sm:pt-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Check className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <CardTitle>Welcome to SCORE</CardTitle>
+            <CardDescription>
+              Your permanent Contributor ID has been generated. Save it somewhere safe.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4">
+            <div className="rounded-md border bg-muted/40 px-4 py-5 text-center">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Contributor ID</p>
+              <p
+                className="mt-2 font-mono text-xl sm:text-2xl font-semibold break-all select-all"
+                aria-label="Contributor ID"
+              >
+                {issuedId}
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={handleCopy}
+              variant="secondary"
+              className="w-full h-11 sm:h-10"
+            >
+              {copied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" /> Copy Contributor ID
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              className="w-full h-11 sm:h-10"
+              onClick={() => navigate("/", { replace: true })}
+            >
+              Continue to dashboard
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              This ID is permanent and cannot be changed.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-6 sm:py-8 bg-background">
