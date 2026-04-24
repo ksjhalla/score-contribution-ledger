@@ -77,7 +77,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
       label: "CONFIDENCE",
       value: (
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: confidenceColor[confidence], display: "inline-block" }} />
+          <span aria-hidden style={{ width: 8, height: 8, borderRadius: "50%", background: confidenceColor[confidence], display: "inline-block" }} />
           {confidence}
         </span>
       ),

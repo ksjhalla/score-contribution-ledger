@@ -267,7 +267,7 @@ const LogWork = () => {
                     <span
                       aria-hidden
                       style={{
-                        width: 10, height: 10, borderRadius: 999, background: dot[e.status],
+                        width: 10, height: 10, borderRadius: "50%", background: dot[e.status],
                         marginTop: 6, flex: "0 0 auto",
                       }}
                     />
