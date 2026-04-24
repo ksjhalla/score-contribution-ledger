@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -27,13 +28,21 @@ export const ValueMixDonut = ({ settled, pending, future = 0, currency, label }:
     { name: "Future", value: future, color: "#2A5C8A" },
   ].filter((d) => d.value > 0);
   const total = settled + pending + future;
+  const [isNarrow, setIsNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsNarrow(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const inner = isNarrow ? 45 : 60;
+  const outer = isNarrow ? 65 : 80;
 
   return (
     <div>
       <div style={{ position: "relative", width: "100%", height: 180 }}>
         <ResponsiveContainer width="100%" height={180}>
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={1} stroke="none">
+            <Pie data={data} dataKey="value" nameKey="name" innerRadius={inner} outerRadius={outer} paddingAngle={1} stroke="none">
               {data.map((d) => <Cell key={d.name} fill={d.color} />)}
             </Pie>
             <Tooltip
