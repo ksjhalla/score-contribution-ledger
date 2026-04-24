@@ -311,9 +311,14 @@ export default function Index() {
             padding: "4px 10px", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted,
           }}>→ Now available</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link to="/auth" className="score-topbar-signin" style={{
-              fontFamily: FONT_MONO, fontSize: 11, color: COLORS.muted, textDecoration: "none",
-            }}>Sign in →</Link>
+            <Link to="/pricing" className="score-topbar-signin" style={{
+              fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted, textDecoration: "none",
+              padding: "9px 14px",
+            }}>Pricing</Link>
+            <Link to="/auth" className="score-topbar-signin score-link-underline" style={{
+              fontFamily: FONT_MONO, fontSize: 10, color: COLORS.text, textDecoration: "none",
+              padding: "9px 14px",
+            }}>Sign in</Link>
             <a href="#cta" onClick={scrollToCta} style={{
               background: COLORS.dark, color: COLORS.darkText,
               fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
@@ -357,7 +362,7 @@ export default function Index() {
             display: "block", textAlign: "center", marginTop: 10,
             fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
           }}>
-            Already have access? <Link to="/auth" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
+            Already have an account? <Link to="/auth" style={{ color: COLORS.amber, textDecoration: "none" }} className="score-link-underline">Sign in →</Link>
           </div>
         </div>
       </Section>
