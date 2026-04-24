@@ -253,20 +253,136 @@ export default function Index() {
           </div>
           <div className="score-cols-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
             {[
-              { eyebrow: "YOUR EARNINGS", title: "See what you're owed across every project", footer: "EARLY ACCESS ONLY" },
-              { eyebrow: "THE PROOF", title: "Proof that you built it — permanent and portable", footer: "EARLY ACCESS ONLY" },
-              { eyebrow: "INVESTOR & AUDIT REPORTS", title: "One click to a report anyone can verify.", footer: "REQUEST A DEMO →", footerAmber: true },
+              { eyebrow: "YOUR EARNINGS", title: "See what you're owed across every project", footer: "EARLY ACCESS ONLY", preview: "earnings" as const },
+              { eyebrow: "THE PROOF", title: "Proof that you built it — permanent and portable", footer: "EARLY ACCESS ONLY", preview: "proof" as const },
+              { eyebrow: "INVESTOR & AUDIT REPORTS", title: "One click to a report anyone can verify.", footer: "REQUEST A DEMO →", footerAmber: true, preview: "passport" as const },
             ].map((c, i) => (
               <div key={i} style={{
                 border: `1px solid ${COLORS.border}`, borderRadius: 6,
-                background: COLORS.card, padding: "28px 24px",
-                display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 220,
+                background: COLORS.card, padding: 24,
+                display: "flex", flexDirection: "column",
               }}>
                 <div>
                   <div style={{ ...eyebrowStyle, marginBottom: 14 }}>{c.eyebrow}</div>
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, lineHeight: 1.3, margin: 0 }}>{c.title}</h3>
                 </div>
-                <div style={{ marginTop: 24 }}>
+                <div style={{
+                  marginTop: 16, border: "1px solid rgba(26,22,14,0.08)", borderRadius: 4,
+                  background: COLORS.bg, overflow: "hidden", position: "relative", height: 160,
+                }}>
+                  {c.preview === "earnings" && (
+                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
+                      <div style={{ display: "flex" }}>
+                        {[
+                          ["SETTLED", "$52,600", "#2A6A45"],
+                          ["PENDING", "$14,000", COLORS.amber],
+                          ["CONTRACTS", "3", COLORS.text],
+                          ["EXECUTIONS", "7", COLORS.text],
+                        ].map(([l, v, col], j) => (
+                          <div key={j} style={{
+                            flex: 1, padding: "10px 14px",
+                            borderRight: j < 3 ? "1px solid rgba(26,22,14,0.08)" : "none",
+                          }}>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint }}>{l}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: col, marginTop: 4 }}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {[
+                        ["SCORE Protocol Founding Agreement", "$52,600", "#2A6A45"],
+                        ["Sahel Agri Cooperative MSA", "Attribution", "#2A5C8A"],
+                      ].map(([n, val, col], j) => (
+                        <div key={j} style={{
+                          padding: "10px 14px", borderTop: "1px solid rgba(26,22,14,0.08)",
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                        }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: COLORS.text }}>{n}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: col }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {c.preview === "proof" && (
+                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
+                      <div style={{ display: "flex", gap: 10, padding: "12px 14px" }}>
+                        <div style={{
+                          width: 20, height: 20, borderRadius: "50%",
+                          background: "rgba(42,106,69,0.10)", border: "1px solid #2A6A45",
+                          color: "#2A6A45", fontSize: 10, display: "flex",
+                          alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        }}>✓</div>
+                        <div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 500, color: COLORS.text }}>API integration · license execution</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 2 }}>License trigger · Nov 2024</div>
+                          <div style={{
+                            display: "inline-block", marginTop: 6,
+                            background: COLORS.bg, border: "1px solid rgba(26,22,14,0.10)",
+                            borderRadius: 3, padding: "3px 8px",
+                            fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint,
+                          }}>sha256: e3b0c44298fc1c14… · RFC 3161: 2024-11-14</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#2A6A45", marginTop: 4 }}>+$12,400</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {c.preview === "passport" && (
+                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
+                      <div style={{
+                        background: COLORS.dark, padding: "14px 16px",
+                        display: "flex", alignItems: "center", gap: 12,
+                      }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: "50%",
+                          background: "rgba(196,137,42,0.15)", border: "1px solid rgba(196,137,42,0.3)",
+                          color: COLORS.amber, fontFamily: FONT_MONO, fontSize: 13, fontWeight: 600,
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        }}>KJ</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>Kaushal Jhaveri</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>Protocol Architect · Independent</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>SCR-KJ-2024-001</div>
+                        </div>
+                        <div style={{
+                          fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45",
+                          background: "rgba(42,106,69,0.15)", borderRadius: 20, padding: "3px 9px",
+                        }}>Trust 94/100</div>
+                      </div>
+                      <div style={{
+                        display: "flex", background: COLORS.dark,
+                        borderTop: "1px solid rgba(245,241,232,0.06)",
+                      }}>
+                        {[["$52.6K","Attributed"],["3","Contracts"],["7","Executions"]].map(([v,l], j) => (
+                          <div key={j} style={{
+                            flex: 1, padding: "10px 0", textAlign: "center",
+                            borderRight: j < 2 ? "1px solid rgba(245,241,232,0.06)" : "none",
+                          }}>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{v}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{
+                        background: COLORS.dark, padding: "10px 16px",
+                        borderTop: "1px solid rgba(245,241,232,0.06)",
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                      }}>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>SCORE Protocol Founding Agreement</div>
+                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>Financial</div>
+                      </div>
+                      <div style={{
+                        background: "rgba(245,241,232,0.04)",
+                        borderTop: "1px solid rgba(245,241,232,0.06)",
+                        padding: "8px 16px",
+                        fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)",
+                      }}>score.xyz/kj · verified contributor</div>
+                    </div>
+                  )}
+                  <div style={{
+                    position: "absolute", bottom: 0, left: 0, right: 0, height: 60,
+                    background: "linear-gradient(transparent, #FDFAF4)", pointerEvents: "none",
+                  }} />
+                </div>
+                <div style={{ marginTop: 16 }}>
                   {c.footerAmber ? (
                     <a href="#cta" onClick={scrollToCta} style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber, textDecoration: "none" }}>{c.footer}</a>
                   ) : (
