@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { passportPreview, conversationCards } from "@/data/marketingPreviews";
+import { conversationCards, type ConversationCard } from "@/data/marketingPreviews";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -61,6 +61,109 @@ function useReveal<T extends HTMLElement>() {
 function Section({ children, ...rest }: { children: React.ReactNode } & React.HTMLAttributes<HTMLElement>) {
   const { ref, style } = useReveal<HTMLElement>();
   return <section ref={ref} style={{ ...style, ...rest.style }} {...rest}>{children}</section>;
+}
+
+function ConversationsScroller({ cards }: { cards: ConversationCard[] }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const dragRef = useRef({ isDown: false, startX: 0, startScroll: 0 });
+
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root) return;
+    const cardEls = Array.from(root.querySelectorAll<HTMLElement>("[data-conv-card]"));
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting && e.intersectionRatio > 0.6) {
+            const idx = Number((e.target as HTMLElement).dataset.idx);
+            if (!Number.isNaN(idx)) setActiveIdx(idx);
+          }
+        });
+      },
+      { root, threshold: [0.6] }
+    );
+    cardEls.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [cards.length]);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    const root = scrollRef.current;
+    if (!root) return;
+    dragRef.current = { isDown: true, startX: e.clientX, startScroll: root.scrollLeft };
+    root.style.cursor = "grabbing";
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    const root = scrollRef.current;
+    if (!root || !dragRef.current.isDown) return;
+    root.scrollLeft = dragRef.current.startScroll - (e.clientX - dragRef.current.startX);
+  };
+  const stopDrag = () => {
+    dragRef.current.isDown = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+  };
+
+  return (
+    <div>
+      <style>{`
+        .conv-scroll::-webkit-scrollbar { display: none; }
+        .conv-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+      <div
+        ref={scrollRef}
+        className="conv-scroll"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={stopDrag}
+        onMouseLeave={stopDrag}
+        style={{
+          display: "flex", gap: 16, overflowX: "auto",
+          padding: "0 24px 8px", cursor: "grab",
+          scrollSnapType: "x mandatory",
+          userSelect: "none",
+        }}
+      >
+        {cards.map((c, i) => (
+          <div
+            key={i}
+            data-conv-card
+            data-idx={i}
+            style={{
+              width: 300, flexShrink: 0,
+              border: "1px solid rgba(26,22,14,0.10)",
+              borderRadius: 6,
+              background: "#FDFAF4",
+              padding: 20,
+              display: "flex", flexDirection: "column",
+              scrollSnapAlign: "start",
+            }}
+          >
+            <div style={{ fontSize: 16, marginBottom: 10 }}>{c.icon}</div>
+            <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 700, color: "#1A1614", marginBottom: 10 }}>"{c.quote}"</div>
+            <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: "#5C5248", lineHeight: 1.7, margin: "0 0 16px", flex: 1 }}>{c.body}</p>
+            <div style={{
+              background: "rgba(196,137,42,0.10)",
+              border: "1px solid rgba(196,137,42,0.25)",
+              color: "#C4892A",
+              fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 9,
+              padding: "8px 10px", borderRadius: 4,
+              marginTop: 14, lineHeight: 1.5,
+            }}>{c.resolution}</div>
+          </div>
+        ))}
+        <div style={{ width: 8, flexShrink: 0 }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 20 }}>
+        {cards.map((_, i) => (
+          <span key={i} style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: i === activeIdx ? "#1A1614" : "rgba(26,22,14,0.2)",
+            transition: "background 0.2s ease",
+          }} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const containerStyle: React.CSSProperties = {
