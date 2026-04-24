@@ -506,25 +506,28 @@ export type Database = {
       }
       trigger_events: {
         Row: {
+          auth_failed: boolean
           id: string
           received_at: string
           source_ip: string | null
           trigger_id: string
-          value: number
+          value: number | null
         }
         Insert: {
+          auth_failed?: boolean
           id?: string
           received_at?: string
           source_ip?: string | null
           trigger_id: string
-          value: number
+          value?: number | null
         }
         Update: {
+          auth_failed?: boolean
           id?: string
           received_at?: string
           source_ip?: string | null
           trigger_id?: string
-          value?: number
+          value?: number | null
         }
         Relationships: [
           {
@@ -551,6 +554,7 @@ export type Database = {
           threshold_value: number
           unit: string | null
           user_id: string
+          webhook_secret: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -567,6 +571,7 @@ export type Database = {
           threshold_value: number
           unit?: string | null
           user_id: string
+          webhook_secret?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -583,6 +588,7 @@ export type Database = {
           threshold_value?: number
           unit?: string | null
           user_id?: string
+          webhook_secret?: string | null
           webhook_url?: string | null
         }
         Relationships: [
