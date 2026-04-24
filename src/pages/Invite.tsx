@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,39 +14,33 @@ const FONT_MONO = "'DM Mono', ui-monospace, monospace";
 
 const Invite = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [checking, setChecking] = useState(true);
 
-  // Bounce signed-out users to /auth, and signed-in users with a completed
-  // profile straight to /dashboard (they already redeemed in the past).
+  // One-shot session check on mount. No realtime, no auth subscriptions.
+  // If the user is already signed in AND their profile is complete,
+  // bounce them to the dashboard. Otherwise render the form immediately.
   useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      navigate("/auth", { replace: true });
-      return;
-    }
+    let cancelled = false;
     (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled || !session?.user) return;
       const { data: prof } = await supabase
         .from("profiles")
-        .select("profile_completed, contributor_id")
-        .eq("id", user.id)
+        .select("profile_completed")
+        .eq("id", session.user.id)
         .maybeSingle();
-      if (prof?.profile_completed) {
+      if (!cancelled && prof?.profile_completed) {
         navigate("/dashboard", { replace: true });
-        return;
       }
-      setChecking(false);
     })();
-  }, [user, loading, navigate]);
+    return () => { cancelled = true; };
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
-    if (!user) return;
-
     const trimmed = code.trim();
     if (!trimmed) {
       setErr("Please enter your invite code.");
@@ -55,6 +48,14 @@ const Invite = () => {
     }
 
     setBusy(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) {
+      setBusy(false);
+      navigate("/auth", { replace: true });
+      return;
+    }
+
     const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
       p_code: trimmed,
       p_email: user.email ?? "",
@@ -75,14 +76,6 @@ const Invite = () => {
     }
     navigate("/complete-profile", { replace: true });
   };
-
-  if (loading || checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
