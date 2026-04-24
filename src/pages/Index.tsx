@@ -538,14 +538,14 @@ export default function Index() {
           }}>THE PRIMITIVE DIGITAL GOOD</div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 48, marginTop: 48 }}>
             {[
-              ["$313K", "attributed to date"],
-              ["14", "active contracts"],
-              ["4", "industries live"],
-              ["100%", "portable on exit"],
+              ["Off-chain", "contracts stay in the real world"],
+              ["SHA-256", "every evidence record fingerprinted"],
+              ["RFC 3161", "timestamped at creation · immutable"],
+              ["Portable", "record follows the contributor · not the org"],
             ].map(([num, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, color: COLORS.amber, lineHeight: 1 }}>{num}</div>
-                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "rgba(245,241,232,0.45)", marginTop: 8, letterSpacing: "0.05em" }}>{label}</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: COLORS.amber, lineHeight: 1 }}>{num}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "rgba(245,241,232,0.4)", marginTop: 8, letterSpacing: "0.05em" }}>{label}</div>
               </div>
             ))}
           </div>
