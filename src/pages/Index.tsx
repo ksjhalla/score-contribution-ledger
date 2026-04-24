@@ -32,6 +32,26 @@ const emailSchema = z
   .email({ message: "Please enter a valid email address." })
   .regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, { message: "Please enter a valid email address." });
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, { message: "Please tell us your name." }).max(120),
+  email: emailSchema,
+  organisation: z.string().trim().max(160).optional(),
+  use_case: z.string().trim().min(1, { message: "Please pick a use case." }).max(80),
+  message: z.string().trim().max(2000).optional(),
+});
+
+const USE_CASES = [
+  "Software & Open Source",
+  "Pharma & Biotech",
+  "College Athletics",
+  "Music & Publishing",
+  "Film & Television",
+  "Agriculture",
+  "Manufacturing",
+  "AI Training Data",
+  "Other",
+];
+
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   const [shown, setShown] = useState(false);
@@ -183,11 +203,13 @@ const eyebrowStyle: React.CSSProperties = {
 };
 
 export default function Index() {
-  const emailInputRef = useRef<HTMLInputElement>(null);
-  const [email, setEmail] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState({ name: "", email: "", organisation: "", use_case: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedName, setSubmittedName] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [fieldErr, setFieldErr] = useState<Partial<Record<keyof typeof form, string>>>({});
 
   useEffect(() => {
     document.title = "SCORE — A new way for collaborative work to earn";
@@ -211,10 +233,16 @@ export default function Index() {
     }
   }, []);
 
+  useEffect(() => {
+    if (window.location.hash === "#cta") {
+      setTimeout(() => document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  }, []);
+
   const scrollToCta = (e?: React.MouseEvent) => {
     e?.preventDefault();
     document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
-    setTimeout(() => emailInputRef.current?.focus(), 600);
+    setTimeout(() => nameInputRef.current?.focus(), 600);
   };
 
   const smoothScroll = (id: string) => (e: React.MouseEvent) => {
@@ -225,26 +253,32 @@ export default function Index() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
-    const parsed = emailSchema.safeParse(email);
+    setFieldErr({});
+    const parsed = contactSchema.safeParse(form);
     if (!parsed.success) {
-      setErr(parsed.error.issues[0]?.message ?? "Please enter a valid email address.");
-      emailInputRef.current?.focus();
+      const fe: Partial<Record<keyof typeof form, string>> = {};
+      parsed.error.issues.forEach((i) => {
+        const k = i.path[0] as keyof typeof form;
+        if (k && !fe[k]) fe[k] = i.message;
+      });
+      setFieldErr(fe);
       return;
     }
     setSubmitting(true);
     const { error } = await supabase.from("demo_requests").insert({
-      email: parsed.data,
-      source: "homepage_cta",
+      name: parsed.data.name,
+      email: parsed.data.email,
+      organisation: parsed.data.organisation || null,
+      use_case: parsed.data.use_case,
+      message: parsed.data.message || null,
+      source: "marketing_cta",
     });
     setSubmitting(false);
     if (error) {
-      // Server-side validation (RLS check constraint) rejected the input.
-      const msg = /check constraint|violates/i.test(error.message)
-        ? "That email doesn't look valid. Please double-check and try again."
-        : "Something went wrong. Please try again.";
-      setErr(msg);
+      setErr("Something went wrong. Email us at hello@score.xyz");
       return;
     }
+    setSubmittedName(parsed.data.name);
     setSubmitted(true);
   };
 
@@ -283,9 +317,14 @@ export default function Index() {
             padding: "4px 10px", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted,
           }}>→ Now available</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link to="/auth" className="score-topbar-signin" style={{
-              fontFamily: FONT_MONO, fontSize: 11, color: COLORS.muted, textDecoration: "none",
-            }}>Sign in →</Link>
+            <Link to="/pricing" className="score-topbar-signin" style={{
+              fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted, textDecoration: "none",
+              padding: "9px 14px",
+            }}>Pricing</Link>
+            <Link to="/auth" className="score-topbar-signin score-link-underline" style={{
+              fontFamily: FONT_MONO, fontSize: 10, color: COLORS.text, textDecoration: "none",
+              padding: "9px 14px",
+            }}>Sign in</Link>
             <a href="#cta" onClick={scrollToCta} style={{
               background: COLORS.dark, color: COLORS.darkText,
               fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
@@ -329,7 +368,7 @@ export default function Index() {
             display: "block", textAlign: "center", marginTop: 10,
             fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
           }}>
-            Already have access? <Link to="/auth" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
+            Already have an account? <Link to="/auth" style={{ color: COLORS.amber, textDecoration: "none" }} className="score-link-underline">Sign in →</Link>
           </div>
         </div>
       </Section>
@@ -578,54 +617,99 @@ export default function Index() {
           <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 420, margin: "0 auto 32px", lineHeight: 1.7 }}>
             Book a short demo and we'll show you the platform end-to-end — earnings, ownership, automatic distributions, and the investor and audit reports that come out the other side.
           </p>
-          <div style={{ maxWidth: 420, margin: "0 auto" }}>
+          <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "left" }}>
             {submitted ? (
-              <div style={{
-                fontFamily: FONT_BODY, fontSize: 14, color: COLORS.text,
-                padding: "14px 16px", border: `1px solid ${COLORS.border}`,
-                borderRadius: 4, background: COLORS.card,
-              }}>Thanks — we'll be in touch.</div>
+              <div style={{ textAlign: "center", padding: "24px 0" }}>
+                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 24, color: COLORS.text }}>
+                  Thanks, {submittedName}.
+                </div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, marginTop: 8 }}>
+                  We'll be in touch within one business day.
+                </div>
+              </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: "flex", width: "100%" }}>
-                <input
-                  ref={emailInputRef}
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (err) setErr(null); }}
-                  placeholder="your@email.com"
-                  maxLength={255}
-                  aria-invalid={!!err}
-                  aria-describedby={err ? "cta-email-error" : undefined}
-                  style={{
-                    flex: 1, border: "1px solid rgba(26,22,14,0.15)",
-                    borderRadius: "4px 0 0 4px", background: "#fff",
-                    padding: "12px 16px", fontFamily: FONT_BODY, fontSize: 14,
-                    color: COLORS.text, outline: "none",
-                    borderColor: err ? "#9A3020" : "rgba(26,22,14,0.15)",
-                  }}
-                />
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {([
+                  { key: "name", label: "YOUR NAME", type: "text", required: true, placeholder: "" },
+                  { key: "email", label: "EMAIL ADDRESS", type: "email", required: true, placeholder: "you@example.com" },
+                  { key: "organisation", label: "ORGANISATION", type: "text", required: false, placeholder: "Company, university, cooperative, or individual" },
+                ] as const).map((f) => (
+                  <div key={f.key}>
+                    <label htmlFor={`cta-${f.key}`} style={{ display: "block", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.faint, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                      {f.label}{f.required && " *"}
+                    </label>
+                    <input
+                      id={`cta-${f.key}`}
+                      ref={f.key === "name" ? nameInputRef : undefined}
+                      type={f.type}
+                      required={f.required}
+                      value={form[f.key]}
+                      onChange={(e) => { setForm((s) => ({ ...s, [f.key]: e.target.value })); if (fieldErr[f.key]) setFieldErr((p) => ({ ...p, [f.key]: undefined })); if (err) setErr(null); }}
+                      placeholder={f.placeholder}
+                      maxLength={255}
+                      style={{
+                        width: "100%", border: `1px solid ${fieldErr[f.key] ? "#9A3020" : "rgba(26,22,14,0.15)"}`,
+                        borderRadius: 4, background: "#fff",
+                        padding: "10px 14px", fontFamily: FONT_BODY, fontSize: 14, color: COLORS.text, outline: "none",
+                      }}
+                    />
+                    {fieldErr[f.key] && (
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 4 }}>{fieldErr[f.key]}</div>
+                    )}
+                  </div>
+                ))}
+                <div>
+                  <label htmlFor="cta-use-case" style={{ display: "block", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.faint, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                    YOUR USE CASE *
+                  </label>
+                  <select
+                    id="cta-use-case"
+                    required
+                    value={form.use_case}
+                    onChange={(e) => { setForm((s) => ({ ...s, use_case: e.target.value })); if (fieldErr.use_case) setFieldErr((p) => ({ ...p, use_case: undefined })); }}
+                    style={{
+                      width: "100%", border: `1px solid ${fieldErr.use_case ? "#9A3020" : "rgba(26,22,14,0.15)"}`,
+                      borderRadius: 4, background: "#fff",
+                      padding: "10px 14px", fontFamily: FONT_BODY, fontSize: 14,
+                      color: form.use_case ? COLORS.text : COLORS.faint, outline: "none",
+                    }}
+                  >
+                    <option value="">Select one…</option>
+                    {USE_CASES.map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  {fieldErr.use_case && (
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 4 }}>{fieldErr.use_case}</div>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="cta-message" style={{ display: "block", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.faint, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                    ANYTHING ELSE?
+                  </label>
+                  <textarea
+                    id="cta-message"
+                    rows={4}
+                    value={form.message}
+                    onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))}
+                    placeholder="Tell us about your situation — the more context, the better the demo."
+                    maxLength={2000}
+                    style={{
+                      width: "100%", border: "1px solid rgba(26,22,14,0.15)",
+                      borderRadius: 4, background: "#fff",
+                      padding: "10px 14px", fontFamily: FONT_BODY, fontSize: 14, color: COLORS.text, outline: "none",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
                 <button type="submit" disabled={submitting} style={{
                   background: COLORS.dark, color: COLORS.darkText,
-                  fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
-                  border: "none", borderRadius: "0 4px 4px 0",
-                  padding: "12px 18px", cursor: submitting ? "wait" : "pointer",
-                }}>{submitting ? "SENDING…" : "REQUEST A DEMO"}</button>
+                  fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
+                  border: "none", borderRadius: 4, padding: 12, width: "100%",
+                  cursor: submitting ? "wait" : "pointer",
+                }}>{submitting ? "Sending…" : "Request a demo →"}</button>
+                {err && (
+                  <div role="alert" style={{ fontFamily: FONT_BODY, fontSize: 13, color: "#9A3020", textAlign: "center" }}>{err}</div>
+                )}
               </form>
-            )}
-            {err && (
-              <div
-                id="cta-email-error"
-                role="alert"
-                style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 8, textAlign: "left" }}
-              >
-                {err}
-              </div>
-            )}
-            {!submitted && (
-              <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint, marginTop: 12 }}>
-                We'll be in touch within one business day.
-              </div>
             )}
           </div>
         </div>

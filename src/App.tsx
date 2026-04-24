@@ -15,6 +15,7 @@ import LogWork from "./pages/LogWork.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Contracts from "./pages/Contracts.tsx";
 import Account from "./pages/Account.tsx";
+import Pricing from "./pages/Pricing.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { DemoProvider } from "./contexts/DemoContext";
@@ -32,6 +33,7 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/passport/:contributorId" element={<PublicPassport />} />
             <Route path="/attest/:token" element={<PublicAttest />} />

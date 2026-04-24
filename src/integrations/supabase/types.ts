@@ -101,20 +101,32 @@ export type Database = {
         Row: {
           email: string
           id: string
+          message: string | null
+          name: string | null
+          organisation: string | null
           source: string | null
           submitted_at: string
+          use_case: string | null
         }
         Insert: {
           email: string
           id?: string
+          message?: string | null
+          name?: string | null
+          organisation?: string | null
           source?: string | null
           submitted_at?: string
+          use_case?: string | null
         }
         Update: {
           email?: string
           id?: string
+          message?: string | null
+          name?: string | null
+          organisation?: string | null
           source?: string | null
           submitted_at?: string
+          use_case?: string | null
         }
         Relationships: []
       }
