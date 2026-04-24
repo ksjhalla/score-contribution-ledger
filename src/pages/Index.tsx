@@ -188,7 +188,7 @@ export default function Index() {
             maxWidth: 480, margin: "0 auto 36px", lineHeight: 1.7,
           }}>
             Most people who build things together get paid once, imprecisely, and then it's over.{" "}
-            <em style={{ fontStyle: "italic", color: COLORS.text }}>We think that's wrong.</em>{" "}
+            <em style={{ fontStyle: "italic", fontWeight: 400, color: COLORS.text, fontFamily: FONT_BODY }}>We think that's wrong.</em>{" "}
             SCORE is a new way for collaborative work to earn — fairly, automatically, and for as long as it's valuable.
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
@@ -300,11 +300,13 @@ export default function Index() {
                 <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 10 }}>"{c.q}"</div>
                 <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7, margin: "0 0 16px", flex: 1 }}>{c.body}</p>
                 <div style={{
-                  background: "rgba(196,137,42,0.1)",
-                  border: `1px solid ${COLORS.amber}`,
+                  display: "block",
+                  background: "rgba(196,137,42,0.10)",
+                  border: "1px solid rgba(196,137,42,0.25)",
                   color: COLORS.amber,
                   fontFamily: FONT_MONO, fontSize: 9,
                   padding: "8px 10px", borderRadius: 4,
+                  marginTop: 14,
                   lineHeight: 1.5,
                 }}>{c.chip}</div>
               </div>
