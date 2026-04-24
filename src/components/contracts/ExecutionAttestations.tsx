@@ -16,6 +16,7 @@ type Row = {
 export const ExecutionAttestations = ({ executionId }: { executionId: string }) => {
   const [rows, setRows] = useState<Row[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
+  const [nudging, setNudging] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await supabase.from("execution_attestations")
@@ -63,6 +64,9 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
   };
 
   const nudge = async (r: Row) => {
+    if (nudging) return;
+    setNudging(r.id);
+    try {
     await copy(r.token);
     const { error } = await supabase
       .from("execution_attestations")
@@ -70,6 +74,9 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
       .eq("id", r.id);
     if (error) { toast.error(error.message); return; }
     load();
+    } finally {
+      setNudging((cur) => (cur === r.id ? null : cur));
+    }
   };
 
   return (
@@ -99,11 +106,12 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
                 return (
                   <button
                     onClick={() => nudge(r)}
+                    disabled={nudging === r.id}
                     title={`Send this link to ${r.attestor_name}`}
-                    className="font-mono text-[10px] px-2 py-1 rounded"
-                    style={{ color: "#C4892A", background: "transparent", border: "none", cursor: "pointer" }}
+                    className="font-mono text-[10px] px-2 py-1 rounded disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{ color: "#C4892A", background: "transparent", border: "none", cursor: nudging === r.id ? "not-allowed" : "pointer" }}
                   >
-                    {copied === r.token ? "Copied ✓" : "Nudge →"}
+                    {nudging === r.id ? "Sending…" : copied === r.token ? "Copied ✓" : "Nudge →"}
                   </button>
                 );
               }
