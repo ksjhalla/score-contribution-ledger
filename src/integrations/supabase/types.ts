@@ -647,6 +647,9 @@ export type Database = {
         | "settlement_due"
         | "attestation_requested"
         | "system"
+        | "attestation_confirmed"
+        | "attestation_declined"
+        | "evidence_required"
       sector_type:
         | "Software"
         | "Pharma & Biotech"
@@ -829,6 +832,9 @@ export const Constants = {
         "settlement_due",
         "attestation_requested",
         "system",
+        "attestation_confirmed",
+        "attestation_declined",
+        "evidence_required",
       ],
       sector_type: [
         "Software",
