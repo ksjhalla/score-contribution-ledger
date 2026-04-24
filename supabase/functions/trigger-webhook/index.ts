@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type, x-score-secret, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -12,6 +12,17 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+
+const sha256Hex = async (input: string) => {
+  const data = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const MAX_VALUE = 1_000_000_000;
+const RATE_LIMIT_PER_HOUR = 60;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -30,72 +41,113 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid trigger id" }, 400);
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: "Body must be JSON" }, 400);
-  }
-  const value = (body as { value?: unknown })?.value;
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return json({ error: "Body must contain numeric `value`" }, 400);
-  }
-
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  // Trigger must exist, be webhook-sourced, and belong to a real user.
-  const { data: trigger, error: tErr } = await supabase
-    .from("triggers")
-    .select("id, user_id, source_type, contract_id, current_value, threshold_value, direction")
-    .eq("id", triggerId)
-    .maybeSingle();
-
-  if (tErr) return json({ error: tErr.message }, 500);
-  if (!trigger) return json({ error: "Trigger not found" }, 404);
-  if (trigger.source_type !== "Webhook") {
-    return json({ error: "Trigger does not accept webhooks" }, 403);
-  }
 
   const sourceIp =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     null;
 
-  const now = new Date().toISOString();
+  // ── AUTH: require X-SCORE-Secret ─────────────────────────────────────────
+  const providedSecret = req.headers.get("x-score-secret");
+  if (!providedSecret) {
+    return json({ error: "Missing X-SCORE-Secret header" }, 401);
+  }
 
+  // Look up the trigger. We deliberately return 401 (not 404) for any failure
+  // here so unauthenticated callers can't probe trigger existence.
+  const { data: trigger } = await supabase
+    .from("triggers")
+    .select("id, user_id, source_type, contract_id, current_value, threshold_value, direction, webhook_secret, label")
+    .eq("id", triggerId)
+    .maybeSingle();
+
+  if (!trigger || trigger.source_type !== "Webhook" || !trigger.webhook_secret) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  const providedHash = await sha256Hex(providedSecret);
+  if (providedHash !== trigger.webhook_secret) {
+    // Audit: record the failed attempt against this trigger.
+    await supabase.from("trigger_events").insert({
+      trigger_id: triggerId,
+      value: null,
+      source_ip: sourceIp,
+      auth_failed: true,
+    });
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  // ── VALIDATION: parse body ───────────────────────────────────────────────
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON body" }, 400);
+  }
+  const raw = (body as { value?: unknown })?.value;
+  if (typeof raw !== "number" || !Number.isFinite(raw)) {
+    return json({ error: "value must be a finite number" }, 400);
+  }
+  if (raw < 0) {
+    return json({ error: "value must be non-negative" }, 400);
+  }
+  if (raw > MAX_VALUE) {
+    return json({ error: `value must not exceed ${MAX_VALUE}` }, 400);
+  }
+  const value = raw;
+
+  // ── RATE LIMIT: 60 successful events per trigger per hour ────────────────
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("trigger_events")
+    .select("id", { count: "exact", head: true })
+    .eq("trigger_id", triggerId)
+    .eq("auth_failed", false)
+    .gte("received_at", oneHourAgo);
+  if ((count ?? 0) >= RATE_LIMIT_PER_HOUR) {
+    return json(
+      { error: `Rate limit exceeded. Max ${RATE_LIMIT_PER_HOUR} requests per hour.` },
+      429,
+    );
+  }
+
+  const now = new Date().toISOString();
+  const oldValue = Number(trigger.current_value ?? 0);
+
+  // ── UPDATE trigger ───────────────────────────────────────────────────────
+  // Note: a DB trigger (notify_trigger_threshold_crossed) inserts the
+  // `trigger_met` notification automatically when current_value crosses the
+  // threshold, so we don't insert one manually here.
   const { error: uErr } = await supabase
     .from("triggers")
     .update({ current_value: value, last_updated: now })
     .eq("id", triggerId);
-  if (uErr) return json({ error: uErr.message }, 500);
+  if (uErr) return json({ error: "Update failed" }, 500);
 
-  const { error: eErr } = await supabase
-    .from("trigger_events")
-    .insert({ trigger_id: triggerId, value, source_ip: sourceIp });
-  if (eErr) return json({ error: eErr.message }, 500);
+  // ── LOG event ────────────────────────────────────────────────────────────
+  await supabase.from("trigger_events").insert({
+    trigger_id: triggerId,
+    value,
+    source_ip: sourceIp,
+    auth_failed: false,
+  });
 
-  // Threshold-crossing notification: only on transition not-met → met.
-  const wasMet = trigger.direction === "Above"
-    ? trigger.current_value >= trigger.threshold_value
-    : trigger.current_value <= trigger.threshold_value;
-  const nowMet = trigger.direction === "Above"
+  const wasBelow = trigger.direction === "Above"
+    ? oldValue < trigger.threshold_value
+    : oldValue > trigger.threshold_value;
+  const nowCrossed = trigger.direction === "Above"
     ? value >= trigger.threshold_value
     : value <= trigger.threshold_value;
-  if (!wasMet && nowMet) {
-    const { data: contract } = await supabase
-      .from("contracts").select("name").eq("id", trigger.contract_id).maybeSingle();
-    await supabase.from("notifications").insert({
-      user_id: trigger.user_id,
-      type: "trigger_met",
-      contract_id: trigger.contract_id,
-      message: `${contract?.name ?? "Contract"} — trigger condition met. Log an execution?`,
-      read: false,
-      email_sent: false,
-    });
-  }
 
-  return json({ ok: true, trigger_id: triggerId, value, received_at: now });
+  return json({
+    received: true,
+    trigger_id: triggerId,
+    new_value: value,
+    threshold_crossed: wasBelow && nowCrossed,
+    received_at: now,
+  });
 });
