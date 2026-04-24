@@ -446,21 +446,14 @@ export default function Index() {
             </h2>
           </div>
           <div className="score-cols-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-            {[
-              { icon: "💬", q: "We'll sort out the split later.", body: "Later arrives. The project is generating real money. Nobody remembers what was agreed. A conversation that should take five minutes turns into months of awkwardness.", chip: "With SCORE: the split is agreed and locked before work begins." },
-              { icon: "📊", q: "Someone needs to calculate everyone's share.", body: "You spend a week pulling numbers from spreadsheets, email threads, and memory. The investor shouldn't need to trust your summary. They should be able to verify it themselves.", chip: "With SCORE: it calculates and distributes itself." },
-              { icon: "🏢", q: "I left that company two years ago.", body: "The work you built is still running. Still generating value. But the payments go to the org, not to you. Because no one set it up the right way from the start.", chip: "With SCORE: your stake follows you, not your employer." },
-              { icon: "❓", q: "Wait — who actually built that part?", body: "Three people claim it. No one has proof. A dispute that could have been avoided turns into something expensive and relationship-ending.", chip: "With SCORE: authorship is recorded, credited, and timestamped from day one." },
-              { icon: "📋", q: "Can you put together a report for our investors?", body: "You spend a week pulling numbers from spreadsheets, email threads, and memory. The investor shouldn't need to trust your summary. They should be able to verify it themselves.", chip: "With SCORE: income and audit reports are generated in one click — with a full, verifiable trail behind them." },
-              { icon: "🔍", q: "Due diligence is asking for the IP ownership docs.", body: "You have an NDA, a contract somewhere, and a vague memory of an email. Proving who owns what, when, and under what terms turns into weeks of archaeology before any deal can close.", chip: "With SCORE: every ownership record is timestamped, verified, and exportable. Diligence closes fast." },
-            ].map((c, i) => (
+            {conversationCards.map((c, i) => (
               <div key={i} style={{
                 border: `1px solid ${COLORS.border}`, borderRadius: 6,
                 background: COLORS.card, padding: 20,
                 display: "flex", flexDirection: "column",
               }}>
                 <div style={{ fontSize: 16, marginBottom: 10 }}>{c.icon}</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 10 }}>"{c.q}"</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 10 }}>"{c.quote}"</div>
                 <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7, margin: "0 0 16px", flex: 1 }}>{c.body}</p>
                 <div style={{
                   display: "block",
@@ -471,7 +464,7 @@ export default function Index() {
                   padding: "8px 10px", borderRadius: 4,
                   marginTop: 14,
                   lineHeight: 1.5,
-                }}>{c.chip}</div>
+                }}>{c.resolution}</div>
               </div>
             ))}
           </div>
