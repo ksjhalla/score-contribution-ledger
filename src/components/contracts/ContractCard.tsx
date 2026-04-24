@@ -11,7 +11,7 @@ import { MarkSettledDialog } from "./MarkSettledDialog";
 import { TriggersList } from "./TriggersList";
 import { AttestorsSection } from "./AttestorsSection";
 import { ExecutionAttestations } from "./ExecutionAttestations";
-import { Download } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import { exportContractRecord } from "@/lib/contractExport";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -41,6 +41,7 @@ type EvidenceRow = {
   evidence_type: string;
   fingerprint: string;
   timestamp_created: string;
+  execution_id?: string | null;
 };
 
 type ExecutionRow = {
@@ -69,6 +70,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
   const [evidence, setEvidence] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [attachFor, setAttachFor] = useState<{ id: string; title: string } | null>(null);
   const [executions, setExecutions] = useState<ExecutionRow[]>([]);
   const [exLoading, setExLoading] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
@@ -91,7 +93,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
     setLoading(true);
     const { data } = await supabase
       .from("evidence")
-      .select("id, title, evidence_type, fingerprint, timestamp_created")
+      .select("id, title, evidence_type, fingerprint, timestamp_created, execution_id")
       .eq("contract_id", contract.id)
       .order("timestamp_created", { ascending: false });
     setEvidence((data ?? []) as EvidenceRow[]);
