@@ -233,6 +233,12 @@ export default function Index() {
     }
   }, []);
 
+  useEffect(() => {
+    if (window.location.hash === "#cta") {
+      setTimeout(() => document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  }, []);
+
   const scrollToCta = (e?: React.MouseEvent) => {
     e?.preventDefault();
     document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
