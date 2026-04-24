@@ -335,28 +335,28 @@ export default function Index() {
                           background: "rgba(196,137,42,0.15)", border: "1px solid rgba(196,137,42,0.3)",
                           color: COLORS.amber, fontFamily: FONT_MONO, fontSize: 13, fontWeight: 600,
                           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                        }}>KJ</div>
+                        }}>{passportPreview.initials}</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>Kaushal Jhaveri</div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>Protocol Architect · Independent</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>SCR-KJ-2024-001</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>{passportPreview.name}</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>{passportPreview.role}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>{passportPreview.contributorId}</div>
                         </div>
                         <div style={{
                           fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45",
                           background: "rgba(42,106,69,0.15)", borderRadius: 20, padding: "3px 9px",
-                        }}>Trust 94/100</div>
+                        }}>{passportPreview.trustScore}</div>
                       </div>
                       <div style={{
                         display: "flex", background: COLORS.dark,
                         borderTop: "1px solid rgba(245,241,232,0.06)",
                       }}>
-                        {[["$52.6K","Attributed"],["3","Contracts"],["7","Executions"]].map(([v,l], j) => (
+                        {passportPreview.stats.map((s, j, arr) => (
                           <div key={j} style={{
                             flex: 1, padding: "10px 0", textAlign: "center",
-                            borderRight: j < 2 ? "1px solid rgba(245,241,232,0.06)" : "none",
+                            borderRight: j < arr.length - 1 ? "1px solid rgba(245,241,232,0.06)" : "none",
                           }}>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{v}</div>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{l}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{s.value}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{s.label}</div>
                           </div>
                         ))}
                       </div>
@@ -365,15 +365,15 @@ export default function Index() {
                         borderTop: "1px solid rgba(245,241,232,0.06)",
                         display: "flex", justifyContent: "space-between", alignItems: "center",
                       }}>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>SCORE Protocol Founding Agreement</div>
-                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>Financial</div>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>{passportPreview.contractName}</div>
+                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>{passportPreview.contractStake}</div>
                       </div>
                       <div style={{
                         background: "rgba(245,241,232,0.04)",
                         borderTop: "1px solid rgba(245,241,232,0.06)",
                         padding: "8px 16px",
                         fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)",
-                      }}>score.xyz/kj · verified contributor</div>
+                      }}>{passportPreview.url}</div>
                     </div>
                   )}
                   <div style={{
