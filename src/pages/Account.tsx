@@ -493,6 +493,34 @@ const Account = () => {
           <PassportView data={passportData} />
         </div>
       )}
+
+      {/* Mobile sign out */}
+      <div
+        className="md:hidden"
+        style={{
+          borderTop: "1px solid rgba(26,22,14,0.08)",
+          paddingTop: 20,
+          marginTop: 20,
+        }}
+      >
+        <button
+          onClick={async () => { await signOut(); navigate("/", { replace: true }); }}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            fontFamily: FONT_MONO,
+            fontSize: 10,
+            color: "#9A8F84",
+            width: "100%",
+            textAlign: "left",
+          }}
+        >
+          Sign out
+        </button>
+      </div>
+
       <style>{`
         @media print {
           .print-only-passport { display: block !important; }

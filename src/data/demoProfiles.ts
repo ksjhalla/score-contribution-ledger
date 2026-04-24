@@ -279,6 +279,8 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       { status: "info", title: "Named inventor · SA Patent 2024/08441", meta: "Filed Aug 2024 · attribution confirmed", amount: null },
       { status: "watch", title: "GLP-1 TTA extension pending", meta: "Novo Nordisk signature outstanding", amount: "R340,000 est.", amountColor: "amber" },
     ],
+    bio:
+      "Thandi led the technical adaptation of Novo Nordisk's insulin fill-and-finish process to Aspen's sterile facility in Gqeberha — the first of its kind in sub-Saharan Africa. She authored the IQ/OQ/PQ validation for the insulin vial line and is named inventor on three process patents. The WHO Prequalification certificate that unlocked commercial-scale production exists in part because of her work. IFC has committed €1 billion to Aspen's manufacturing programme. Thandi's contribution record is what sits beneath that investment at the individual level.",
   },
   ncaa: {
     key: "ncaa",
@@ -406,6 +408,8 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       { status: "info", title: "Broadcast evidence logged · 710 snaps", meta: "~440 broadcast mins · SHA-256 fingerprinted", amount: null },
       { status: "watch", title: "Spring 2026 distribution pending", meta: "Seasonal trigger · awaiting settlement", amount: "$124,800", amountColor: "amber" },
     ],
+    bio:
+      "Jeremiah Smith caught 76 passes for 1,315 yards and 15 touchdowns in his freshman season at Ohio State — one of the most productive debut seasons in programme history. His NIL appeared in approximately 440 minutes of broadcast content on Fox Sports, ESPN, and the Big Ten Network. The House v. NCAA settlement structures school payments as Team Marketing Rights — compensation for the use of athlete NIL in commercial broadcasts. OSU's unilateral allocation decision is the only number that exists without a SCORE record. With one, Jeremiah has an independent NIL fair market value basis — portable to any school he transfers to.",
   },
   supplyChain: {
     key: "supplyChain",

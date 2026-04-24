@@ -73,7 +73,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/auth", { replace: true });
+    navigate("/", { replace: true });
   };
 
   const pageTitle = titleFor(location.pathname);

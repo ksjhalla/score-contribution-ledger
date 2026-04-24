@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 type Row = {
@@ -12,6 +10,7 @@ type Row = {
   status: "Pending" | "Confirmed" | "Declined";
   token: string;
   notes: string | null;
+  last_nudged_at: string | null;
 };
 
 export const ExecutionAttestations = ({ executionId }: { executionId: string }) => {
@@ -20,7 +19,7 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
 
   const load = useCallback(async () => {
     const { data } = await supabase.from("execution_attestations")
-      .select("id, attestor_name, attestor_email, status, token, notes")
+      .select("id, attestor_name, attestor_email, status, token, notes, last_nudged_at")
       .eq("execution_id", executionId)
       .order("requested_at", { ascending: true });
     setRows((data ?? []) as Row[]);
@@ -50,6 +49,29 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const NUDGE_COOLDOWN_MS = 48 * 60 * 60 * 1000;
+  const nudgeWindow = (last: string | null): { active: boolean; tooltip?: string } => {
+    if (!last) return { active: true };
+    const elapsed = Date.now() - new Date(last).getTime();
+    if (elapsed >= NUDGE_COOLDOWN_MS) return { active: true };
+    const remainingMs = NUDGE_COOLDOWN_MS - elapsed;
+    const hours = Math.floor(remainingMs / (60 * 60 * 1000));
+    const tooltip = hours >= 1
+      ? `Next nudge available in ${hours} hour${hours === 1 ? "" : "s"}`
+      : `Next nudge available in ${Math.max(1, Math.floor(remainingMs / 60000))} minutes`;
+    return { active: false, tooltip };
+  };
+
+  const nudge = async (r: Row) => {
+    await copy(r.token);
+    const { error } = await supabase
+      .from("execution_attestations")
+      .update({ last_nudged_at: new Date().toISOString() })
+      .eq("id", r.id);
+    if (error) { toast.error(error.message); return; }
+    load();
+  };
+
   return (
     <div className="rounded-md border bg-muted/20 p-2.5 space-y-2">
       <div className="flex items-center justify-between text-[11px]">
@@ -71,13 +93,30 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
             <Badge variant={r.status === "Confirmed" ? "default" : r.status === "Declined" ? "destructive" : "secondary"} className="text-[10px]">
               {r.status}
             </Badge>
-            {r.status === "Pending" && (
-              <Button size="sm" variant="ghost" className="h-6 px-2"
-                onClick={() => copy(r.token)} title={`Send this link to ${r.attestor_name}`}>
-                {copied === r.token ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                <span className="ml-1">Link</span>
-              </Button>
-            )}
+            {r.status === "Pending" && (() => {
+              const w = nudgeWindow(r.last_nudged_at);
+              if (w.active) {
+                return (
+                  <button
+                    onClick={() => nudge(r)}
+                    title={`Send this link to ${r.attestor_name}`}
+                    className="font-mono text-[10px] px-2 py-1 rounded"
+                    style={{ color: "#C4892A", background: "transparent", border: "none", cursor: "pointer" }}
+                  >
+                    {copied === r.token ? "Copied ✓" : "Nudge →"}
+                  </button>
+                );
+              }
+              return (
+                <span
+                  title={w.tooltip}
+                  className="font-mono text-[10px] px-2 py-1"
+                  style={{ color: "#9A8F84", cursor: "help" }}
+                >
+                  Nudge sent
+                </span>
+              );
+            })()}
           </li>
         ))}
       </ul>

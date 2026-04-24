@@ -36,6 +36,7 @@ const Admin = () => {
   const [generating, setGenerating] = useState(false);
   const [lastCode, setLastCode] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
 
   const loadInvites = async () => {
     const { data } = await supabase.from("invite_codes").select("*").order("created_at", { ascending: false });
@@ -62,32 +63,51 @@ const Admin = () => {
 
   const handleGenerate = async () => {
     setGenerating(true);
-    const code = newCode();
     const max = Math.max(1, parseInt(genMaxUses || "1", 10) || 1);
-    const payload: {
-      code: string;
-      email: string | null;
-      note: string | null;
-      max_uses: number;
-      expires_at: string | null;
-      created_by: string | null;
-    } = {
-      code,
-      email: genEmail.trim() ? genEmail.trim().toLowerCase() : null,
-      note: genNote.trim() ? genNote.trim() : null,
-      max_uses: max,
-      expires_at: genExpires ? new Date(genExpires).toISOString() : null,
-      created_by: user?.id ?? null,
-    };
-    const { error } = await supabase.from("invite_codes").insert(payload);
+    let code = "";
+    let success = false;
+    let lastError: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      code = newCode();
+      const { count } = await supabase
+        .from("invite_codes")
+        .select("id", { count: "exact", head: true })
+        .eq("code", code);
+      if ((count ?? 0) > 0) {
+        toast.error("Code already exists. Generating a new one…");
+        continue;
+      }
+      const { error } = await supabase.from("invite_codes").insert({
+        code,
+        email: genEmail.trim() ? genEmail.trim().toLowerCase() : null,
+        note: genNote.trim() ? genNote.trim() : null,
+        max_uses: max,
+        expires_at: genExpires ? new Date(genExpires).toISOString() : null,
+        created_by: user?.id ?? null,
+      });
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Code already exists. Generating a new one…");
+          continue;
+        }
+        lastError = error.message;
+        break;
+      }
+      success = true;
+      break;
+    }
     setGenerating(false);
-    if (error) {
-      toast.error("Could not generate code", { description: error.message });
+    if (!success) {
+      toast.error(lastError ?? "Failed to generate unique code. Try again.");
       return;
     }
     setLastCode(code);
     setGenEmail(""); setGenExpires(""); setGenMaxUses("1"); setGenNote("");
     await loadInvites();
+    setTimeout(() => {
+      const el = document.getElementById("admin-last-code-input") as HTMLInputElement | null;
+      el?.select();
+    }, 50);
   };
 
   const copy = async (text: string) => {
@@ -101,6 +121,31 @@ const Admin = () => {
     if (r.use_count >= r.max_uses) return { label: "Used", cls: "text-muted-foreground" };
     return { label: "Active", cls: "text-emerald-700 dark:text-emerald-400" };
   };
+
+  const revoke = async (id: string) => {
+    const { error } = await supabase.from("invite_codes").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Invite code revoked.");
+    setRevokeId(null);
+    await loadInvites();
+  };
+
+  const summary = (() => {
+    const total = invites.length;
+    const redeemed = invites.filter((i) => i.use_count > 0 || i.used_at).length;
+    const domains = new Map<string, number>();
+    for (const i of invites) {
+      if (!i.email || !(i.use_count > 0 || i.used_at)) continue;
+      const d = i.email.split("@")[1];
+      if (!d) continue;
+      domains.set(d, (domains.get(d) ?? 0) + 1);
+    }
+    let topDomain: { domain: string; n: number } | null = null;
+    for (const [domain, n] of domains) {
+      if (!topDomain || n > topDomain.n) topDomain = { domain, n };
+    }
+    return { total, redeemed, topDomain };
+  })();
 
   if (authorised === null) return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
   if (!authorised) return (
@@ -128,6 +173,30 @@ const Admin = () => {
         <Card>
           <CardHeader><CardTitle className="text-sm">Invite codes</CardTitle></CardHeader>
           <CardContent className="space-y-5">
+            <div
+              className="grid grid-cols-3 gap-3"
+              style={{
+                border: "1px solid rgba(26,22,14,0.10)",
+                borderRadius: 5,
+                background: "#FDFAF4",
+                padding: 14,
+              }}
+            >
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Codes generated</div>
+                <div className="font-mono text-[14px] mt-1" style={{ color: "#1A1614" }}>{summary.total}</div>
+              </div>
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Redeemed</div>
+                <div className="font-mono text-[14px] mt-1" style={{ color: "#2A6A45" }}>{summary.redeemed}</div>
+              </div>
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Top email domain</div>
+                <div className="font-mono text-[11px] mt-1" style={{ color: "#1A1614" }}>
+                  {summary.topDomain ? `@${summary.topDomain.domain} · ${summary.topDomain.n} signups` : "—"}
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Lock to email (optional)</label>
@@ -153,7 +222,14 @@ const Admin = () => {
               {lastCode && (
                 <div className="flex-1 flex items-center justify-between gap-3 px-3 py-2 rounded bg-muted">
                   <div>
-                    <div className="font-mono text-sm">{lastCode}</div>
+                    <input
+                      id="admin-last-code-input"
+                      readOnly
+                      value={lastCode}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="font-mono text-sm bg-transparent border-none p-0 focus:outline-none"
+                      style={{ width: "100%" }}
+                    />
                     <div className="font-mono text-[9px] text-muted-foreground mt-0.5">Code generated. Share this with the invitee.</div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => copy(lastCode)}>
@@ -190,10 +266,33 @@ const Admin = () => {
                         <td className="text-right font-mono text-[11px]">{r.use_count}/{r.max_uses}</td>
                         <td className="text-right font-mono text-[11px]">{r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "—"}</td>
                         <td className={`text-right font-mono text-[11px] ${s.cls}`}>{s.label}</td>
-                        <td className="text-right">
-                          <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copy(r.code)}>
-                            {copied === r.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                          </Button>
+                        <td className="text-right whitespace-nowrap">
+                          {revokeId === r.id ? (
+                            <span className="inline-flex items-center gap-2">
+                              <span className="text-[12px]">Revoke this code?</span>
+                              <button
+                                onClick={() => revoke(r.id)}
+                                className="font-mono text-[9px] px-2 py-0.5 rounded"
+                                style={{ color: "#9A3020", border: "1px solid rgba(154,48,32,0.25)", background: "transparent" }}
+                              >Confirm</button>
+                              <button
+                                onClick={() => setRevokeId(null)}
+                                className="font-mono text-[9px] px-2 py-0.5"
+                                style={{ color: "#9A8F84", background: "transparent", border: "none" }}
+                              >Cancel</button>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copy(r.code)} title="Copy code">
+                                {copied === r.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                              </Button>
+                              <button
+                                onClick={() => setRevokeId(r.id)}
+                                className="font-mono text-[9px] px-2 py-0.5 rounded"
+                                style={{ color: "#9A3020", border: "1px solid rgba(154,48,32,0.25)", background: "transparent" }}
+                              >Revoke</button>
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );
