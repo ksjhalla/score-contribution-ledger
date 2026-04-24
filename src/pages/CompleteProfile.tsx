@@ -69,7 +69,7 @@ const CompleteProfile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ fullName: true, role: true, sector: true });
-    if (!user || !isValid) {
+    if (!user || !isValid || !sector) {
       toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
