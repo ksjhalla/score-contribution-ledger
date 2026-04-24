@@ -12,6 +12,10 @@ import PublicAttest from "./pages/PublicAttest.tsx";
 import Admin from "./pages/Admin.tsx";
 import PassportReport from "./pages/PassportReport.tsx";
 import LogWork from "./pages/LogWork.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
+import Contracts from "./pages/Contracts.tsx";
+import Account from "./pages/Account.tsx";
+import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 
 const queryClient = new QueryClient();
@@ -31,7 +35,10 @@ const App = () => (
             <Route path="/attest/:token" element={<PublicAttest />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/report" element={<PassportReport />} />
-            <Route path="/log-work" element={<LogWork />} />
+            <Route path="/dashboard" element={<AppShell><Dashboard /></AppShell>} />
+            <Route path="/log-work" element={<AppShell><LogWork /></AppShell>} />
+            <Route path="/contracts" element={<AppShell><Contracts /></AppShell>} />
+            <Route path="/account" element={<AppShell><Account /></AppShell>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
