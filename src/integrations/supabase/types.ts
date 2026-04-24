@@ -681,6 +681,7 @@ export type Database = {
         }
         Returns: Json
       }
+      current_user_has_redeemed_invite: { Args: never; Returns: boolean }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_user_list: { Args: never; Returns: Json }
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
