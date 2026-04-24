@@ -111,6 +111,7 @@ const Contracts = () => {
             return (
               <div
                 key={c.id}
+                id={`contract-${c.id}`}
                 style={{
                   borderLeft: adHoc ? "2px solid #9A8F84" : undefined,
                   paddingLeft: adHoc ? 8 : 0,
