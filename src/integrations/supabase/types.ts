@@ -557,6 +557,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_profile_with_contributor_id: {
+        Args: {
+          p_full_name: string
+          p_organisation: string
+          p_professional_role: string
+          p_sector: Database["public"]["Enums"]["sector_type"]
+        }
+        Returns: Json
+      }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_user_list: { Args: never; Returns: Json }
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
