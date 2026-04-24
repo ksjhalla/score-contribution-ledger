@@ -488,7 +488,7 @@ export default function Index() {
           </div>
           <div className="score-cols-2" style={{
             display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
-            maxWidth: 760, margin: "0 auto",
+            maxWidth: 760, margin: "32px auto 0",
           }}>
             {[
               { icon: "⌨", title: "Knowledge work & software", body: "Open source contributors, protocol architects, and AI training data labellers whose code or data generates downstream value long after the work is done.", chip: "e.g. SCORE Protocol · Story Protocol on-chain" },
