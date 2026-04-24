@@ -127,9 +127,9 @@ export const PassportView = ({ data }: { data: PassportData }) => {
             <Link to="/log-work" style={{ color: "#C4892A", textDecoration: "underline" }}>
               Log an execution →
             </Link>
-            <Link to="/demo" style={{ color: "#C4892A", textDecoration: "underline" }}>
-              See how it works →
-            </Link>
+            <a href="/#cta" style={{ color: "#C4892A", textDecoration: "underline" }}>
+              Request a demo →
+            </a>
           </div>
         </div>
       )}

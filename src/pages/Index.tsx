@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { earningsPreview, proofPreview, passportPreview, conversationCards } from "@/data/marketingPreviews";
+import { conversationCards, type ConversationCard } from "@/data/marketingPreviews";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -61,6 +61,109 @@ function useReveal<T extends HTMLElement>() {
 function Section({ children, ...rest }: { children: React.ReactNode } & React.HTMLAttributes<HTMLElement>) {
   const { ref, style } = useReveal<HTMLElement>();
   return <section ref={ref} style={{ ...style, ...rest.style }} {...rest}>{children}</section>;
+}
+
+function ConversationsScroller({ cards }: { cards: ConversationCard[] }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const dragRef = useRef({ isDown: false, startX: 0, startScroll: 0 });
+
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root) return;
+    const cardEls = Array.from(root.querySelectorAll<HTMLElement>("[data-conv-card]"));
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting && e.intersectionRatio > 0.6) {
+            const idx = Number((e.target as HTMLElement).dataset.idx);
+            if (!Number.isNaN(idx)) setActiveIdx(idx);
+          }
+        });
+      },
+      { root, threshold: [0.6] }
+    );
+    cardEls.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [cards.length]);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    const root = scrollRef.current;
+    if (!root) return;
+    dragRef.current = { isDown: true, startX: e.clientX, startScroll: root.scrollLeft };
+    root.style.cursor = "grabbing";
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    const root = scrollRef.current;
+    if (!root || !dragRef.current.isDown) return;
+    root.scrollLeft = dragRef.current.startScroll - (e.clientX - dragRef.current.startX);
+  };
+  const stopDrag = () => {
+    dragRef.current.isDown = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+  };
+
+  return (
+    <div>
+      <style>{`
+        .conv-scroll::-webkit-scrollbar { display: none; }
+        .conv-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+      <div
+        ref={scrollRef}
+        className="conv-scroll"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={stopDrag}
+        onMouseLeave={stopDrag}
+        style={{
+          display: "flex", gap: 16, overflowX: "auto",
+          padding: "0 24px 8px", cursor: "grab",
+          scrollSnapType: "x mandatory",
+          userSelect: "none",
+        }}
+      >
+        {cards.map((c, i) => (
+          <div
+            key={i}
+            data-conv-card
+            data-idx={i}
+            style={{
+              width: 300, flexShrink: 0,
+              border: "1px solid rgba(26,22,14,0.10)",
+              borderRadius: 6,
+              background: "#FDFAF4",
+              padding: 20,
+              display: "flex", flexDirection: "column",
+              scrollSnapAlign: "start",
+            }}
+          >
+            <div style={{ fontSize: 16, marginBottom: 10 }}>{c.icon}</div>
+            <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 700, color: "#1A1614", marginBottom: 10 }}>"{c.quote}"</div>
+            <p style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: "#5C5248", lineHeight: 1.7, margin: "0 0 16px", flex: 1 }}>{c.body}</p>
+            <div style={{
+              background: "rgba(196,137,42,0.10)",
+              border: "1px solid rgba(196,137,42,0.25)",
+              color: "#C4892A",
+              fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 9,
+              padding: "8px 10px", borderRadius: 4,
+              marginTop: 14, lineHeight: 1.5,
+            }}>{c.resolution}</div>
+          </div>
+        ))}
+        <div style={{ width: 8, flexShrink: 0 }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 20 }}>
+        {cards.map((_, i) => (
+          <span key={i} style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: i === activeIdx ? "#1A1614" : "rgba(26,22,14,0.2)",
+            transition: "background 0.2s ease",
+          }} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const containerStyle: React.CSSProperties = {
@@ -143,6 +246,7 @@ export default function Index() {
           .score-hero-h { font-size: 48px !important; }
           .score-cols-3 { grid-template-columns: 1fr !important; }
           .score-cols-2 { grid-template-columns: 1fr !important; }
+          .score-platform-grid { grid-template-columns: 1fr !important; }
         }
         .score-link-underline:hover { text-decoration: underline; }
       `}</style>
@@ -163,7 +267,7 @@ export default function Index() {
             padding: "4px 10px", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted,
           }}>→ Now available</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link to="/login" className="score-topbar-signin" style={{
+            <Link to="/auth" className="score-topbar-signin" style={{
               fontFamily: FONT_MONO, fontSize: 11, color: COLORS.muted, textDecoration: "none",
             }}>Sign in →</Link>
             <a href="#cta" onClick={scrollToCta} style={{
@@ -204,16 +308,12 @@ export default function Index() {
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
               borderRadius: 4, padding: "12px 24px", textDecoration: "none",
             }}>Request a demo →</a>
-            <Link to="/demo" style={{
-              background: "transparent", color: COLORS.muted,
-              fontFamily: FONT_BODY, fontSize: 14, padding: "12px 8px", textDecoration: "none",
-            }} className="score-link-underline">See what it does</Link>
           </div>
           <div style={{
             display: "block", textAlign: "center", marginTop: 10,
             fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
           }}>
-            Already have access? <Link to="/login" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
+            Already have access? <Link to="/auth" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
           </div>
         </div>
       </Section>
@@ -252,149 +352,75 @@ export default function Index() {
               If you helped build something valuable, you should keep earning from it — proportionally, automatically, and without having to ask. SCORE makes that possible.
             </p>
           </div>
-          <div className="score-cols-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
-            {[
-              { eyebrow: "YOUR EARNINGS", title: "See what you're owed across every project", footer: "EARLY ACCESS ONLY", preview: "earnings" as const },
-              { eyebrow: "THE PROOF", title: "Proof that you built it — permanent and portable", footer: "EARLY ACCESS ONLY", preview: "proof" as const },
-              { eyebrow: "INVESTOR & AUDIT REPORTS", title: "One click to a report anyone can verify.", footer: "REQUEST A DEMO →", footerAmber: true, preview: "passport" as const },
-            ].map((c, i) => (
-              <div key={i} style={{
+          <div className="score-platform-grid" style={{
+            display: "grid", gridTemplateColumns: "60% 40%", gap: 16,
+          }}>
+            {/* LEFT — main earnings card */}
+            <div style={{
+              border: `1px solid ${COLORS.border}`, borderRadius: 6,
+              background: COLORS.card, padding: 32,
+              display: "flex", flexDirection: "column",
+            }}>
+              <div style={eyebrowStyle}>YOUR EARNINGS</div>
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 28, lineHeight: 1.25, margin: "0 0 16px" }}>
+                See everything you're owed,<br />across every project.
+              </h3>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, lineHeight: 1.7, margin: "0 0 24px" }}>
+                One view of what's been paid, what's pending, and what you're still owed — across every contract you've ever had, whether you're still there or not.
+              </p>
+              <div style={{
+                marginTop: "auto",
+                background: COLORS.surface, borderRadius: 4,
+                padding: "12px 16px",
+                display: "flex", alignItems: "center", gap: 0,
+              }}>
+                {[
+                  { value: "$52,600", label: "Settled", color: "#2A6A45" },
+                  { value: "$14,000", label: "Pending", color: COLORS.amber },
+                  { value: "3", label: "Contracts", color: "#2A5C8A" },
+                ].map((s, j, arr) => (
+                  <div key={j} style={{
+                    flex: 1, padding: "0 12px",
+                    borderRight: j < arr.length - 1 ? "1px solid rgba(26,22,14,0.10)" : "none",
+                  }}>
+                    <div style={{ fontFamily: FONT_MONO, fontSize: 13, color: s.color }}>{s.value}</div>
+                    <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 2 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 8 }}>
+                Live example · Kaushal Jhaveri · SCR-KJ-2024-001
+              </div>
+            </div>
+            {/* RIGHT — two stacked cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{
                 border: `1px solid ${COLORS.border}`, borderRadius: 6,
-                background: COLORS.card, padding: 24,
+                background: COLORS.card, padding: "20px 24px", flex: 1,
+              }}>
+                <div style={eyebrowStyle}>THE PROOF</div>
+                <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, lineHeight: 1.3, margin: "0 0 10px" }}>Permanent and portable.</h3>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, lineHeight: 1.7, margin: 0 }}>
+                  Every contribution is SHA-256 fingerprinted and timestamped. The record follows your DID — not your employer.
+                </p>
+              </div>
+              <div style={{
+                border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                background: COLORS.card, padding: "20px 24px", flex: 1,
                 display: "flex", flexDirection: "column",
               }}>
-                <div>
-                  <div style={{ ...eyebrowStyle, marginBottom: 14 }}>{c.eyebrow}</div>
-                  <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, lineHeight: 1.3, margin: 0 }}>{c.title}</h3>
-                </div>
-                <div style={{
-                  marginTop: 16, border: "1px solid rgba(26,22,14,0.08)", borderRadius: 4,
-                  background: COLORS.bg, overflow: "hidden", position: "relative", height: 160,
-                }}>
-                  {c.preview === "earnings" && (
-                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
-                      <div style={{ display: "flex" }}>
-                        {earningsPreview.stats.map((s, j, arr) => {
-                          const col = s.tone === "settled" ? "#2A6A45" : s.tone === "pending" ? COLORS.amber : COLORS.text;
-                          return (
-                            <div key={j} style={{
-                              flex: 1, padding: "10px 14px",
-                              borderRight: j < arr.length - 1 ? "1px solid rgba(26,22,14,0.08)" : "none",
-                            }}>
-                              <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint }}>{s.label}</div>
-                              <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: col, marginTop: 4 }}>{s.value}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {earningsPreview.rows.map((r, j) => {
-                        const col = r.tone === "settled" ? "#2A6A45" : "#2A5C8A";
-                        return (
-                          <div key={j} style={{
-                            padding: "10px 14px", borderTop: "1px solid rgba(26,22,14,0.08)",
-                            display: "flex", justifyContent: "space-between", alignItems: "center",
-                          }}>
-                            <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: COLORS.text }}>{r.name}</div>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: col }}>{r.value}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {c.preview === "proof" && (
-                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
-                      <div style={{ display: "flex", gap: 10, padding: "12px 14px" }}>
-                        <div style={{
-                          width: 20, height: 20, borderRadius: "50%",
-                          background: "rgba(42,106,69,0.10)", border: "1px solid #2A6A45",
-                          color: "#2A6A45", fontSize: 10, display: "flex",
-                          alignItems: "center", justifyContent: "center", flexShrink: 0,
-                        }}>✓</div>
-                        <div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 500, color: COLORS.text }}>{proofPreview.title}</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 2 }}>{proofPreview.subtitle}</div>
-                          <div style={{
-                            display: "inline-block", marginTop: 6,
-                            background: COLORS.bg, border: "1px solid rgba(26,22,14,0.10)",
-                            borderRadius: 3, padding: "3px 8px",
-                            fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint,
-                          }}>{proofPreview.fingerprint}</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#2A6A45", marginTop: 4 }}>{proofPreview.amount}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {c.preview === "passport" && (
-                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
-                      <div style={{
-                        background: COLORS.dark, padding: "14px 16px",
-                        display: "flex", alignItems: "center", gap: 12,
-                      }}>
-                        <div style={{
-                          width: 36, height: 36, borderRadius: "50%",
-                          background: "rgba(196,137,42,0.15)", border: "1px solid rgba(196,137,42,0.3)",
-                          color: COLORS.amber, fontFamily: FONT_MONO, fontSize: 13, fontWeight: 600,
-                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                        }}>{passportPreview.initials}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>{passportPreview.name}</div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>{passportPreview.role}</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>{passportPreview.contributorId}</div>
-                        </div>
-                        <div style={{
-                          fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45",
-                          background: "rgba(42,106,69,0.15)", borderRadius: 20, padding: "3px 9px",
-                        }}>{passportPreview.trustScore}</div>
-                      </div>
-                      <div style={{
-                        display: "flex", background: COLORS.dark,
-                        borderTop: "1px solid rgba(245,241,232,0.06)",
-                      }}>
-                        {passportPreview.stats.map((s, j, arr) => (
-                          <div key={j} style={{
-                            flex: 1, padding: "10px 0", textAlign: "center",
-                            borderRight: j < arr.length - 1 ? "1px solid rgba(245,241,232,0.06)" : "none",
-                          }}>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{s.value}</div>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{s.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{
-                        background: COLORS.dark, padding: "10px 16px",
-                        borderTop: "1px solid rgba(245,241,232,0.06)",
-                        display: "flex", justifyContent: "space-between", alignItems: "center",
-                      }}>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>{passportPreview.contractName}</div>
-                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>{passportPreview.contractStake}</div>
-                      </div>
-                      <div style={{
-                        background: "rgba(245,241,232,0.04)",
-                        borderTop: "1px solid rgba(245,241,232,0.06)",
-                        padding: "8px 16px",
-                        fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)",
-                      }}>{passportPreview.url}</div>
-                    </div>
-                  )}
-                  <div style={{
-                    position: "absolute", bottom: 0, left: 0, right: 0, height: 60,
-                    background: "linear-gradient(transparent, #FDFAF4)", pointerEvents: "none",
-                  }} />
-                </div>
-                <div style={{ marginTop: 16 }}>
-                  {c.footerAmber ? (
-                    <a href="#cta" onClick={scrollToCta} style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber, textDecoration: "none" }}>{c.footer}</a>
-                  ) : (
-                    <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint }}>{c.footer}</div>
-                  )}
-                </div>
+                <div style={eyebrowStyle}>INVESTOR REPORTS</div>
+                <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, lineHeight: 1.3, margin: "0 0 10px" }}>One click to a report anyone can verify.</h3>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, lineHeight: 1.7, margin: "0 0 14px" }}>
+                  Signed PDF. Full execution history. SHA-256 fingerprints. RFC 3161 timestamps. Structured as a professional credential.
+                </p>
+                <a href="#cta" onClick={scrollToCta} style={{
+                  marginTop: "auto", alignSelf: "flex-start",
+                  fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber,
+                  textDecoration: "none",
+                }} className="score-link-underline">Request a demo →</a>
               </div>
-            ))}
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <a href="#cta" onClick={scrollToCta} style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, textDecoration: "underline" }}>
-              Book a demo to see the full platform →
-            </a>
+            </div>
           </div>
         </div>
       </Section>
@@ -440,38 +466,16 @@ export default function Index() {
 
       {/* CONVERSATIONS */}
       <Section id="conversations" style={{ background: COLORS.bg, padding: "100px 0" }}>
-        <div style={containerStyle}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div style={eyebrowStyle}>SCORE FAMILIAR</div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 48, lineHeight: 1.15, margin: 0 }}>
-              These are the <em style={{ fontStyle: "italic", color: COLORS.amber }}>conversations</em><br />
-              we're trying to end.
-            </h2>
-          </div>
-          <div className="score-cols-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-            {conversationCards.map((c, i) => (
-              <div key={i} style={{
-                border: `1px solid ${COLORS.border}`, borderRadius: 6,
-                background: COLORS.card, padding: 20,
-                display: "flex", flexDirection: "column",
-              }}>
-                <div style={{ fontSize: 16, marginBottom: 10 }}>{c.icon}</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 10 }}>"{c.quote}"</div>
-                <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7, margin: "0 0 16px", flex: 1 }}>{c.body}</p>
-                <div style={{
-                  display: "block",
-                  background: "rgba(196,137,42,0.10)",
-                  border: "1px solid rgba(196,137,42,0.25)",
-                  color: COLORS.amber,
-                  fontFamily: FONT_MONO, fontSize: 9,
-                  padding: "8px 10px", borderRadius: 4,
-                  marginTop: 14,
-                  lineHeight: 1.5,
-                }}>{c.resolution}</div>
-              </div>
-            ))}
-          </div>
+        <div style={{ ...containerStyle, textAlign: "center", marginBottom: 32 }}>
+          <div style={eyebrowStyle}>SCORE FAMILIAR</div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 44, lineHeight: 1.15, margin: "0 0 16px" }}>
+            Sound familiar?
+          </h2>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 440, margin: "0 auto", lineHeight: 1.7 }}>
+            Every one of these conversations has a structural fix.
+          </p>
         </div>
+        <ConversationsScroller cards={conversationCards} />
       </Section>
 
       {/* VERTICALS */}
