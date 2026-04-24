@@ -18,7 +18,7 @@ const Auth = () => {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate("/", { replace: true });
+    if (!loading && user) navigate("/dashboard", { replace: true });
   }, [user, loading, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -45,7 +45,7 @@ const Auth = () => {
   const handleGoogle = async () => {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + "/dashboard",
     });
     if (result.error) {
       setBusy(false);
