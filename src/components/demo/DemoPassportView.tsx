@@ -1,6 +1,10 @@
 import type { DemoProfile } from "@/data/demoProfiles";
 import { formatDemoAmount } from "@/data/demoProfiles";
 import { ValueEventCard } from "@/components/value-events/ValueEventCard";
+import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
+import { ContractSparkBars } from "@/components/charts/ContractSparkBars";
+import { QuickReadPanel } from "@/components/charts/QuickReadPanel";
+import { MilestoneArc } from "@/components/charts/MilestoneArc";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -13,7 +17,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
-  const { contributor, stats, contracts, whatChanged, accent } = profile;
+  const { contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones } = profile;
   return (
     <div style={{ padding: "32px 24px", maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div style={{ marginBottom: 20 }}>
