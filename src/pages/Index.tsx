@@ -804,6 +804,9 @@ export default function Index() {
                   {submitting && <Loader2 size={16} className="animate-spin" />}
                   {submitting ? "Sending…" : "Request a demo →"}
                 </button>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, textAlign: "center", marginTop: 8, letterSpacing: "0.04em" }}>
+                  SCORE is currently invite-only. We'll send your invite code within one business day.
+                </div>
                 {err && (
                   <div role="alert" style={{ fontFamily: FONT_BODY, fontSize: 13, color: "#9A3020", textAlign: "center" }}>{err}</div>
                 )}

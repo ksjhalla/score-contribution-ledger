@@ -16,6 +16,8 @@ const Auth = () => {
   const { user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -24,15 +26,47 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setInviteError(null);
+
+    const code = inviteCode.trim();
+    if (!code) {
+      setInviteError("An invite code is required to create an account.");
+      return;
+    }
+
     setBusy(true);
+
+    // 1) Validate the code against the email BEFORE creating the auth user
+    const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
+      p_code: code,
+      p_email: email,
+    });
+    if (vErr || !valid) {
+      setBusy(false);
+      setInviteError("This invite code is invalid, expired, or not for this email.");
+      return;
+    }
+
+    // 2) Create the account
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/` },
     });
+    if (error) {
+      setBusy(false);
+      toast.error(error.message);
+      return;
+    }
+
+    // 3) Redeem the code (best-effort — failure here doesn't block the user)
+    const { data: { user: newUser } } = await supabase.auth.getUser();
+    if (newUser) {
+      await supabase.rpc("redeem_invite_code", { p_code: code, p_user_id: newUser.id });
+    }
+
     setBusy(false);
-    if (error) toast.error(error.message);
-    else toast.success("Account created. You're signed in.");
+    toast.success("Account created. You're signed in.");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -145,10 +179,36 @@ const Auth = () => {
                   <Input id="email-up" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
+                  <Label
+                    htmlFor="invite-up"
+                    style={{ fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.05em" }}
+                  >
+                    Invite code
+                  </Label>
+                  <Input
+                    id="invite-up"
+                    type="text"
+                    required
+                    autoComplete="off"
+                    placeholder="SCORE-XXXX-XXXX"
+                    value={inviteCode}
+                    onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); if (inviteError) setInviteError(null); }}
+                    style={{ fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 13, color: "#1A1614", letterSpacing: "0.04em" }}
+                  />
+                  {inviteError && (
+                    <p role="alert" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: "#9A3020", marginTop: 4 }}>
+                      {inviteError}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="pw-up">Password</Label>
                   <Input id="pw-up" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>Create Account</Button>
+                <p style={{ fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 9, color: "#9A8F84", textAlign: "center", marginTop: 4 }}>
+                  Don't have a code? <a href="/#cta" style={{ color: "#C4892A", textDecoration: "none" }}>Request access →</a>
+                </p>
               </form>
             </TabsContent>
           </Tabs>

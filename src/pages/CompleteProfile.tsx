@@ -30,7 +30,18 @@ const CompleteProfile = () => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
+    if (loading) return;
+    if (!user) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+    // Soft invite gate: signed-in users without a redeemed code go to /invite.
+    (async () => {
+      const { data } = await supabase.rpc("current_user_has_redeemed_invite");
+      if (data === false) {
+        navigate("/invite", { replace: true });
+      }
+    })();
   }, [user, loading, navigate]);
 
   const errors = useMemo(() => {

@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import CompleteProfile from "./pages/CompleteProfile.tsx";
+import Invite from "./pages/Invite.tsx";
 import PublicPassport from "./pages/PublicPassport.tsx";
 import PublicAttest from "./pages/PublicAttest.tsx";
 import Admin from "./pages/Admin.tsx";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/invite" element={<Invite />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/passport/:contributorId" element={<PublicPassport />} />
             <Route path="/attest/:token" element={<PublicAttest />} />
