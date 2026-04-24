@@ -232,10 +232,33 @@ const LogWork = () => {
           </CardHeader>
           <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6">
             {loadingList ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
+              <ul className="divide-y">
+                {[0, 1, 2].map((i) => (
+                  <li key={i} className="py-3 flex items-start gap-3">
+                    <span className="skeleton" style={{ width: 10, height: 10, borderRadius: "50%", marginTop: 6 }} />
+                    <div style={{ flex: 1 }}>
+                      <span className="skeleton" style={{ width: "55%", height: 12 }} />
+                      <span className="skeleton" style={{ width: "35%", height: 9, marginTop: 6 }} />
+                    </div>
+                    <span className="skeleton" style={{ width: 64, height: 12 }} />
+                  </li>
+                ))}
+              </ul>
             ) : executions.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                No executions yet. Log your first contribution above.
+              <div style={{ paddingTop: 40, paddingBottom: 24, textAlign: "center" }}>
+                <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
+                  No executions yet.
+                </div>
+                <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: "4px 0 12px" }}>
+                  Log your first contribution to start the trail.
+                </p>
+                <button
+                  type="button" onClick={() => setOpenForm(true)}
+                  style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#C4892A" }}
+                >
+                  + Log work →
+                </button>
               </div>
             ) : (
               <ul className="divide-y">
