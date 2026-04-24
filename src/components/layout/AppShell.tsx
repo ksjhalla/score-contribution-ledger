@@ -4,6 +4,8 @@ import { FileText, PenLine, FileStack, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
+import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
+import { useDemo } from "@/contexts/DemoContext";
 
 const NAV = [
   { to: "/dashboard", label: "Passport", icon: FileText },
@@ -31,6 +33,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false
   );
@@ -112,6 +115,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               </NavLink>
             ))}
           </nav>
+          <div style={{ marginTop: 4 }}>
+            <DemoProfileCards />
+          </div>
           <div style={{ marginTop: "auto", borderTop: "1px solid rgba(26,22,14,0.08)", padding: "14px 20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
@@ -184,6 +190,40 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           </h1>
           {user && <NotificationBell userId={user.id} />}
         </header>
+
+        {demoProfile && (
+          <div
+            style={{
+              background: demoProfile.banner.bg,
+              borderBottom: `1px solid ${demoProfile.banner.border}`,
+              padding: "7px 24px",
+              fontFamily: "'DM Mono',ui-monospace,monospace",
+              fontSize: 10,
+              color: demoProfile.accent,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <span>{demoProfile.banner.text}</span>
+            <button
+              type="button"
+              onClick={() => setActiveDemo("none")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: demoProfile.accent,
+                fontFamily: "'DM Mono',ui-monospace,monospace",
+                fontSize: 10,
+              }}
+            >
+              Exit demo →
+            </button>
+          </div>
+        )}
 
         <main style={{ flex: 1, minWidth: 0 }}>{children}</main>
       </div>
