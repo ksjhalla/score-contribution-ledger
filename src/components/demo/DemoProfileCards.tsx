@@ -51,6 +51,23 @@ const CARDS: CardSpec[] = [
       { value: "$124.8K", label: "pending", settled: false },
     ],
   },
+  {
+    key: "supplyChain",
+    initials: "AK",
+    name: "Ayesha Khan",
+    role: "Process Engineer · Textile Mfg.",
+    tag: "Supply Chain · ESG",
+    accent: "#4A784A",
+    accentSoft: "rgba(74,120,74,0.10)",
+    accentBorder: "rgba(74,120,74,0.25)",
+    accentBg: "rgba(74,120,74,0.04)",
+    avatarBg: "rgba(74,120,74,0.12)",
+    avatarBorder: "rgba(74,120,74,0.3)",
+    stats: [
+      { value: "$420K", label: "paid", settled: true },
+      { value: "$380K", label: "pending", settled: false },
+    ],
+  },
 ];
 
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";

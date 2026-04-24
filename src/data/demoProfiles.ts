@@ -1,12 +1,12 @@
-export type DemoKey = "pharma" | "ncaa";
+export type DemoKey = "pharma" | "ncaa" | "supplyChain";
 
 export type DemoExecution = {
   title: string;
-  status: "Settled" | "Pending" | "Attributed";
+  status: "Settled" | "Pending" | "Attributed" | "Intent logged";
   amount: number | null;
   currency: string;
   date: string;
-  proof: string;
+  proof: string | null;
   resolver_description?: string;
   expected_resolution?: string;
   confidence?: "High" | "Medium" | "Low";
@@ -25,15 +25,18 @@ export type DemoProfile = {
   key: DemoKey;
   accent: string;
   contributor: { name: string; role: string; org: string; id: string; sector: string };
-  stats: { settled: number; pending: number; currency: string; contracts: number; executions: number };
+  stats: { settled: number; pending: number; future?: number; esg?: number; currency: string; contracts: number; executions: number };
   contracts: DemoContract[];
   executions: DemoExecution[];
   whatChanged: DemoValueEvent[];
   banner: { text: string; mobileText?: string; bg: string; border: string };
-  valueMix: { settled: number; pending: number; future: number; currency: string; label: string };
-  bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number }>;
+  valueMix: { settled: number; pending: number; future: number; esg?: number; currency: string; label: string };
+  bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number; color?: string }>;
   quickRead: Array<{ question: string; answer: string; value: string; valueColor: "green" | "amber" | "blue" | "default" }>;
   milestones: Array<{ status: "ok" | "info" | "watch"; title: string; meta: string; amount?: string | null; amountColor?: "green" | "amber" | "blue" }>;
+  bio?: string;
+  badges?: string[];
+  valueStreams?: Array<{ icon: "droplets" | "leaf" | "network"; iconColor: string; name: string; description: string; value: string }>;
 };
 
 export type DemoValueEvent = {
@@ -94,9 +97,29 @@ export const ncaaNotifications: DemoNotification[] = [
   },
 ];
 
+export const supplyChainNotifications: DemoNotification[] = [
+  {
+    id: "demo-n5",
+    type: "settlement_due",
+    message:
+      "Payment due on Supplier Network Expansion Agreement. 5-facility adoption confirmed. Mark as settled when transfer received.",
+    read: false,
+    created_at: hoursAgo(4),
+  },
+  {
+    id: "demo-n6",
+    type: "trigger_met",
+    message:
+      "Tier 1 supplier adoption threshold reached. Log an execution against the Supplier Network Expansion Agreement.",
+    read: true,
+    created_at: daysAgo(2),
+  },
+];
+
 export const demoNotificationsFor = (key: DemoKey | "none"): DemoNotification[] => {
   if (key === "pharma") return pharmaNotifications;
   if (key === "ncaa") return ncaaNotifications;
+  if (key === "supplyChain") return supplyChainNotifications;
   return [];
 };
 
@@ -362,6 +385,180 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       { status: "ok", title: "Fall 2025–26 distribution settled", meta: "ACH-OSU-SMITH-2026-01 · Jan 2026", amount: "+$124,800", amountColor: "green" },
       { status: "info", title: "Broadcast evidence logged · 710 snaps", meta: "~440 broadcast mins · SHA-256 fingerprinted", amount: null },
       { status: "watch", title: "Spring 2026 distribution pending", meta: "Seasonal trigger · awaiting settlement", amount: "$124,800", amountColor: "amber" },
+    ],
+  },
+  supplyChain: {
+    key: "supplyChain",
+    accent: "#4A784A",
+    contributor: {
+      name: "Ayesha Khan",
+      role: "Process Engineer · Sustainability Lead",
+      org: "Textile Manufacturing (India → Global)",
+      id: "SCR-AK-2022-001",
+      sector: "Manufacturing",
+    },
+    stats: { settled: 420000, pending: 380000, future: 2400000, esg: 600000, currency: "USD", contracts: 3, executions: 5 },
+    contracts: [
+      {
+        name: "Process Innovation Savings Share · 2022",
+        counterparty: "Regional Textile Group Ltd.",
+        stake_type: "Financial",
+        entitlement: "8% of documented water + energy savings above baseline across adopted facilities",
+        trigger: "Facility adoption confirmed by plant ops report",
+        status: "Active",
+      },
+      {
+        name: "Supplier Network Expansion Agreement · 2024",
+        counterparty: "Global Brand Supply Chain Ops",
+        stake_type: "Financial",
+        entitlement: "4% of savings across Tier 1 supplier facilities",
+        trigger: "Adoption confirmed across minimum 5 supplier facilities",
+        status: "Pending",
+      },
+      {
+        name: "ESG Attribution Record · Process Origin",
+        counterparty: "Third-party ESG Auditor",
+        stake_type: "Attribution",
+        entitlement: "Named originator of dyeing process in annual ESG disclosure and carbon reporting",
+        trigger: "Inclusion in brand ESG report confirmed by auditor",
+        status: "Watching",
+      },
+    ],
+    executions: [
+      {
+        title: "Local adoption · 2 facilities confirmed",
+        status: "Settled",
+        amount: 220000,
+        currency: "USD",
+        date: "2023-06-01",
+        proof: "Production logs · factory ops report · SHA-256: prod-log-2023-f1f2.json",
+        confidence: "High",
+        resolver_description: "Plant operations report · Regional Textile Group",
+        expected_resolution: "Resolved",
+      },
+      {
+        title: "Phase 2 adoption incentive · early mover",
+        status: "Settled",
+        amount: 200000,
+        currency: "USD",
+        date: "2024-01-15",
+        proof: "Adoption agreement · SHA-256: adopt-agree-2024.pdf",
+        confidence: "High",
+        resolver_description: "Regional Textile Group Finance",
+        expected_resolution: "Resolved",
+      },
+      {
+        title: "Tier 1 supplier expansion · 5 facilities",
+        status: "Pending",
+        amount: 380000,
+        currency: "USD",
+        date: "2025-03-01",
+        proof: "Supplier rollout report pending final sign-off",
+        confidence: "Medium",
+        resolver_description: "Supplier network + global brand ops",
+        expected_resolution: "90 days",
+      },
+      {
+        title: "ESG report inclusion · named process originator",
+        status: "Intent logged",
+        amount: 600000,
+        currency: "USD",
+        date: "2025-09-01",
+        proof: null,
+        confidence: "Medium",
+        resolver_description: "External ESG auditor · annual disclosure cycle",
+        expected_resolution: "Q4 2025 reporting cycle",
+      },
+      {
+        title: "Global standardisation · process adopted network-wide",
+        status: "Intent logged",
+        amount: 1800000,
+        currency: "USD",
+        date: "2026-01-01",
+        proof: null,
+        confidence: "Low",
+        resolver_description: "Brand-level supply chain decision · multi-party",
+        expected_resolution: "18–36 months",
+      },
+    ],
+    whatChanged: [
+      {
+        amount: 380000, currency: "USD",
+        headline: "on the way",
+        subheadline: "Tier 1 supplier expansion confirmed across 5 facilities. Awaiting settlement.",
+        status: "Under review", confidence: "Medium",
+        trigger: "Adoption across 5 supplier facilities confirmed",
+        resolver: "Supplier network + global brand ops",
+        expected_resolution: "90 days", evidence_count: 1,
+      },
+      {
+        amount: 220000, currency: "USD",
+        headline: "paid",
+        subheadline: "Local adoption across 2 facilities confirmed and settled.",
+        status: "Resolved", confidence: "High",
+        trigger: "Plant ops report confirmed",
+        resolver: "Regional Textile Group",
+        expected_resolution: "Resolved", evidence_count: 2,
+      },
+      {
+        amount: 600000, currency: "USD",
+        headline: "could grow",
+        subheadline: "ESG report inclusion would name Ayesha as process originator in brand disclosures.",
+        status: "Watching", confidence: "Medium",
+        trigger: "Inclusion in annual ESG report confirmed by auditor",
+        resolver: "External ESG auditor",
+        expected_resolution: "Q4 2025 reporting cycle", evidence_count: 0,
+      },
+    ],
+    banner: {
+      text: "Demo · Ayesha Khan · Textile Manufacturing · ESG",
+      mobileText: "Demo · Ayesha Khan",
+      bg: "rgba(74,120,74,0.08)",
+      border: "rgba(74,120,74,0.2)",
+    },
+    valueMix: { settled: 420000, pending: 380000, esg: 600000, future: 1800000, currency: "USD", label: "Total tracked" },
+    bars: [
+      { label: "Savings", value: 420000, status: "settled" },
+      { label: "Expansion", value: 380000, status: "pending" },
+      { label: "ESG", value: 600000, status: "watching", color: "#4A784A" },
+      { label: "Global", value: 1800000, status: "watching" },
+    ],
+    quickRead: [
+      { question: "What is already paid?", answer: "Savings share from local adoption across 2 facilities", value: "$420K", valueColor: "green" },
+      { question: "What is next to move?", answer: "Tier 1 supplier expansion — 5 facilities, 90-day window", value: "$380K", valueColor: "amber" },
+      { question: "Where is the system value?", answer: "ESG attribution + global standardisation — multi-party, long tail", value: "$2.4M", valueColor: "blue" },
+    ],
+    milestones: [
+      { status: "ok", title: "Local adoption · 2 facilities confirmed", meta: "Plant ops report · Jun 2023", amount: "+$220,000", amountColor: "green" },
+      { status: "ok", title: "Phase 2 adoption incentive", meta: "Early mover agreement · Jan 2024", amount: "+$200,000", amountColor: "green" },
+      { status: "watch", title: "Tier 1 supplier expansion", meta: "5 facilities · sign-off pending", amount: "$380,000 pending", amountColor: "amber" },
+      { status: "info", title: "ESG report inclusion · watching", meta: "Q4 2025 auditor cycle", amount: null },
+    ],
+    bio:
+      "Ayesha redesigned a dyeing process to reduce water usage and energy consumption across textile facilities. That process has since been adopted across suppliers in multiple countries and is rolling into global production. The savings, compliance value, and ESG impact continue to grow — but her original contribution had no single place to live. SCORE is that place.",
+    badges: ["7 facilities impacted", "2 countries", "ESG-linked value", "Replicable process"],
+    valueStreams: [
+      {
+        icon: "droplets",
+        iconColor: "#2A5C8A",
+        name: "Cost Efficiency",
+        description: "% of savings from reduced water and energy usage across facilities",
+        value: "$620K tracked",
+      },
+      {
+        icon: "leaf",
+        iconColor: "#4A784A",
+        name: "ESG Attribution",
+        description: "Carbon reduction credits, water savings reporting, and compliance incentive value",
+        value: "$600K potential",
+      },
+      {
+        icon: "network",
+        iconColor: "#C4892A",
+        name: "Replication Value",
+        description: "Process reused across factories and regions — each adoption extends the value tail",
+        value: "$1.8M future",
+      },
     ],
   },
 };

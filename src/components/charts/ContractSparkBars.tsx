@@ -22,6 +22,7 @@ export type SparkContract = {
   value: number;
   status: "settled" | "pending" | "watching" | "attributed";
   evidence_count?: number;
+  color?: string;
 };
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
@@ -52,7 +53,7 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
         />
         <Bar dataKey="value" radius={[3, 3, 0, 0]}>
           {contracts.map((c, i) => (
-            <Cell key={i} fill={STATUS_COLOR[c.status]} />
+            <Cell key={i} fill={c.color ?? STATUS_COLOR[c.status]} />
           ))}
         </Bar>
       </BarChart>
