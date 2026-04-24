@@ -484,47 +484,37 @@ export default function Index() {
         <div style={containerStyle}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={eyebrowStyle}>WHO IT'S FOR</div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, lineHeight: 1.15, margin: "0 0 20px" }}>
-              Eight industries.<br />One structural problem.
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, lineHeight: 1.15, margin: "0 0 12px" }}>
+              Four industries.<br />One structural problem.
             </h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 540, margin: "0 auto", lineHeight: 1.7 }}>
-              Wherever value creation is separable from employment, revenue has a tail, and no portable attribution infrastructure exists — SCORE fits.
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>
+              Wherever a contribution creates long-tail value and no portable record exists — SCORE fits.
             </p>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginBottom: 40 }}>
-            {["Software & Open Source","Pharma & Biotech","College Athletics","Music & Publishing","Film & Television","Agriculture","Manufacturing","AI Training Data"].map((s) => (
-              <div key={s} style={{
-                border: `1px solid ${COLORS.borderEm}`, background: COLORS.card,
-                borderRadius: 4, padding: "8px 16px",
-                fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: COLORS.text,
-              }}>{s}</div>
-            ))}
-          </div>
-          <div className="score-cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="score-cols-2" style={{
+            display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+            maxWidth: 760, margin: "0 auto",
+          }}>
             {[
-              [
-                ["Software", "SCORE Protocol · 40% revenue share · Story Protocol on-chain"],
-                ["Pharma", "Aspen Pharmacare · IFC-financed · Gqeberha · S.21 SA Patents Act"],
-                ["NCAA", "Ohio State · House Settlement · $15.375M football pool · NIL Go FMV"],
-                ["Music", "Co-writing split · DAW session timestamps · sync rights"],
-              ],
-              [
-                ["Film", "WGA/SAG-AFTRA · streaming residuals · independent viewership record"],
-                ["Agriculture", "Sahel Co-op · IoT yield sensor · sorghum protocol · UPOV PVR"],
-                ["Mfg", "Meridian · line efficiency reader · ArbEG inventor compensation"],
-                ["AI Data", "Training data provenance · EU AI Act Art. 53 · RFC 3161 timestamp"],
-              ],
-            ].map((col, ci) => (
-              <div key={ci}>
-                {col.map(([label, val], i) => (
-                  <div key={i} style={{
-                    padding: "12px 0",
-                    borderBottom: `1px solid ${COLORS.borderSoft}`,
-                  }}>
-                    <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.faint, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>{val}</div>
-                  </div>
-                ))}
+              { icon: "⌨", title: "Knowledge work & software", body: "Open source contributors, protocol architects, and AI training data labellers whose code or data generates downstream value long after the work is done.", chip: "e.g. SCORE Protocol · Story Protocol on-chain" },
+              { icon: "🧪", title: "Institutional research", body: "Pharma researchers, biotech scientists, and university inventors whose discoveries generate royalties under Bayh-Dole, S.21, or equivalent inventor compensation law.", chip: "e.g. Aspen Pharmacare · IFC-financed · WHO-GMP · Gqeberha" },
+              { icon: "🎬", title: "Creative & performance", body: "Musicians, writers, filmmakers, and athletes whose work generates residuals, splits, NIL licensing revenue, or union distribution rights over years or decades.", chip: "e.g. Ohio State · House Settlement · NIL Go FMV · $15.375M pool" },
+              { icon: "⚙", title: "Industrial & cooperative", body: "Process engineers, floor supervisors, and cooperative farmers whose innovations get adopted globally but whose contribution record stays with the institution.", chip: "e.g. Meridian Manufacturing · ArbEG · line efficiency reader · IoT trigger" },
+            ].map((b) => (
+              <div key={b.title} style={{
+                background: COLORS.card, border: `1px solid ${COLORS.border}`,
+                borderRadius: 6, padding: "20px 22px",
+                display: "flex", flexDirection: "column",
+              }}>
+                <div style={{ fontSize: 16, marginBottom: 10 }}>{b.icon}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: COLORS.text }}>{b.title}</div>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7, margin: "6px 0 0", flex: 1 }}>{b.body}</p>
+                <div style={{
+                  marginTop: 14, alignSelf: "flex-start",
+                  fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint,
+                  background: "rgba(26,22,14,0.04)", border: "1px solid rgba(26,22,14,0.08)",
+                  borderRadius: 3, padding: "4px 8px",
+                }}>{b.chip}</div>
               </div>
             ))}
           </div>
