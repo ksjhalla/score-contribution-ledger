@@ -106,7 +106,7 @@ function TierCard({ tier }: { tier: Tier }) {
   const labelColor = tier.dark ? "rgba(245,241,232,0.5)" : COLORS.faint;
   const priceColor = tier.dark ? COLORS.darkText : COLORS.text;
   const subColor = tier.dark ? "rgba(245,241,232,0.5)" : COLORS.faint;
-  const featureColor = tier.dark ? "rgba(245,241,232,0.85)" : COLORS.muted;
+  const featureColor = tier.dark ? COLORS.darkText : COLORS.muted;
   const checkColor = tier.dark ? COLORS.amber : "#2A6A45";
   const ctaStyle: React.CSSProperties = tier.dark
     ? { background: COLORS.amber, color: "#fff", border: "none" }
