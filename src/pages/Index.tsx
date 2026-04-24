@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { toast } from "sonner";
 import { conversationCards, type ConversationCard } from "@/data/marketingPreviews";
 
 const COLORS = {
@@ -197,6 +198,16 @@ export default function Index() {
       const m = document.createElement("meta");
       m.name = "description"; m.content = text;
       document.head.appendChild(m);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("deleted") === "true") {
+      toast.success("Your account has been deleted.", { duration: 5000 });
+      params.delete("deleted");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
     }
   }, []);
 
