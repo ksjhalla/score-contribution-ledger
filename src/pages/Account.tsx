@@ -142,7 +142,8 @@ const Account = () => {
   const togglePrivacy = async (key: "passport_visible" | "show_contracts" | "show_counterparties" | "show_amounts", value: boolean) => {
     if (!user || !profile) return;
     setProfile({ ...profile, [key]: value });
-    const { error } = await supabase.from("profiles").update({ [key]: value }).eq("id", user.id);
+    const update: Partial<Pick<Profile, "passport_visible" | "show_contracts" | "show_counterparties" | "show_amounts">> = { [key]: value };
+    const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
     if (error) {
       toast.error(error.message);
       await reload();
