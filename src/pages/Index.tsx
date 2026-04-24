@@ -400,6 +400,42 @@ export default function Index() {
         </div>
       </Section>
 
+      {/* HOW IT WORKS */}
+      <Section id="how-it-works" style={{ background: COLORS.surface, padding: "80px 0" }}>
+        <div style={{ ...containerStyle, maxWidth: 760 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={eyebrowStyle}>HOW IT WORKS</div>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 36, lineHeight: 1.2, margin: "0 auto", maxWidth: 700 }}>
+              The contract stays real.<br />The payment stays real.<br />SCORE is the ledger between them.
+            </h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 560, margin: "16px auto 48px", lineHeight: 1.75 }}>
+              SCORE records what was contributed, proves it happened, and notifies when payment is due. Nothing about this requires a blockchain. Evidence is SHA-256 fingerprinted and RFC 3161 timestamped. The record is the value.
+            </p>
+          </div>
+          <div style={{ display: "flex", alignItems: "stretch" }}>
+            {[
+              { n: "01", t: "Contract", b: "A real-world agreement defines what the contributor is owed and what condition must be met. SCORE records the reference — it does not hold the contract." },
+              { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
+              { n: "03", t: "Trigger & payment", b: "When the condition is met — a threshold crossed, a licence executed, a distribution event — SCORE notifies and records settlement. Payment moves through existing channels." },
+            ].map((s, i, arr) => (
+              <div key={s.n} style={{ display: "flex", flex: 1, alignItems: "stretch" }}>
+                <div style={{
+                  flex: 1, padding: "24px 28px", textAlign: "center",
+                  borderRight: i < arr.length - 1 ? "1px solid rgba(26,22,14,0.08)" : "none",
+                }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: COLORS.amber, marginBottom: 12 }}>{s.n}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>{s.t}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.65 }}>{s.b}</div>
+                </div>
+                {i < arr.length - 1 && (
+                  <div style={{ display: "flex", alignItems: "center", fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber, padding: "0 4px" }}>→</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
       {/* CONVERSATIONS */}
       <Section id="conversations" style={{ background: COLORS.bg, padding: "100px 0" }}>
         <div style={containerStyle}>
