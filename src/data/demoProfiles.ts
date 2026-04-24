@@ -30,6 +30,10 @@ export type DemoProfile = {
   executions: DemoExecution[];
   whatChanged: DemoValueEvent[];
   banner: { text: string; bg: string; border: string };
+  valueMix: { settled: number; pending: number; future: number; currency: string; label: string };
+  bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number }>;
+  quickRead: Array<{ question: string; answer: string; value: string; valueColor: "green" | "amber" | "blue" | "default" }>;
+  milestones: Array<{ status: "ok" | "info" | "watch"; title: string; meta: string; amount?: string | null; amountColor?: "green" | "amber" | "blue" }>;
 };
 
 export type DemoValueEvent = {
