@@ -4,10 +4,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, ShieldCheck, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 type Stats = { total_contracts: number; total_executions: number; total_settled_value: number; total_users: number; active_users_30d: number };
 type UserRow = { id: string; contributor_id: string | null; full_name: string | null; sector: string | null; created_at: string; anonymised: boolean; deleted_at: string | null; contract_count: number; execution_count: number; last_active: string | null };
+type InviteRow = { id: string; code: string; email: string | null; note: string | null; max_uses: number; use_count: number; expires_at: string | null; used_at: string | null; created_at: string };
+
+const randomSegment = (len = 4) => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < len; i++) out += chars[arr[i] % chars.length];
+  return out;
+};
+const newCode = () => `SCORE-${randomSegment()}-${randomSegment()}`;
 
 const Admin = () => {
   const { user, loading } = useAuth();
@@ -15,6 +28,19 @@ const Admin = () => {
   const [authorised, setAuthorised] = useState<boolean | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [genEmail, setGenEmail] = useState("");
+  const [genExpires, setGenExpires] = useState("");
+  const [genMaxUses, setGenMaxUses] = useState("1");
+  const [genNote, setGenNote] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [lastCode, setLastCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const loadInvites = async () => {
+    const { data } = await supabase.from("invite_codes").select("*").order("created_at", { ascending: false });
+    setInvites((data as InviteRow[]) ?? []);
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -24,14 +50,57 @@ const Admin = () => {
       const isAdmin = (roleRows ?? []).length > 0;
       setAuthorised(isAdmin);
       if (!isAdmin) return;
-      const [s, u] = await Promise.all([
+      const [s, u, _i] = await Promise.all([
         supabase.rpc("get_admin_stats"),
         supabase.rpc("get_admin_user_list"),
+        loadInvites(),
       ]);
       setStats(s.data as unknown as Stats);
       setUsers((u.data as unknown as UserRow[]) ?? []);
     })();
   }, [user, loading, navigate]);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    const code = newCode();
+    const max = Math.max(1, parseInt(genMaxUses || "1", 10) || 1);
+    const payload: {
+      code: string;
+      email: string | null;
+      note: string | null;
+      max_uses: number;
+      expires_at: string | null;
+      created_by: string | null;
+    } = {
+      code,
+      email: genEmail.trim() ? genEmail.trim().toLowerCase() : null,
+      note: genNote.trim() ? genNote.trim() : null,
+      max_uses: max,
+      expires_at: genExpires ? new Date(genExpires).toISOString() : null,
+      created_by: user?.id ?? null,
+    };
+    const { error } = await supabase.from("invite_codes").insert(payload);
+    setGenerating(false);
+    if (error) {
+      toast.error("Could not generate code", { description: error.message });
+      return;
+    }
+    setLastCode(code);
+    setGenEmail(""); setGenExpires(""); setGenMaxUses("1"); setGenNote("");
+    await loadInvites();
+  };
+
+  const copy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(text);
+    setTimeout(() => setCopied((c) => (c === text ? null : c)), 1500);
+  };
+
+  const statusOf = (r: InviteRow): { label: string; cls: string } => {
+    if (r.expires_at && new Date(r.expires_at) < new Date()) return { label: "Expired", cls: "text-destructive" };
+    if (r.use_count >= r.max_uses) return { label: "Used", cls: "text-muted-foreground" };
+    return { label: "Active", cls: "text-emerald-700 dark:text-emerald-400" };
+  };
 
   if (authorised === null) return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
   if (!authorised) return (
@@ -56,6 +125,85 @@ const Admin = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Invite codes</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Lock to email (optional)</label>
+                <Input value={genEmail} onChange={(e) => setGenEmail(e.target.value)} placeholder="user@example.com" type="email" className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Expires</label>
+                <Input value={genExpires} onChange={(e) => setGenExpires(e.target.value)} type="date" className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Max uses</label>
+                <Input value={genMaxUses} onChange={(e) => setGenMaxUses(e.target.value)} type="number" min={1} className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Memo</label>
+                <Input value={genNote} onChange={(e) => setGenNote(e.target.value)} placeholder="Who this is for" className="h-9 text-xs" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button size="sm" onClick={handleGenerate} disabled={generating}>
+                {generating ? "Generating…" : "Generate code →"}
+              </Button>
+              {lastCode && (
+                <div className="flex-1 flex items-center justify-between gap-3 px-3 py-2 rounded bg-muted">
+                  <div>
+                    <div className="font-mono text-sm">{lastCode}</div>
+                    <div className="font-mono text-[9px] text-muted-foreground mt-0.5">Code generated. Share this with the invitee.</div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => copy(lastCode)}>
+                    {copied === lastCode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="text-left py-2">Code</th>
+                    <th className="text-left">Email</th>
+                    <th className="text-left">Note</th>
+                    <th className="text-right">Uses</th>
+                    <th className="text-right">Expires</th>
+                    <th className="text-right">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invites.length === 0 && (
+                    <tr><td colSpan={7} className="py-3 text-muted-foreground text-center">No invite codes yet.</td></tr>
+                  )}
+                  {invites.map((r) => {
+                    const s = statusOf(r);
+                    return (
+                      <tr key={r.id} className="border-b">
+                        <td className="py-2 font-mono text-[11px]">{r.code}</td>
+                        <td className="font-mono text-[11px]">{r.email ?? "—"}</td>
+                        <td className="font-mono text-[11px]">{r.note ?? "—"}</td>
+                        <td className="text-right font-mono text-[11px]">{r.use_count}/{r.max_uses}</td>
+                        <td className="text-right font-mono text-[11px]">{r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "—"}</td>
+                        <td className={`text-right font-mono text-[11px] ${s.cls}`}>{s.label}</td>
+                        <td className="text-right">
+                          <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copy(r.code)}>
+                            {copied === r.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
         <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {stats && (
             <>
