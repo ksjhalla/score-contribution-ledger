@@ -3,18 +3,25 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
-// Spies we can assert against. The mock factory below references these via
-// closure so each test can re-stub the rpc/getSession behaviour.
-const channelSpy = vi.fn();
-const onAuthStateChangeSpy = vi.fn(() => ({
-  data: { subscription: { unsubscribe: vi.fn() } },
-}));
-const getSessionMock = vi.fn();
-const rpcMock = vi.fn();
-const fromMock = vi.fn(() => ({
-  select: () => ({
-    eq: () => ({ maybeSingle: () => Promise.resolve({ data: null, error: null }) }),
-  }),
+// Hoisted so the vi.mock factory (which is itself hoisted) can reference them.
+const {
+  channelSpy,
+  onAuthStateChangeSpy,
+  getSessionMock,
+  rpcMock,
+  fromMock,
+} = vi.hoisted(() => ({
+  channelSpy: vi.fn(),
+  onAuthStateChangeSpy: vi.fn(() => ({
+    data: { subscription: { unsubscribe: vi.fn() } },
+  })),
+  getSessionMock: vi.fn(),
+  rpcMock: vi.fn(),
+  fromMock: vi.fn(() => ({
+    select: () => ({
+      eq: () => ({ maybeSingle: () => Promise.resolve({ data: null, error: null }) }),
+    }),
+  })),
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({
