@@ -421,14 +421,17 @@ export default function Index() {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); if (err) setErr(null); }}
                   placeholder="your@email.com"
                   maxLength={255}
+                  aria-invalid={!!err}
+                  aria-describedby={err ? "cta-email-error" : undefined}
                   style={{
                     flex: 1, border: "1px solid rgba(26,22,14,0.15)",
                     borderRadius: "4px 0 0 4px", background: "#fff",
                     padding: "12px 16px", fontFamily: FONT_BODY, fontSize: 14,
                     color: COLORS.text, outline: "none",
+                    borderColor: err ? "#9A3020" : "rgba(26,22,14,0.15)",
                   }}
                 />
                 <button type="submit" disabled={submitting} style={{
@@ -439,7 +442,15 @@ export default function Index() {
                 }}>{submitting ? "SENDING…" : "REQUEST A DEMO"}</button>
               </form>
             )}
-            {err && <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 8 }}>{err}</div>}
+            {err && (
+              <div
+                id="cta-email-error"
+                role="alert"
+                style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 8, textAlign: "left" }}
+              >
+                {err}
+              </div>
+            )}
             {!submitted && (
               <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint, marginTop: 12 }}>
                 We'll be in touch within one business day.
