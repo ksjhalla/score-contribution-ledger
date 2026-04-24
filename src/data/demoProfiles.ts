@@ -1,4 +1,4 @@
-export type DemoKey = "pharma" | "ncaa" | "supplyChain";
+export type DemoKey = "pharma" | "ncaa" | "supplyChain" | "ai";
 
 export type DemoExecution = {
   title: string;
