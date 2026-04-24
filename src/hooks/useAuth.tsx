@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { isPublicRoute } from "@/lib/routeGuard";
 
 type AuthContextValue = {
   user: User | null;
@@ -25,6 +26,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
+    // On public routes (/, /auth, /invite, /pricing, /attest/*, /passport/*, /report)
+    // we do NOT subscribe to onAuthStateChange. This prevents WebSocket churn and
+    // post-OAuth redirect loops on /invite. We still fetch the current session
+    // once so consumers can read user state.
+    const path = window.location.pathname;
+    if (isPublicRoute(path)) {
+      supabase.auth.getSession().then(({ data: { session: s } }) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        setLoading(false);
+      });
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
