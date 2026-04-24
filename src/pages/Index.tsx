@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { earningsPreview, passportPreview, conversationCards } from "@/data/marketingPreviews";
+import { passportPreview, conversationCards } from "@/data/marketingPreviews";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -204,16 +204,12 @@ export default function Index() {
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
               borderRadius: 4, padding: "12px 24px", textDecoration: "none",
             }}>Request a demo →</a>
-            <Link to="/demo" style={{
-              background: "transparent", color: COLORS.muted,
-              fontFamily: FONT_BODY, fontSize: 14, padding: "12px 8px", textDecoration: "none",
-            }} className="score-link-underline">See what it does</Link>
           </div>
           <div style={{
             display: "block", textAlign: "center", marginTop: 10,
             fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
           }}>
-            Already have access? <Link to="/login" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
+            Already have access? <Link to="/auth" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
           </div>
         </div>
       </Section>
