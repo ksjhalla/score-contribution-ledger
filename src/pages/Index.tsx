@@ -32,6 +32,26 @@ const emailSchema = z
   .email({ message: "Please enter a valid email address." })
   .regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, { message: "Please enter a valid email address." });
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, { message: "Please tell us your name." }).max(120),
+  email: emailSchema,
+  organisation: z.string().trim().max(160).optional(),
+  use_case: z.string().trim().min(1, { message: "Please pick a use case." }).max(80),
+  message: z.string().trim().max(2000).optional(),
+});
+
+const USE_CASES = [
+  "Software & Open Source",
+  "Pharma & Biotech",
+  "College Athletics",
+  "Music & Publishing",
+  "Film & Television",
+  "Agriculture",
+  "Manufacturing",
+  "AI Training Data",
+  "Other",
+];
+
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   const [shown, setShown] = useState(false);
@@ -183,11 +203,13 @@ const eyebrowStyle: React.CSSProperties = {
 };
 
 export default function Index() {
-  const emailInputRef = useRef<HTMLInputElement>(null);
-  const [email, setEmail] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState({ name: "", email: "", organisation: "", use_case: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedName, setSubmittedName] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [fieldErr, setFieldErr] = useState<Partial<Record<keyof typeof form, string>>>({});
 
   useEffect(() => {
     document.title = "SCORE — A new way for collaborative work to earn";
@@ -214,7 +236,7 @@ export default function Index() {
   const scrollToCta = (e?: React.MouseEvent) => {
     e?.preventDefault();
     document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
-    setTimeout(() => emailInputRef.current?.focus(), 600);
+    setTimeout(() => nameInputRef.current?.focus(), 600);
   };
 
   const smoothScroll = (id: string) => (e: React.MouseEvent) => {
@@ -225,26 +247,32 @@ export default function Index() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
-    const parsed = emailSchema.safeParse(email);
+    setFieldErr({});
+    const parsed = contactSchema.safeParse(form);
     if (!parsed.success) {
-      setErr(parsed.error.issues[0]?.message ?? "Please enter a valid email address.");
-      emailInputRef.current?.focus();
+      const fe: Partial<Record<keyof typeof form, string>> = {};
+      parsed.error.issues.forEach((i) => {
+        const k = i.path[0] as keyof typeof form;
+        if (k && !fe[k]) fe[k] = i.message;
+      });
+      setFieldErr(fe);
       return;
     }
     setSubmitting(true);
     const { error } = await supabase.from("demo_requests").insert({
-      email: parsed.data,
-      source: "homepage_cta",
+      name: parsed.data.name,
+      email: parsed.data.email,
+      organisation: parsed.data.organisation || null,
+      use_case: parsed.data.use_case,
+      message: parsed.data.message || null,
+      source: "marketing_cta",
     });
     setSubmitting(false);
     if (error) {
-      // Server-side validation (RLS check constraint) rejected the input.
-      const msg = /check constraint|violates/i.test(error.message)
-        ? "That email doesn't look valid. Please double-check and try again."
-        : "Something went wrong. Please try again.";
-      setErr(msg);
+      setErr("Something went wrong. Email us at hello@score.xyz");
       return;
     }
+    setSubmittedName(parsed.data.name);
     setSubmitted(true);
   };
 
