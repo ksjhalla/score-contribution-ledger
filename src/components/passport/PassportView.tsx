@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export type PassportData = {
   contributor_id: string;
@@ -63,6 +64,11 @@ export const PassportView = ({ data }: { data: PassportData }) => {
       ? "—"
       : `${Number(data.summary.work_settled_value).toLocaleString()} ${data.summary.currency}`;
   const hasWorkEntries = (data.summary.work_entries ?? 0) > 0;
+  const isPassportEmpty =
+    data.summary.contracts === 0 &&
+    data.summary.executions === 0 &&
+    (data.summary.attributed_value == null || Number(data.summary.attributed_value) === 0) &&
+    !hasWorkEntries;
 
   return (
     <article id="passport-printable" className="max-w-2xl mx-auto px-4 py-6 space-y-5">
@@ -90,6 +96,43 @@ export const PassportView = ({ data }: { data: PassportData }) => {
         <Stat label="Executions" value={String(data.summary.executions)} />
         <Stat label="Attributed value" value={value} />
       </section>
+
+      {isPassportEmpty && (
+        <div
+          style={{
+            border: "1px solid rgba(26,22,14,0.10)",
+            borderRadius: 6,
+            padding: "16px 20px",
+            background: "#FDFAF4",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: 13,
+              color: "#5C5248",
+              lineHeight: 1.7,
+              margin: 0,
+            }}
+          >
+            Your attributed total updates automatically when you mark an execution as Settled. Start by adding a contract, logging your first contribution, and confirming the trigger was met.
+          </p>
+          <div
+            className="mt-3 flex flex-wrap gap-x-5 gap-y-2"
+            style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13 }}
+          >
+            <Link to="/dashboard" style={{ color: "#C4892A", textDecoration: "underline" }}>
+              Add a contract →
+            </Link>
+            <Link to="/log-work" style={{ color: "#C4892A", textDecoration: "underline" }}>
+              Log an execution →
+            </Link>
+            <Link to="/demo" style={{ color: "#C4892A", textDecoration: "underline" }}>
+              See how it works →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {hasWorkEntries && (
         <section className="space-y-2">
