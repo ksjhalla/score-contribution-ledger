@@ -451,7 +451,6 @@ export default function Index() {
               ].map((p) => (
                 <span
                   key={p.label}
-                  className="score-live-chip"
                   style={{
                     display: "inline-block",
                     background: COLORS.card,
@@ -463,8 +462,9 @@ export default function Index() {
                     fontSize: 12,
                     color: COLORS.text,
                     transition: "border-color .15s ease",
-                    ["--chip-accent" as string]: p.color,
-                  } as React.CSSProperties}
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.borderColor = p.color; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.borderColor = COLORS.border; (e.currentTarget as HTMLSpanElement).style.borderLeftColor = p.color; }}
                 >
                   {p.label}
                 </span>
