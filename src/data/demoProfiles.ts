@@ -36,7 +36,7 @@ export type DemoProfile = {
   milestones: Array<{ status: "ok" | "info" | "watch"; title: string; meta: string; amount?: string | null; amountColor?: "green" | "amber" | "blue" }>;
   bio?: string;
   badges?: string[];
-  valueStreams?: Array<{ icon: "droplets" | "leaf" | "network"; iconColor: string; name: string; description: string; value: string }>;
+  valueStreams?: Array<{ icon: "droplets" | "leaf" | "network" | "code" | "git-fork" | "brain"; iconColor: string; name: string; description: string; value: string }>;
 };
 
 export type DemoValueEvent = {
@@ -116,10 +116,30 @@ export const supplyChainNotifications: DemoNotification[] = [
   },
 ];
 
+export const aiNotifications: DemoNotification[] = [
+  {
+    id: "demo-n7",
+    type: "trigger_met",
+    message:
+      "Dataset adoption signal detected — referenced in a production model release. Log an execution against the Dataset Attribution Record.",
+    read: false,
+    created_at: hoursAgo(3),
+  },
+  {
+    id: "demo-n8",
+    type: "settlement_due",
+    message:
+      "Enterprise integration usage signal confirmed. Library deployed in production. Mark the Integration Royalty as pending settlement.",
+    read: true,
+    created_at: daysAgo(4),
+  },
+];
+
 export const demoNotificationsFor = (key: DemoKey | "none"): DemoNotification[] => {
   if (key === "pharma") return pharmaNotifications;
   if (key === "ncaa") return ncaaNotifications;
   if (key === "supplyChain") return supplyChainNotifications;
+  if (key === "ai") return aiNotifications;
   return [];
 };
 
