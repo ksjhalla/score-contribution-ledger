@@ -539,7 +539,7 @@ export default function Index() {
               ["Portable", "record follows the contributor · not the org"],
             ].map(([num, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: COLORS.amber, lineHeight: 1 }}>{num}</div>
+                <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 32, color: COLORS.amber, lineHeight: 1, fontVariantLigatures: "none" }}>{num}</div>
                 <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "rgba(245,241,232,0.4)", marginTop: 8, letterSpacing: "0.05em" }}>{label}</div>
               </div>
             ))}
