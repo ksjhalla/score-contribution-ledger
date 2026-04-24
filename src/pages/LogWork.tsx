@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Check, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useDemo } from "@/contexts/DemoContext";
+import { formatDemoAmount } from "@/data/demoProfiles";
 
 type WorkStatus = "Pending" | "Settled";
 
@@ -210,6 +212,7 @@ const EmptyEntries = ({ onStart }: { onStart: () => void }) => (
 const LogWork = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { profile: demoProfile } = useDemo();
 
   const [entries, setEntries] = useState<WorkEntry[]>([]);
   const [loadingList, setLoadingList] = useState(true);
@@ -256,9 +259,53 @@ const LogWork = () => {
   };
 
   useEffect(() => {
-    if (user) fetchEntries();
+    if (user && !demoProfile) fetchEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, demoProfile]);
+
+  if (demoProfile) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-6 sm:py-10">
+        <div className="mx-auto w-full max-w-3xl space-y-6">
+          <header className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">Log work</h1>
+            <p className="text-sm text-muted-foreground">
+              Read-only demo view. Showing executions for {demoProfile.contributor.name}.
+            </p>
+          </header>
+          <Card>
+            <CardHeader className="px-5 sm:px-6 pt-5 sm:pt-6">
+              <CardTitle>Demo executions</CardTitle>
+              <CardDescription>
+                {demoProfile.executions.length} {demoProfile.executions.length === 1 ? "entry" : "entries"} · exit demo to log your own work.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6">
+              <ul className="divide-y">
+                {demoProfile.executions.map((e) => (
+                  <li key={e.title} className="py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <p className="font-medium text-sm break-words">{e.title}</p>
+                        <Badge variant="outline">{e.status}</Badge>
+                        <span className="text-xs text-muted-foreground">{e.date}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground break-words" style={{ fontFamily: "'DM Mono',ui-monospace,monospace" }}>
+                        {e.proof}
+                      </p>
+                    </div>
+                    <div className="text-sm font-medium" style={{ fontFamily: "'DM Mono',ui-monospace,monospace" }}>
+                      {formatDemoAmount(e.amount, e.currency)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const errors = useMemo(
     () => validate({ title, workDate, hours, category, description, referenceUrl }),
