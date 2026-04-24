@@ -1,12 +1,12 @@
-export type DemoKey = "pharma" | "ncaa";
+export type DemoKey = "pharma" | "ncaa" | "supplyChain";
 
 export type DemoExecution = {
   title: string;
-  status: "Settled" | "Pending" | "Attributed";
+  status: "Settled" | "Pending" | "Attributed" | "Intent logged";
   amount: number | null;
   currency: string;
   date: string;
-  proof: string;
+  proof: string | null;
   resolver_description?: string;
   expected_resolution?: string;
   confidence?: "High" | "Medium" | "Low";
@@ -25,15 +25,18 @@ export type DemoProfile = {
   key: DemoKey;
   accent: string;
   contributor: { name: string; role: string; org: string; id: string; sector: string };
-  stats: { settled: number; pending: number; currency: string; contracts: number; executions: number };
+  stats: { settled: number; pending: number; future?: number; esg?: number; currency: string; contracts: number; executions: number };
   contracts: DemoContract[];
   executions: DemoExecution[];
   whatChanged: DemoValueEvent[];
   banner: { text: string; mobileText?: string; bg: string; border: string };
-  valueMix: { settled: number; pending: number; future: number; currency: string; label: string };
-  bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number }>;
+  valueMix: { settled: number; pending: number; future: number; esg?: number; currency: string; label: string };
+  bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number; color?: string }>;
   quickRead: Array<{ question: string; answer: string; value: string; valueColor: "green" | "amber" | "blue" | "default" }>;
   milestones: Array<{ status: "ok" | "info" | "watch"; title: string; meta: string; amount?: string | null; amountColor?: "green" | "amber" | "blue" }>;
+  bio?: string;
+  badges?: string[];
+  valueStreams?: Array<{ icon: "droplets" | "leaf" | "network"; iconColor: string; name: string; description: string; value: string }>;
 };
 
 export type DemoValueEvent = {
