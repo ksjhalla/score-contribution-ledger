@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Check } from "lucide-react";
+import { Check, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type WorkStatus = "Pending" | "Settled";
 
@@ -111,6 +112,100 @@ const friendlyError = (msg: string) => {
   if (m.includes("duplicate")) return "A duplicate entry already exists.";
   return msg || "Could not save entry. Please try again.";
 };
+
+const STATUS_TOOLTIP: Record<string, string> = {
+  Pending:
+    "Trigger confirmed. Waiting for settlement. Counts toward Passport Pending total.",
+  Settled:
+    "Payment received. Counts toward your attributed total on the Passport.",
+  "Intent logged":
+    "Work recorded. Trigger not yet confirmed. Not counted in Passport totals until status changes.",
+};
+
+const focusTitleInput = () => {
+  const el = document.getElementById("title") as HTMLInputElement | null;
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => el.focus(), 350);
+  }
+};
+
+const EmptyEntries = ({ onStart }: { onStart: () => void }) => (
+  <div className="py-6 flex flex-col items-center text-center">
+    <h3
+      className="text-foreground"
+      style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 600, fontSize: 18 }}
+    >
+      No contributions logged yet.
+    </h3>
+    <p
+      className="mt-3"
+      style={{
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        fontSize: 13,
+        color: "#5C5248",
+        lineHeight: 1.7,
+        maxWidth: 360,
+      }}
+    >
+      Log your first execution against a contract. Each entry moves through three states:
+    </p>
+    <ol className="mt-5 w-full max-w-[360px] text-left relative" style={{ paddingLeft: 22 }}>
+      <span
+        aria-hidden
+        className="absolute"
+        style={{ left: 5, top: 6, bottom: 6, width: 1, background: "rgba(26,22,14,0.10)" }}
+      />
+      {[
+        { label: "Intent logged", color: "#9A8F84", body: "Work happened but the trigger condition isn't confirmed yet. Doesn't affect Passport totals." },
+        { label: "Pending", color: "#C4892A", body: "Trigger confirmed. Payment is due but not yet received. Shows in Passport as Pending." },
+        { label: "Settled", color: "#2A6A45", body: "Payment received and confirmed. Adds to your Passport attributed total." },
+      ].map((s) => (
+        <li key={s.label} className="relative pb-4 last:pb-0">
+          <span
+            aria-hidden
+            className="absolute rounded-full"
+            style={{ left: -22, top: 6, width: 11, height: 11, background: s.color, border: "2px solid #FDFAF4" }}
+          />
+          <div
+            style={{
+              fontFamily: "'DM Mono', ui-monospace, monospace",
+              fontSize: 9,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: s.color,
+            }}
+          >
+            {s.label}
+          </div>
+          <p
+            className="mt-1"
+            style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13, color: "#5C5248", lineHeight: 1.7 }}
+          >
+            {s.body}
+          </p>
+        </li>
+      ))}
+    </ol>
+    <button
+      type="button"
+      onClick={onStart}
+      className="mt-6"
+      style={{
+        background: "#1A1614",
+        color: "#F5F1E8",
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        fontSize: 14,
+        borderRadius: 4,
+        padding: "10px 20px",
+        border: "none",
+        cursor: "pointer",
+      }}
+    >
+      Log your first contribution →
+    </button>
+  </div>
+);
 
 const LogWork = () => {
   const navigate = useNavigate();
@@ -441,8 +536,9 @@ const LogWork = () => {
             {loadingList ? (
               <p className="text-sm text-muted-foreground">Loading entries…</p>
             ) : entries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No entries yet. Add your first above.</p>
+              <EmptyEntries onStart={focusTitleInput} />
             ) : (
+              <TooltipProvider delayDuration={150}>
               <ul className="divide-y">
                 {entries.map((e) => (
                   <li key={e.id} className="py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -459,6 +555,33 @@ const LogWork = () => {
                         >
                           {e.status}
                         </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`What does ${e.status} mean?`}
+                              className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+                            >
+                              <HelpCircle className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="border-0"
+                            style={{
+                              fontFamily: "'DM Sans', system-ui, sans-serif",
+                              fontSize: 12,
+                              background: "#1A1614",
+                              color: "#F5F1E8",
+                              borderRadius: 4,
+                              padding: "6px 10px",
+                              maxWidth: 220,
+                              zIndex: 50,
+                            }}
+                          >
+                            {STATUS_TOOLTIP[e.status] ?? STATUS_TOOLTIP.Pending}
+                          </TooltipContent>
+                        </Tooltip>
                         <span className="text-xs text-muted-foreground">{e.work_date}</span>
                         {e.hours != null && <span className="text-xs text-muted-foreground">· {e.hours}h</span>}
                         {e.category && <span className="text-xs text-muted-foreground">· {e.category}</span>}
@@ -513,6 +636,7 @@ const LogWork = () => {
                   </li>
                 ))}
               </ul>
+              </TooltipProvider>
             )}
           </CardContent>
         </Card>
