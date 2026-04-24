@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { SEO } from "@/components/SEO";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -85,6 +86,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <SEO
+        title="Sign in — SCORE"
+        description="Sign in to your SCORE contribution ledger."
+        noindex
+      />
       <a
         href="/"
         style={{
