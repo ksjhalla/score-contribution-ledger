@@ -259,6 +259,11 @@ export default function Index() {
           .score-cols-2 { grid-template-columns: 1fr !important; }
           .score-platform-grid { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 767px) {
+          .score-howitworks-row { flex-direction: column !important; }
+          .score-howitworks-arrow { display: none !important; }
+          .score-howitworks-step { padding: 20px 0 !important; }
+        }
         .score-link-underline:hover { text-decoration: underline; }
       `}</style>
 
@@ -448,23 +453,23 @@ export default function Index() {
               SCORE records what was contributed, proves it happened, and notifies when payment is due. Nothing about this requires a blockchain. Evidence is SHA-256 fingerprinted and RFC 3161 timestamped. The record is the value.
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+          <div className="score-howitworks-row" style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
             {[
               { n: "01", t: "Contract", b: "A real-world agreement defines what the contributor is owed and what condition must be met. SCORE records the reference — it does not hold the contract." },
               { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
               { n: "03", t: "Trigger & payment", b: "When the condition is met — a threshold crossed, a licence executed, a distribution event — SCORE notifies and records settlement. Payment moves through existing channels." },
             ].map((s, i, arr) => (
               <Fragment key={s.n}>
-                <div style={{
+                <div className="score-howitworks-step" style={{
                   flex: 1, minWidth: 0, padding: "24px 28px", textAlign: "center",
-                  wordWrap: "break-word", hyphens: "none",
+                  wordBreak: "normal", overflowWrap: "break-word", hyphens: "none",
                 }}>
                   <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: COLORS.amber, marginBottom: 12 }}>{s.n}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>{s.t}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7 }}>{s.b}</div>
                 </div>
                 {i < arr.length - 1 && (
-                  <div style={{
+                  <div className="score-howitworks-arrow" style={{
                     flexShrink: 0, alignSelf: "center", padding: "0 8px",
                     fontFamily: FONT_MONO, fontSize: 18, color: COLORS.amber,
                   }}>→</div>

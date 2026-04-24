@@ -85,6 +85,21 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <a
+        href="/"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          padding: "12px 24px",
+          fontFamily: "'DM Mono', ui-monospace, monospace",
+          fontSize: 10,
+          color: "#9A8F84",
+          textDecoration: "none",
+        }}
+      >
+        ← Back to home
+      </a>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl tracking-tight">SCORE</CardTitle>

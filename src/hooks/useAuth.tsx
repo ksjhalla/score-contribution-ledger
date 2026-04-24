@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       if (event === "SIGNED_OUT") {
-        navigate("/auth", { replace: true });
+        navigate("/", { replace: true });
       }
     });
 
