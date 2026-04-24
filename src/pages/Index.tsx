@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { earningsPreview, proofPreview, passportPreview, conversationCards } from "@/data/marketingPreviews";
+import { earningsPreview, passportPreview, conversationCards } from "@/data/marketingPreviews";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -163,7 +163,7 @@ export default function Index() {
             padding: "4px 10px", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted,
           }}>→ Now available</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link to="/login" className="score-topbar-signin" style={{
+            <Link to="/auth" className="score-topbar-signin" style={{
               fontFamily: FONT_MONO, fontSize: 11, color: COLORS.muted, textDecoration: "none",
             }}>Sign in →</Link>
             <a href="#cta" onClick={scrollToCta} style={{
