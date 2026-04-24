@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { trackEvent } from "@/lib/analytics";
 
@@ -264,7 +264,17 @@ export default function Pricing() {
           </div>
           <div>
             {FAQ.map((item, i) => (
-              <FaqItem key={item.q} q={item.q} a={item.a} open={openIdx === i} onToggle={() => setOpenIdx(openIdx === i ? null : i)} />
+              <FaqItem
+                key={item.q}
+                q={item.q}
+                a={item.a}
+                open={openIdx === i}
+                onToggle={() => {
+                  const willOpen = openIdx !== i;
+                  setOpenIdx(willOpen ? i : null);
+                  if (willOpen) trackEvent("pricing_faq_opened", { question: item.q });
+                }}
+              />
             ))}
           </div>
         </div>
