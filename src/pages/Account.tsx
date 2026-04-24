@@ -79,6 +79,20 @@ const Account = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [dangerOpen, setDangerOpen] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown <= 0) {
+      void confirmDelete();
+      setCountdown(null);
+      return;
+    }
+    const t = setTimeout(() => setCountdown((c) => (c === null ? null : c - 1)), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown]);
 
   const passportUrl = useMemo(
     () => (profile?.contributor_id ? `${window.location.origin}/passport/${profile.contributor_id}` : ""),
@@ -421,36 +435,56 @@ const Account = () => {
       </section>
 
       {/* SECTION 4: DANGER ZONE */}
-      <section style={{ paddingTop: 28 }}>
-        <SectionHeading color="#9A3020">Danger zone</SectionHeading>
-        <div style={{
-          border: "1px solid rgba(154,48,32,0.20)",
-          borderRadius: 6,
-          padding: 20,
-          background: "rgba(154,48,32,0.03)",
-        }}>
-          <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: "#1A1614", marginBottom: 4 }}>
-            Delete account
+      <section style={{ paddingTop: 28, marginTop: 8 }}>
+        <button
+          onClick={() => setDangerOpen((v) => !v)}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            fontFamily: FONT_MONO,
+            fontSize: 10,
+            color: "#9A8F84",
+            textTransform: "none",
+          }}
+          aria-expanded={dangerOpen}
+        >
+          Account deletion {dangerOpen ? "▾" : "›"}
+        </button>
+
+        {dangerOpen && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{
+              border: "1px solid rgba(154,48,32,0.30)",
+              borderRadius: 6,
+              padding: 20,
+              background: "transparent",
+            }}>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: "#9A3020", marginBottom: 4 }}>
+                Delete account
+              </div>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Permanently removes your profile, contracts, executions, and personal data. Evidence fingerprint records are retained anonymised. Your Contributor ID is retired and never reissued. This cannot be undone.
+              </p>
+              <button
+                onClick={() => { setDeleteInput(""); setCountdown(null); setDeleteOpen(true); }}
+                style={{
+                  background: "rgba(154,48,32,0.08)",
+                  border: "1px solid rgba(154,48,32,0.3)",
+                  color: "#9A3020",
+                  fontFamily: FONT_MONO,
+                  fontSize: 10,
+                  borderRadius: 4,
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                }}
+              >
+                Delete my account
+              </button>
+            </div>
           </div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", margin: "0 0 14px", lineHeight: 1.6 }}>
-            Permanently removes your profile, contracts, executions, and personal data. Evidence fingerprint records are retained anonymised. Your Contributor ID is retired and never reissued. This cannot be undone.
-          </p>
-          <button
-            onClick={() => { setDeleteInput(""); setDeleteOpen(true); }}
-            style={{
-              background: "rgba(154,48,32,0.08)",
-              border: "1px solid rgba(154,48,32,0.3)",
-              color: "#9A3020",
-              fontFamily: FONT_MONO,
-              fontSize: 10,
-              borderRadius: 4,
-              padding: "8px 16px",
-              cursor: "pointer",
-            }}
-          >
-            Delete my account
-          </button>
-        </div>
+        )}
       </section>
 
       {/* Hidden printable passport */}
@@ -466,7 +500,7 @@ const Account = () => {
       `}</style>
 
       {/* Delete confirmation dialog */}
-      <Dialog open={deleteOpen} onOpenChange={(v) => { if (!deleting) setDeleteOpen(v); }}>
+      <Dialog open={deleteOpen} onOpenChange={(v) => { if (!deleting && countdown === null) { setDeleteOpen(v); if (!v) setCountdown(null); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600 }}>
@@ -480,6 +514,7 @@ const Account = () => {
             value={deleteInput}
             onChange={(e) => setDeleteInput(e.target.value)}
             placeholder={profile.contributor_id ?? ""}
+            disabled={countdown !== null || deleting}
             style={{
               width: "100%",
               border: "1px solid rgba(26,22,14,0.15)",
@@ -493,8 +528,8 @@ const Account = () => {
           />
           <DialogFooter style={{ flexDirection: "column", gap: 8, alignItems: "stretch" }}>
             <button
-              onClick={confirmDelete}
-              disabled={deleting || deleteInput !== profile.contributor_id || !profile.contributor_id}
+              onClick={() => { if (countdown === null) setCountdown(5); }}
+              disabled={deleting || countdown !== null || deleteInput !== profile.contributor_id || !profile.contributor_id}
               style={{
                 background: "#9A3020",
                 color: "#fff",
@@ -504,14 +539,24 @@ const Account = () => {
                 width: "100%",
                 borderRadius: 4,
                 padding: 10,
-                cursor: deleteInput === profile.contributor_id ? "pointer" : "not-allowed",
-                opacity: deleteInput === profile.contributor_id ? 1 : 0.5,
+                cursor: deleteInput === profile.contributor_id && countdown === null ? "pointer" : "not-allowed",
+                opacity: deleteInput === profile.contributor_id || countdown !== null ? 1 : 0.5,
               }}
             >
-              {deleting ? "Deleting…" : "Delete my account permanently"}
+              {deleting
+                ? "Deleting…"
+                : countdown !== null
+                  ? `Deleting in ${countdown}…`
+                  : "Delete my account permanently"}
             </button>
             <button
-              onClick={() => setDeleteOpen(false)}
+              onClick={() => {
+                if (countdown !== null) {
+                  setCountdown(null);
+                } else {
+                  setDeleteOpen(false);
+                }
+              }}
               disabled={deleting}
               style={{ ...linkBtn, color: "#9A8F84", textAlign: "center", padding: 4 }}
             >
