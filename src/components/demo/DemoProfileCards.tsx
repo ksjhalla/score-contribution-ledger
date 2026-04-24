@@ -68,6 +68,23 @@ const CARDS: CardSpec[] = [
       { value: "$380K", label: "pending", settled: false },
     ],
   },
+  {
+    key: "ai",
+    initials: "MA",
+    name: "Mateo Alvarez",
+    role: "Open-source · AI datasets",
+    tag: "AI · Ecosystem",
+    accent: "#5B5FBF",
+    accentSoft: "rgba(91,95,191,0.10)",
+    accentBorder: "rgba(91,95,191,0.25)",
+    accentBg: "rgba(91,95,191,0.04)",
+    avatarBg: "rgba(91,95,191,0.12)",
+    avatarBorder: "rgba(91,95,191,0.3)",
+    stats: [
+      { value: "$120K", label: "paid", settled: true },
+      { value: "$280K", label: "pending", settled: false },
+    ],
+  },
 ];
 
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
