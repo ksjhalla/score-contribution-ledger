@@ -19,7 +19,7 @@ const STATUS_COLOR: Record<string, string> = {
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
   const { contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones } = profile;
   return (
-    <div style={{ padding: "32px 24px", maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
+    <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div style={{ marginBottom: 20 }}>
         <div
           style={{
@@ -48,14 +48,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 28 }}>
         {[
           { label: "Settled", value: formatDemoAmount(stats.settled, stats.currency), color: "#2A6A45" },
           { label: "Pending", value: formatDemoAmount(stats.pending, stats.currency), color: "#C4892A" },
@@ -89,7 +82,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28 }}>
         <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>Value mix</span>
@@ -116,7 +109,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         What changed
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 14, marginBottom: 28 }}>
+      <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-3.5" style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {whatChanged.map((c, i) => (
             <ValueEventCard
@@ -147,7 +140,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         Contracts
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28, alignItems: "start" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28, alignItems: "start" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {contracts.map((c) => (
           <div

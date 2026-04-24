@@ -31,7 +31,7 @@ export const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
       const a = document.createElement("a");
       a.href = dlUrl; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(dlUrl);
-      toast.success("Export downloaded");
+      toast.success("Export downloaded.");
     } finally { setExporting(false); }
   };
 
@@ -40,7 +40,7 @@ export const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
     const { error } = await supabase.rpc("soft_delete_account");
     setDeleting(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Account anonymised");
+    toast.success("Account anonymised.");
     await signOut();
     navigate("/auth", { replace: true });
   };

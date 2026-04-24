@@ -49,7 +49,7 @@ type Props = { userId: string };
 
 export const NotificationBell = ({ userId }: Props) => {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<NotificationRow[]>([]);
+  const [items, setItems] = useState<NotificationRow[] | null>(null);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
@@ -114,19 +114,20 @@ export const NotificationBell = ({ userId }: Props) => {
   }, [activeDemo, demoReadIds]);
 
   const realRows: PanelRow[] = useMemo(
-    () => items.map((i) => ({ id: i.id, type: i.type, message: i.message, read: i.read, created_at: i.created_at, contract_id: i.contract_id })),
+    () => (items ?? []).map((i) => ({ id: i.id, type: i.type, message: i.message, read: i.read, created_at: i.created_at, contract_id: i.contract_id })),
     [items],
   );
 
   const rows = activeDemo === "none" ? realRows : demoRows;
   const unread = useMemo(() => rows.filter((r) => !r.read).length, [rows]);
+  const isLoadingRealRows = activeDemo === "none" && items === null;
 
   const markRead = async (id: string) => {
     if (activeDemo !== "none") {
       setDemoReadIds((prev) => new Set(prev).add(id));
       return;
     }
-    setItems((prev) => prev.map((i) => i.id === id ? { ...i, read: true } : i));
+    setItems((prev) => (prev ?? []).map((i) => i.id === id ? { ...i, read: true } : i));
     await supabase.from("notifications").update({ read: true }).eq("id", id);
   };
 
@@ -135,7 +136,7 @@ export const NotificationBell = ({ userId }: Props) => {
       setDemoReadIds(new Set(rows.map((r) => r.id)));
       return;
     }
-    setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+    setItems((prev) => (prev ?? []).map((i) => ({ ...i, read: true })));
     await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
   };
 
@@ -214,7 +215,7 @@ export const NotificationBell = ({ userId }: Props) => {
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "16px 20px", borderBottom: "1px solid rgba(26,22,14,0.08)",
-                gap: 12,
+                gap: 12, flexShrink: 0, background: "#FDFAF4",
               }}
             >
               <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: "#1A1614", margin: 0 }}>
@@ -245,12 +246,25 @@ export const NotificationBell = ({ userId }: Props) => {
             </header>
 
             <div style={{ flex: 1, overflowY: "auto" }}>
-              {rows.length === 0 ? (
-                <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: "#9A8F84" }}>
+              {isLoadingRealRows ? (
+                <div>
+                  {[0, 1].map((i) => (
+                    <div key={i} style={{ padding: "14px 20px", borderBottom: "1px solid rgba(26,22,14,0.07)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                        <span className="skeleton" style={{ width: 64, height: 12 }} />
+                        <span className="skeleton" style={{ width: 36, height: 9 }} />
+                      </div>
+                      <span className="skeleton" style={{ width: "85%", height: 10, marginTop: 8 }} />
+                      <span className="skeleton" style={{ width: "55%", height: 10, marginTop: 6 }} />
+                    </div>
+                  ))}
+                </div>
+              ) : rows.length === 0 ? (
+                <div style={{ paddingTop: 40, paddingBottom: 32, paddingLeft: 24, paddingRight: 24, textAlign: "center" }}>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
                     Nothing yet.
                   </div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#9A8F84", marginTop: 6, lineHeight: 1.5 }}>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A8F84", marginTop: 4, lineHeight: 1.5 }}>
                     Notifications appear when triggers fire, payments are due, or attestations resolve.
                   </div>
                 </div>

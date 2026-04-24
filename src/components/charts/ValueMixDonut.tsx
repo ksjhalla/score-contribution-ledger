@@ -36,11 +36,12 @@ export const ValueMixDonut = ({ settled, pending, future = 0, currency, label }:
   }, []);
   const inner = isNarrow ? 45 : 60;
   const outer = isNarrow ? 65 : 80;
+  const chartHeight = isNarrow ? 140 : 180;
 
   return (
     <div>
-      <div style={{ position: "relative", width: "100%", height: 180 }}>
-        <ResponsiveContainer width="100%" height={180}>
+      <div style={{ position: "relative", width: "100%", height: chartHeight }}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={inner} outerRadius={outer} paddingAngle={1} stroke="none">
               {data.map((d) => <Cell key={d.name} fill={d.color} />)}

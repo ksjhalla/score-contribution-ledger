@@ -46,7 +46,7 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
     const url = `${window.location.origin}/attest/${token}`;
     await navigator.clipboard.writeText(url);
     setCopied(token);
-    toast.success("Attestation link copied");
+    toast.success("Attestation link copied.");
     setTimeout(() => setCopied(null), 2000);
   };
 

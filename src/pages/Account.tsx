@@ -153,7 +153,7 @@ const Account = () => {
   const copyUrl = async () => {
     await navigator.clipboard.writeText(passportUrl);
     setCopied(true);
-    toast.success("Passport URL copied");
+    toast.success("Passport URL copied.");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -190,7 +190,7 @@ const Account = () => {
       a.click();
       a.remove();
       URL.revokeObjectURL(dlUrl);
-      toast.success("Record downloaded");
+      toast.success("Record downloaded.");
     } catch {
       setExportError("Export failed. Try again.");
     } finally {

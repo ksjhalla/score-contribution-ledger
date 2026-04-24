@@ -101,7 +101,7 @@ export const AddTriggerDialog = ({ open, onOpenChange, contractId, onCreated }: 
     }
 
     setBusy(false);
-    toast.success("Trigger added");
+    toast.success("Trigger added.");
     onCreated();
     close(false);
   };

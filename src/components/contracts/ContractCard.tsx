@@ -83,7 +83,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
     try {
       const { data: prof } = await supabase.from("profiles").select("contributor_id").eq("id", user.id).maybeSingle();
       await exportContractRecord(contract.id, prof?.contributor_id ?? null);
-      toast.success("Record exported");
+      toast.success("Record exported.");
     } catch (e) {
       toast.error("Export failed");
     } finally { setExporting(false); }
@@ -143,14 +143,24 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
         <Tabs defaultValue="executions" className="pt-1">
           <TabsList className="grid grid-cols-5 h-8">
             <TabsTrigger value="executions" className="text-xs">
-              Executions{executions.length > 0 ? ` (${executions.length})` : ""}
+              <span className="hidden min-[480px]:inline">Executions</span>
+              <span className="inline min-[480px]:hidden">Execs</span>
+              {executions.length > 0 ? ` (${executions.length})` : ""}
             </TabsTrigger>
             <TabsTrigger value="triggers" className="text-xs">Triggers</TabsTrigger>
-            <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
-            <TabsTrigger value="evidence" className="text-xs">
-              Evidence{evidence.length > 0 ? ` (${evidence.length})` : ""}
+            <TabsTrigger value="details" className="text-xs">
+              <span className="hidden min-[480px]:inline">Details</span>
+              <span className="inline min-[480px]:hidden">Info</span>
             </TabsTrigger>
-            <TabsTrigger value="attestors" className="text-xs">Attestors</TabsTrigger>
+            <TabsTrigger value="evidence" className="text-xs">
+              <span className="hidden min-[480px]:inline">Evidence</span>
+              <span className="inline min-[480px]:hidden">Evid.</span>
+              {evidence.length > 0 ? ` (${evidence.length})` : ""}
+            </TabsTrigger>
+            <TabsTrigger value="attestors" className="text-xs">
+              <span className="hidden min-[480px]:inline">Attestors</span>
+              <span className="inline min-[480px]:hidden">Attest.</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="executions" className="pt-3 space-y-3">
@@ -160,11 +170,26 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
               </Button>
             </div>
             {exLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
+              <p className="text-xs" style={{ color: "#9A8F84" }}>Loading…</p>
             ) : executions.length === 0 ? (
-              <div className="rounded-md border border-dashed p-4 flex flex-col items-center text-center gap-1">
-                <Activity className="h-4 w-4 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">No executions logged yet.</p>
+              <div
+                className="rounded-md border border-dashed flex flex-col items-center text-center"
+                style={{ paddingTop: 40, paddingBottom: 24, paddingLeft: 24, paddingRight: 24 }}
+              >
+                <Activity className="h-4 w-4" style={{ color: "#9A8F84", marginBottom: 8 }} />
+                <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
+                  No executions logged yet.
+                </div>
+                <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: "4px 0 12px" }}>
+                  Log work against this contract to start the trail.
+                </p>
+                <button
+                  type="button" onClick={() => setLogOpen(true)}
+                  style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#C4892A" }}
+                >
+                  + Log execution →
+                </button>
               </div>
             ) : (
               <ol className="relative border-l pl-4 ml-1 space-y-3">
@@ -242,15 +267,23 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
             </div>
 
             {loading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
+              <p className="text-xs" style={{ color: "#9A8F84" }}>Loading…</p>
             ) : evidence.length === 0 ? (
-              <div className="rounded-md border border-dashed p-4 flex flex-col items-center text-center gap-1">
-                <FileSearch className="h-4 w-4 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">No evidence attached to this contract yet.</p>
+              <div
+                className="rounded-md border border-dashed flex flex-col items-center text-center"
+                style={{ paddingTop: 40, paddingBottom: 24, paddingLeft: 24, paddingRight: 24 }}
+              >
+                <FileSearch className="h-4 w-4" style={{ color: "#9A8F84", marginBottom: 8 }} />
+                <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
+                  No evidence attached yet.
+                </div>
+                <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: "4px 0 12px" }}>
+                  Attach a document, dataset, or hash so this contract has proof.
+                </p>
                 <button
                   type="button" onClick={() => setAttachOpen(true)}
                   style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
-                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#C4892A", marginTop: 4 }}
+                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#C4892A" }}
                 >
                   + Attach evidence →
                 </button>
@@ -276,7 +309,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                     <div className="flex items-center justify-between gap-2">
                       <button
                         type="button"
-                        onClick={() => { navigator.clipboard.writeText(e.fingerprint); toast.success("Hash copied"); }}
+                        onClick={() => { navigator.clipboard.writeText(e.fingerprint); toast.success("Hash copied."); }}
                         style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
                           fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84",
                           display: "inline-flex", alignItems: "center", gap: 4 }}

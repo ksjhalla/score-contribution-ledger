@@ -79,7 +79,7 @@ const CompleteProfile = () => {
       return;
     }
     setIssuedId(contributorId);
-    toast.success("Contributor ID generated");
+    toast.success("Contributor ID generated.");
   };
 
   const handleCopy = async () => {
@@ -87,7 +87,7 @@ const CompleteProfile = () => {
     try {
       await navigator.clipboard.writeText(issuedId);
       setCopied(true);
-      toast.success("Copied to clipboard");
+      toast.success("Copied to clipboard.");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Could not copy. Long-press to select instead.");

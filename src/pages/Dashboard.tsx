@@ -62,6 +62,13 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+const StatSkeleton = () => (
+  <div className="rounded-md border p-3">
+    <span className="skeleton" style={{ width: 56, height: 8 }} />
+    <span className="skeleton" style={{ width: 44, height: 16, marginTop: 8 }} />
+  </div>
+);
+
 const Dashboard = () => {
   const { profile } = useDemo();
   const { user } = useAuth();
@@ -241,7 +248,7 @@ const Dashboard = () => {
   if (profile) return <DemoPassportView profile={profile} />;
 
   return (
-    <div style={{ padding: "32px 24px", maxWidth: 920, margin: "0 auto" }}>
+    <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 12 }}>
         <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 600, margin: 0 }}>
           Your Passport
@@ -264,14 +271,25 @@ const Dashboard = () => {
         Totals roll up from your executions. <Link to="/log-work" style={{ color: "#C4892A", textDecoration: "underline" }}>Log work</Link> to add to them.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Contracts" value={String(stats?.contracts ?? 0)} />
-        <Stat label="Executions" value={String(stats?.executions ?? 0)} />
-        <Stat label="Settled" value={stats?.settledTotal ? stats.settledTotal.toLocaleString() : "—"} />
-        <Stat label="Pending" value={stats?.pendingTotal ? stats.pendingTotal.toLocaleString() : "—"} />
+        {stats === null ? (
+          <>
+            <StatSkeleton /><StatSkeleton /><StatSkeleton /><StatSkeleton />
+          </>
+        ) : (
+          <>
+            <Stat label="Contracts" value={String(stats.contracts)} />
+            <Stat label="Executions" value={String(stats.executions)} />
+            <Stat label="Settled" value={stats.settledTotal ? stats.settledTotal.toLocaleString() : "—"} />
+            <Stat label="Pending" value={stats.pendingTotal ? stats.pendingTotal.toLocaleString() : "—"} />
+          </>
+        )}
       </div>
 
       {chart?.hasExecutions && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 24 }}>
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 gap-3.5"
+          style={{ marginTop: 24 }}
+        >
           <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>Value mix</span>
@@ -300,10 +318,19 @@ const Dashboard = () => {
           </Link>
         </div>
         {cards.length === 0 ? (
-          <div style={{ border: "1px dashed rgba(26,22,14,0.15)", borderRadius: 6, padding: 24, textAlign: "center" }}>
-            <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: 0 }}>
-              Nothing to show yet. Log your first contribution to see value events here.
+          <div style={{ border: "1px dashed rgba(26,22,14,0.15)", borderRadius: 6, padding: "40px 24px 24px", textAlign: "center" }}>
+            <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
+              Nothing to show yet.
+            </div>
+            <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: "4px 0 12px" }}>
+              Log your first contribution to see what changed here.
             </p>
+            <Link
+              to="/log-work"
+              style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#C4892A", textDecoration: "none" }}
+            >
+              Log work →
+            </Link>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

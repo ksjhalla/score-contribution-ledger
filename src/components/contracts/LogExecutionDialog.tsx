@@ -107,7 +107,7 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
     }).select("id").maybeSingle();
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Execution recorded");
+    toast.success("Execution recorded.");
 
     // If contract requires attestation, create per-attestor rows for this execution.
     if (created?.id) {
