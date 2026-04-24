@@ -180,9 +180,24 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                         <Badge variant="secondary" className="shrink-0 text-[10px]">{ex.status}</Badge>
                       </div>
                       <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                        <span>
-                          {new Date(ex.execution_date).toLocaleDateString()} ·{" "}
-                          {ex.evidence_ids?.length ?? 0} evidence
+                        <span className="inline-flex items-center gap-2">
+                          {new Date(ex.execution_date).toLocaleDateString()}
+                          {(ex.evidence_ids?.length ?? 0) === 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setAttachFor({ id: ex.id, title: ex.title })}
+                              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                                fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}
+                            >
+                              Attach evidence →
+                            </button>
+                          ) : (
+                            <span style={{ background: "rgba(42,106,69,0.08)", color: "#2A6A45",
+                              fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9,
+                              padding: "2px 6px", borderRadius: 3 }}>
+                              {ex.evidence_ids.length} evidence
+                            </span>
+                          )}
                         </span>
                         {ex.settled_amount != null && (
                           <span className="font-medium text-foreground">
