@@ -216,9 +216,11 @@ export type Database = {
       }
       execution_attestations: {
         Row: {
-          attestor_email: string
+          attestation_type: string
+          attestor_email: string | null
           attestor_name: string
           contract_id: string
+          document_fingerprint: string | null
           email_sent: boolean
           email_sent_at: string | null
           execution_id: string
@@ -232,9 +234,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          attestor_email: string
+          attestation_type?: string
+          attestor_email?: string | null
           attestor_name: string
           contract_id: string
+          document_fingerprint?: string | null
           email_sent?: boolean
           email_sent_at?: string | null
           execution_id: string
@@ -248,9 +252,11 @@ export type Database = {
           user_id: string
         }
         Update: {
-          attestor_email?: string
+          attestation_type?: string
+          attestor_email?: string | null
           attestor_name?: string
           contract_id?: string
+          document_fingerprint?: string | null
           email_sent?: boolean
           email_sent_at?: string | null
           execution_id?: string
@@ -359,6 +365,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invite_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number
+          note: string | null
+          use_count: number
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          note?: string | null
+          use_count?: number
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          note?: string | null
+          use_count?: number
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -644,10 +692,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_invite_code: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: boolean
+      }
       soft_delete_account: { Args: never; Returns: Json }
       submit_attestation: {
         Args: { p_decision: string; p_notes?: string; p_token: string }
         Returns: Json
+      }
+      validate_invite_code: {
+        Args: { p_code: string; p_email: string }
+        Returns: boolean
       }
     }
     Enums: {
