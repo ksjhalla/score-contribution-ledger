@@ -5,6 +5,7 @@ import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
 import { ContractSparkBars } from "@/components/charts/ContractSparkBars";
 import { QuickReadPanel } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc } from "@/components/charts/MilestoneArc";
+import { Droplets, Leaf, Network } from "lucide-react";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -17,7 +18,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
-  const { contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones } = profile;
+  const { contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones, bio, badges, valueStreams } = profile;
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div style={{ marginBottom: 20 }}>
@@ -46,6 +47,43 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         <div style={{ fontSize: 13, color: "#5C5248" }}>
           {contributor.role} · {contributor.org} · {contributor.sector}
         </div>
+        {bio && (
+          <div
+            style={{
+              marginTop: 14,
+              border: "1px solid rgba(26,22,14,0.10)",
+              borderLeft: `3px solid ${accent}`,
+              borderRadius: 5,
+              background: "#FDFAF4",
+              padding: "14px 16px",
+              fontSize: 13,
+              lineHeight: 1.7,
+              color: "#1A1614",
+            }}
+          >
+            {bio}
+            {badges && badges.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
+                {badges.map((b) => (
+                  <span
+                    key={b}
+                    style={{
+                      fontFamily: FONT_MONO,
+                      fontSize: 9,
+                      color: accent,
+                      background: "rgba(74,120,74,0.08)",
+                      border: `1px solid ${accent}33`,
+                      borderRadius: 3,
+                      padding: "3px 8px",
+                    }}
+                  >
+                    {b}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 28 }}>
@@ -138,9 +176,40 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           margin: "0 0 12px",
         }}
       >
-        Contracts
+        {valueStreams ? "Value streams" : "Contracts"}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28, alignItems: "start" }}>
+      {valueStreams ? (
+        <div
+          style={{
+            border: "1px solid rgba(26,22,14,0.10)",
+            borderRadius: 6,
+            background: "#FDFAF4",
+            padding: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+          }}
+        >
+          {valueStreams.map((s) => {
+            const Icon = s.icon === "droplets" ? Droplets : s.icon === "leaf" ? Leaf : Network;
+            return (
+              <div key={s.name} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <Icon size={18} color={s.iconColor} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: "#1A1614" }}>{s.name}</div>
+                    <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#1A1614", whiteSpace: "nowrap" }}>{s.value}</div>
+                  </div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 4, lineHeight: 1.6 }}>
+                    {s.description}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {contracts.map((c) => (
           <div
@@ -182,6 +251,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           </div>
         ))}
       </div>
+      )}
         <div>
           <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Milestone arc</div>
           <MilestoneArc milestones={milestones} />
