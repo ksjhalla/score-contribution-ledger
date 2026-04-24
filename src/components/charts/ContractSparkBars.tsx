@@ -26,6 +26,7 @@ export type SparkContract = {
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
   if (!contracts.length) return null;
+  const dense = contracts.length > 3;
   return (
     <ResponsiveContainer width="100%" height={140}>
       <BarChart data={contracts} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
@@ -34,6 +35,7 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
           tick={{ fontFamily: "DM Mono", fontSize: 9, fill: "#9A8F84" }}
           axisLine={false}
           tickLine={false}
+          {...(dense ? { angle: -35, textAnchor: "end" as const, height: 48, interval: 0 } : {})}
         />
         <Tooltip
           cursor={{ fill: "rgba(26,22,14,0.04)" }}
