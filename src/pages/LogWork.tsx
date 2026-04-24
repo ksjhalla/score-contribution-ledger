@@ -259,6 +259,22 @@ const LogWork = () => {
                         <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#9A8F84" }}>
                           {new Date(e.execution_date).toLocaleDateString()}
                         </span>
+                        {e.evidence_ids.length === 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => setAttachFor(e)}
+                            style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                              fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}
+                          >
+                            Attach evidence →
+                          </button>
+                        ) : (
+                          <span style={{ background: "rgba(42,106,69,0.08)", color: "#2A6A45",
+                            fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9,
+                            padding: "2px 6px", borderRadius: 3 }}>
+                            {e.evidence_ids.length} evidence
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flex: "0 0 auto" }}>
@@ -312,6 +328,17 @@ const LogWork = () => {
           defaultCurrency={settleFor.currency}
           defaultChannel={settleFor.settlement_channel}
           onSettled={() => { setSettleFor(null); fetchExecutions(); }}
+        />
+      )}
+
+      {attachFor && (
+        <AttachEvidenceDialog
+          open={!!attachFor}
+          onOpenChange={(v) => !v && setAttachFor(null)}
+          contractId={attachFor.contract_id}
+          executionId={attachFor.id}
+          executionTitle={attachFor.title}
+          onCreated={() => { setAttachFor(null); fetchExecutions(); }}
         />
       )}
     </div>
