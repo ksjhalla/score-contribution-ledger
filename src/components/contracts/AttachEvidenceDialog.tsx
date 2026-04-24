@@ -21,6 +21,8 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contractId: string;
+  executionId?: string | null;
+  executionTitle?: string | null;
   onCreated: () => void;
 };
 
@@ -31,7 +33,7 @@ const sha256Hex = async (buf: ArrayBuffer) => {
     .join("");
 };
 
-export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated }: Props) => {
+export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, executionId, executionTitle, onCreated }: Props) => {
   const { user } = useAuth();
   const [mode, setMode] = useState<"url" | "file">("url");
   const [title, setTitle] = useState("");
@@ -43,10 +45,13 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
   const [fingerprint, setFingerprint] = useState("");
   const [hashing, setHashing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [stampedAt, setStampedAt] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const reset = () => {
     setMode("url"); setTitle(""); setDescription(""); setEvidenceType("");
     setUrl(""); setFile(null); setNotes(""); setFingerprint(""); setBusy(false); setHashing(false);
+    setStampedAt(""); setErrorMsg(null);
   };
 
   const close = (v: boolean) => {
@@ -59,19 +64,19 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
     let cancelled = false;
     (async () => {
       if (mode === "url") {
-        if (!url.trim()) { setFingerprint(""); return; }
+        if (!url.trim()) { setFingerprint(""); setStampedAt(""); return; }
         setHashing(true);
         const enc = new TextEncoder().encode(url.trim());
         // Copy into a fresh ArrayBuffer to satisfy strict BufferSource typing
         const ab = enc.buffer.slice(enc.byteOffset, enc.byteOffset + enc.byteLength) as ArrayBuffer;
         const fp = await sha256Hex(ab);
-        if (!cancelled) { setFingerprint(fp); setHashing(false); }
+        if (!cancelled) { setFingerprint(fp); setStampedAt(new Date().toISOString()); setHashing(false); }
       } else {
-        if (!file) { setFingerprint(""); return; }
+        if (!file) { setFingerprint(""); setStampedAt(""); return; }
         setHashing(true);
         const buf = await file.arrayBuffer();
         const fp = await sha256Hex(buf);
-        if (!cancelled) { setFingerprint(fp); setHashing(false); }
+        if (!cancelled) { setFingerprint(fp); setStampedAt(new Date().toISOString()); setHashing(false); }
       }
     })();
     return () => { cancelled = true; };
@@ -90,7 +95,8 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
   const submit = async () => {
     if (!user || !canSave) return;
     setBusy(true);
-    const { error } = await supabase.from("evidence").insert({
+    setErrorMsg(null);
+    const { data: inserted, error } = await supabase.from("evidence").insert({
       contract_id: contractId,
       user_id: user.id,
       title: title.trim(),
@@ -99,10 +105,21 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
       source_url: mode === "url" ? url.trim() : null,
       fingerprint,
       notes: notes.trim() || null,
-    });
+      execution_id: executionId ?? null,
+    }).select("id").maybeSingle();
+    if (error || !inserted) {
+      setBusy(false);
+      setErrorMsg("Evidence was not saved. Try again.");
+      return;
+    }
+    if (executionId) {
+      const { data: exRow } = await supabase
+        .from("executions").select("evidence_ids").eq("id", executionId).maybeSingle();
+      const next = [...((exRow?.evidence_ids as string[] | null) ?? []), inserted.id];
+      await supabase.from("executions").update({ evidence_ids: next }).eq("id", executionId);
+    }
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Evidence recorded");
+    toast.success("Evidence attached.");
     onCreated();
     close(false);
   };
@@ -116,6 +133,11 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
             Record proof that work happened. The fingerprint and timestamp become permanent on save.
           </DialogDescription>
         </DialogHeader>
+        {executionTitle && (
+          <p style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#9A8F84", margin: "0 0 4px" }}>
+            Attaching to: {executionTitle}
+          </p>
+        )}
 
         <div className="rounded-md border bg-muted/40 p-3 flex gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
@@ -161,8 +183,14 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
             <TabsContent value="file" className="pt-3 space-y-2">
               <Label htmlFor="ev-file">File</Label>
               <Input id="ev-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              {file && (
+                <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", lineHeight: 1.6 }}>
+                  <div>File: {file.name}</div>
+                  <div>Size: {file.size < 1024 ? `${file.size} B` : file.size < 1024*1024 ? `${(file.size/1024).toFixed(1)} KB` : `${(file.size/1024/1024).toFixed(2)} MB`}</div>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
-                File never leaves your browser. Only the SHA-256 hash is stored.
+                <em>SCORE stores the fingerprint, not the file. The hash proves this file existed at this moment.</em>
               </p>
             </TabsContent>
           </Tabs>
@@ -181,6 +209,11 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
+            {fingerprint && stampedAt && (
+              <p style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", margin: 0 }}>
+                Timestamped: {stampedAt}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -190,6 +223,9 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, onCreated
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
+          {errorMsg && (
+            <p className="mr-auto text-xs text-destructive self-center">{errorMsg}</p>
+          )}
           <Button variant="ghost" onClick={() => close(false)} disabled={busy}>Cancel</Button>
           <Button onClick={submit} disabled={!canSave}>
             {busy ? "Saving…" : "Save evidence"}

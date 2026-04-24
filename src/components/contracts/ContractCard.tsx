@@ -4,14 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ShieldCheck, FileSearch, Activity } from "lucide-react";
+import { Plus, FileSearch, Activity } from "lucide-react";
 import { AttachEvidenceDialog } from "./AttachEvidenceDialog";
 import { LogExecutionDialog } from "./LogExecutionDialog";
 import { MarkSettledDialog } from "./MarkSettledDialog";
 import { TriggersList } from "./TriggersList";
 import { AttestorsSection } from "./AttestorsSection";
 import { ExecutionAttestations } from "./ExecutionAttestations";
-import { Download } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import { exportContractRecord } from "@/lib/contractExport";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -41,6 +41,7 @@ type EvidenceRow = {
   evidence_type: string;
   fingerprint: string;
   timestamp_created: string;
+  execution_id?: string | null;
 };
 
 type ExecutionRow = {
@@ -69,6 +70,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
   const [evidence, setEvidence] = useState<EvidenceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [attachFor, setAttachFor] = useState<{ id: string; title: string } | null>(null);
   const [executions, setExecutions] = useState<ExecutionRow[]>([]);
   const [exLoading, setExLoading] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
@@ -91,7 +93,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
     setLoading(true);
     const { data } = await supabase
       .from("evidence")
-      .select("id, title, evidence_type, fingerprint, timestamp_created")
+      .select("id, title, evidence_type, fingerprint, timestamp_created, execution_id")
       .eq("contract_id", contract.id)
       .order("timestamp_created", { ascending: false });
     setEvidence((data ?? []) as EvidenceRow[]);
@@ -178,9 +180,24 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                         <Badge variant="secondary" className="shrink-0 text-[10px]">{ex.status}</Badge>
                       </div>
                       <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                        <span>
-                          {new Date(ex.execution_date).toLocaleDateString()} ·{" "}
-                          {ex.evidence_ids?.length ?? 0} evidence
+                        <span className="inline-flex items-center gap-2">
+                          {new Date(ex.execution_date).toLocaleDateString()}
+                          {(ex.evidence_ids?.length ?? 0) === 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setAttachFor({ id: ex.id, title: ex.title })}
+                              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                                fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}
+                            >
+                              Attach evidence →
+                            </button>
+                          ) : (
+                            <span style={{ background: "rgba(42,106,69,0.08)", color: "#2A6A45",
+                              fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9,
+                              padding: "2px 6px", borderRadius: 3 }}>
+                              {ex.evidence_ids.length} evidence
+                            </span>
+                          )}
                         </span>
                         {ex.settled_amount != null && (
                           <span className="font-medium text-foreground">
@@ -229,7 +246,14 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
             ) : evidence.length === 0 ? (
               <div className="rounded-md border border-dashed p-4 flex flex-col items-center text-center gap-1">
                 <FileSearch className="h-4 w-4 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">No evidence attached yet.</p>
+                <p className="text-xs text-muted-foreground">No evidence attached to this contract yet.</p>
+                <button
+                  type="button" onClick={() => setAttachOpen(true)}
+                  style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#C4892A", marginTop: 4 }}
+                >
+                  + Attach evidence →
+                </button>
               </div>
             ) : (
               <ul className="space-y-2">
@@ -238,18 +262,30 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-sm font-medium truncate">{e.title}</div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {new Date(e.timestamp_created).toLocaleString()}
-                        </div>
+                        {e.execution_id && (() => {
+                          const ex = executions.find((x) => x.id === e.execution_id);
+                          return ex ? (
+                            <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}>
+                              → {ex.title}
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                       <Badge variant="secondary" className="shrink-0 text-[10px]">{e.evidence_type}</Badge>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <code className="font-mono text-muted-foreground truncate">
-                        {e.fingerprint.slice(0, 16)}…
-                      </code>
-                      <span className="inline-flex items-center gap-1 text-primary">
-                        <ShieldCheck className="h-3 w-3" /> Verified
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { navigator.clipboard.writeText(e.fingerprint); toast.success("Hash copied"); }}
+                        style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                          fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84",
+                          display: "inline-flex", alignItems: "center", gap: 4 }}
+                        title="Copy full hash"
+                      >
+                        sha256: {e.fingerprint.slice(0, 16)}… <Copy className="h-3 w-3" />
+                      </button>
+                      <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}>
+                        Timestamped {new Date(e.timestamp_created).toISOString().replace("T", " ").slice(0, 19)} UTC
                       </span>
                     </div>
                   </li>
@@ -270,6 +306,17 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
         contractId={contract.id}
         onCreated={load}
       />
+
+      {attachFor && (
+        <AttachEvidenceDialog
+          open={!!attachFor}
+          onOpenChange={(v) => !v && setAttachFor(null)}
+          contractId={contract.id}
+          executionId={attachFor.id}
+          executionTitle={attachFor.title}
+          onCreated={() => { load(); loadExecutions(); }}
+        />
+      )}
 
       <LogExecutionDialog
         open={logOpen}

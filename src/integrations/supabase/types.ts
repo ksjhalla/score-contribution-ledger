@@ -124,6 +124,7 @@ export type Database = {
           created_at: string
           description: string | null
           evidence_type: Database["public"]["Enums"]["evidence_type"]
+          execution_id: string | null
           fingerprint: string
           id: string
           notes: string | null
@@ -137,6 +138,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           evidence_type: Database["public"]["Enums"]["evidence_type"]
+          execution_id?: string | null
           fingerprint: string
           id?: string
           notes?: string | null
@@ -150,6 +152,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           evidence_type?: Database["public"]["Enums"]["evidence_type"]
+          execution_id?: string | null
           fingerprint?: string
           id?: string
           notes?: string | null
@@ -164,6 +167,13 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "executions"
             referencedColumns: ["id"]
           },
         ]
