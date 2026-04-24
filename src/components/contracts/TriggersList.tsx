@@ -73,19 +73,10 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
       .update({ current_value: val, last_updated: new Date().toISOString() })
       .eq("id", t.id);
     if (error) { toast.error(error.message); return; }
-    // Threshold-crossing notification (only fires when crossing from not-met → met).
+    // The DB trigger `triggers_threshold_crossed_notif` creates the trigger_met
+    // notification automatically when current_value crosses the threshold.
     const nowMet = t.direction === "Above" ? val >= t.threshold_value : val <= t.threshold_value;
-    if (!wasMet && nowMet && user) {
-      const { data: c } = await supabase
-        .from("contracts").select("name").eq("id", contractId).maybeSingle();
-      await sendNotification({
-        userId: user.id,
-        type: "trigger_met",
-        contractId,
-        message: `${c?.name ?? "Contract"} — trigger condition met. Log an execution?`,
-      });
-      notificationEvents.emit();
-    }
+    if (!wasMet && nowMet) notificationEvents.emit();
     setDraftValues((p) => ({ ...p, [t.id]: "" }));
     load();
   };
