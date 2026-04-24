@@ -371,7 +371,7 @@ export default function Index() {
               fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted, textDecoration: "none",
               padding: "9px 14px",
             }}>Pricing</Link>
-            <Link to="/auth" className="score-topbar-signin score-link-underline" style={{
+            <Link to="/auth" onClick={() => trackEvent("signin_link_clicked", { source: "topbar" })} className="score-topbar-signin score-link-underline" style={{
               fontFamily: FONT_MONO, fontSize: 10, color: COLORS.text, textDecoration: "none",
               padding: "9px 14px",
             }}>Sign in</Link>
@@ -418,7 +418,7 @@ export default function Index() {
             display: "block", textAlign: "center", marginTop: 10,
             fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
           }}>
-            Already have an account? <Link to="/auth" style={{ color: COLORS.amber, textDecoration: "none" }} className="score-link-underline">Sign in →</Link>
+            Already have an account? <Link to="/auth" onClick={() => trackEvent("signin_link_clicked", { source: "hero" })} style={{ color: COLORS.amber, textDecoration: "none" }} className="score-link-underline">Sign in →</Link>
           </div>
         </div>
       </Section>
@@ -690,21 +690,25 @@ export default function Index() {
                     </label>
                     <input
                       id={`cta-${f.key}`}
-                      ref={f.key === "name" ? nameInputRef : undefined}
+                      ref={(el) => {
+                        fieldRefs.current[f.key] = el;
+                        if (f.key === "name") nameInputRef.current = el;
+                      }}
                       type={f.type}
                       required={f.required}
                       value={form[f.key]}
                       onChange={(e) => { setForm((s) => ({ ...s, [f.key]: e.target.value })); if (fieldErr[f.key]) setFieldErr((p) => ({ ...p, [f.key]: undefined })); if (err) setErr(null); }}
+                      onBlur={handleBlur(f.key)}
                       placeholder={f.placeholder}
                       maxLength={255}
                       style={{
-                        width: "100%", border: `1px solid ${fieldErr[f.key] ? "#9A3020" : "rgba(26,22,14,0.15)"}`,
+                        width: "100%", border: `1px solid ${fieldErr[f.key] ? "rgba(154,48,32,0.4)" : "rgba(26,22,14,0.15)"}`,
                         borderRadius: 4, background: "#fff",
                         padding: "10px 14px", fontFamily: FONT_BODY, fontSize: 14, color: COLORS.text, outline: "none",
                       }}
                     />
                     {fieldErr[f.key] && (
-                      <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 4 }}>{fieldErr[f.key]}</div>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#9A3020", marginTop: 4 }}>{fieldErr[f.key]}</div>
                     )}
                   </div>
                 ))}
@@ -714,11 +718,13 @@ export default function Index() {
                   </label>
                   <select
                     id="cta-use-case"
+                    ref={(el) => { fieldRefs.current["use_case"] = el; }}
                     required
                     value={form.use_case}
                     onChange={(e) => { setForm((s) => ({ ...s, use_case: e.target.value })); if (fieldErr.use_case) setFieldErr((p) => ({ ...p, use_case: undefined })); }}
+                    onBlur={handleBlur("use_case")}
                     style={{
-                      width: "100%", border: `1px solid ${fieldErr.use_case ? "#9A3020" : "rgba(26,22,14,0.15)"}`,
+                      width: "100%", border: `1px solid ${fieldErr.use_case ? "rgba(154,48,32,0.4)" : "rgba(26,22,14,0.15)"}`,
                       borderRadius: 4, background: "#fff",
                       padding: "10px 14px", fontFamily: FONT_BODY, fontSize: 14,
                       color: form.use_case ? COLORS.text : COLORS.faint, outline: "none",
@@ -728,7 +734,7 @@ export default function Index() {
                     {USE_CASES.map((u) => <option key={u} value={u}>{u}</option>)}
                   </select>
                   {fieldErr.use_case && (
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#9A3020", marginTop: 4 }}>{fieldErr.use_case}</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#9A3020", marginTop: 4 }}>{fieldErr.use_case}</div>
                   )}
                 </div>
                 <div>
@@ -754,8 +760,13 @@ export default function Index() {
                   background: COLORS.dark, color: COLORS.darkText,
                   fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
                   border: "none", borderRadius: 4, padding: 12, width: "100%",
-                  cursor: submitting ? "wait" : "pointer",
-                }}>{submitting ? "Sending…" : "Request a demo →"}</button>
+                  cursor: submitting ? "not-allowed" : "pointer",
+                  opacity: submitting ? 0.85 : 1,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}>
+                  {submitting && <Loader2 size={16} className="animate-spin" />}
+                  {submitting ? "Sending…" : "Request a demo →"}
+                </button>
                 {err && (
                   <div role="alert" style={{ fontFamily: FONT_BODY, fontSize: 13, color: "#9A3020", textAlign: "center" }}>{err}</div>
                 )}
