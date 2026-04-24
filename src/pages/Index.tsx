@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { toast } from "sonner";
 import { conversationCards, type ConversationCard } from "@/data/marketingPreviews";
+import { SEO } from "@/components/SEO";
+import { trackEvent } from "@/lib/analytics";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -204,6 +207,7 @@ const eyebrowStyle: React.CSSProperties = {
 
 export default function Index() {
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
   const [form, setForm] = useState({ name: "", email: "", organisation: "", use_case: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -239,6 +243,26 @@ export default function Index() {
     }
   }, []);
 
+  const validateField = (key: keyof typeof form, value: string): string | undefined => {
+    if (key === "name") {
+      if (!value.trim()) return "Please enter your name.";
+    }
+    if (key === "email") {
+      if (!value.trim()) return "Please enter your email.";
+      const r = emailSchema.safeParse(value);
+      if (!r.success) return "Please enter a valid email address.";
+    }
+    if (key === "use_case") {
+      if (!value) return "Please select your use case.";
+    }
+    return undefined;
+  };
+
+  const handleBlur = (key: keyof typeof form) => () => {
+    const msg = validateField(key, form[key]);
+    setFieldErr((p) => ({ ...p, [key]: msg }));
+  };
+
   const scrollToCta = (e?: React.MouseEvent) => {
     e?.preventDefault();
     document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" });
@@ -253,15 +277,29 @@ export default function Index() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
-    setFieldErr({});
+    const fe: Partial<Record<keyof typeof form, string>> = {};
+    (["name", "email", "use_case"] as const).forEach((k) => {
+      const msg = validateField(k, form[k]);
+      if (msg) fe[k] = msg;
+    });
+    if (Object.keys(fe).length) {
+      setFieldErr(fe);
+      const firstKey = (["name", "email", "use_case"] as const).find((k) => fe[k]);
+      if (firstKey) {
+        const el = fieldRefs.current[firstKey];
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => (el as HTMLInputElement | HTMLSelectElement | null)?.focus(), 350);
+      }
+      return;
+    }
     const parsed = contactSchema.safeParse(form);
     if (!parsed.success) {
-      const fe: Partial<Record<keyof typeof form, string>> = {};
+      const fe2: Partial<Record<keyof typeof form, string>> = {};
       parsed.error.issues.forEach((i) => {
         const k = i.path[0] as keyof typeof form;
-        if (k && !fe[k]) fe[k] = i.message;
+        if (k && !fe2[k]) fe2[k] = i.message;
       });
-      setFieldErr(fe);
+      setFieldErr(fe2);
       return;
     }
     setSubmitting(true);
@@ -276,14 +314,26 @@ export default function Index() {
     setSubmitting(false);
     if (error) {
       setErr("Something went wrong. Email us at hello@score.xyz");
+      trackEvent("demo_request_failed", { error: error.message });
       return;
     }
+    trackEvent("demo_request_submitted", {
+      use_case: parsed.data.use_case,
+      has_message: (parsed.data.message?.length ?? 0) > 0,
+    });
     setSubmittedName(parsed.data.name);
     setSubmitted(true);
   };
 
   return (
     <div style={{ background: COLORS.bg, color: COLORS.text, fontFamily: FONT_BODY, minHeight: "100vh" }}>
+      <SEO
+        title="SCORE — Contribution Ledger"
+        description="SCORE records what you built, proves it happened, and notifies when payment is due. A portable contribution ledger for collaborative work."
+        url="https://score-contribution-ledger.lovable.app"
+        ogDescription="What if your work kept paying you long after you built it? SCORE makes that possible."
+        twitterDescription="What if your work kept paying you long after you built it?"
+      />
       <style>{`
         @media (max-width: 640px) {
           .score-topbar-center { display: none !important; }
