@@ -16,6 +16,10 @@ export type PassportData = {
     executions: number;
     attributed_value: number | null;
     currency: string;
+    work_entries?: number;
+    work_pending?: number;
+    work_settled?: number;
+    work_settled_value?: number | null;
   };
   contracts: Array<{
     id: string;
@@ -54,6 +58,11 @@ export const PassportView = ({ data }: { data: PassportData }) => {
     data.summary.attributed_value == null
       ? "—"
       : `${Number(data.summary.attributed_value).toLocaleString()} ${data.summary.currency}`;
+  const workSettledValue =
+    data.summary.work_settled_value == null
+      ? "—"
+      : `${Number(data.summary.work_settled_value).toLocaleString()} ${data.summary.currency}`;
+  const hasWorkEntries = (data.summary.work_entries ?? 0) > 0;
 
   return (
     <article id="passport-printable" className="max-w-2xl mx-auto px-4 py-6 space-y-5">
@@ -81,6 +90,17 @@ export const PassportView = ({ data }: { data: PassportData }) => {
         <Stat label="Executions" value={String(data.summary.executions)} />
         <Stat label="Attributed value" value={value} />
       </section>
+
+      {hasWorkEntries && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold tracking-tight">Logged work</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <Stat label="Pending" value={String(data.summary.work_pending ?? 0)} />
+            <Stat label="Settled" value={String(data.summary.work_settled ?? 0)} />
+            <Stat label="Settled value" value={workSettledValue} />
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold tracking-tight">Contracts</h2>

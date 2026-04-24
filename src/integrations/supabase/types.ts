@@ -521,6 +521,9 @@ export type Database = {
           hours: number | null
           id: string
           reference_url: string | null
+          settled_amount: number | null
+          settled_at: string | null
+          status: string
           title: string
           updated_at: string
           user_id: string
@@ -533,6 +536,9 @@ export type Database = {
           hours?: number | null
           id?: string
           reference_url?: string | null
+          settled_amount?: number | null
+          settled_at?: string | null
+          status?: string
           title: string
           updated_at?: string
           user_id: string
@@ -545,6 +551,9 @@ export type Database = {
           hours?: number | null
           id?: string
           reference_url?: string | null
+          settled_amount?: number | null
+          settled_at?: string | null
+          status?: string
           title?: string
           updated_at?: string
           user_id?: string
