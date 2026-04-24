@@ -73,7 +73,7 @@ const Contracts = () => {
   };
 
   return (
-    <div style={{ padding: "32px 24px", maxWidth: 920, margin: "0 auto" }}>
+    <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 20 }}>
         <div>
           <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 600, margin: "0 0 12px" }}>
@@ -97,10 +97,47 @@ const Contracts = () => {
         </button>
       </div>
       {loading ? (
-        <p style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 11, color: "#9A8F84" }}>Loading…</p>
+        <div className="space-y-3">
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              style={{
+                border: "1px solid rgba(26,22,14,0.10)",
+                borderRadius: 6,
+                background: "#FDFAF4",
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span className="skeleton" style={{ width: 14, height: 14 }} />
+              <span className="skeleton" style={{ width: 56, height: 14 }} />
+              <div style={{ flex: 1 }}>
+                <span className="skeleton" style={{ width: "60%", height: 12 }} />
+                <span className="skeleton" style={{ width: "40%", height: 9, marginTop: 6 }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : rows.length === 0 ? (
-        <div style={{ border: "1px dashed rgba(26,22,14,0.15)", borderRadius: 6, padding: 24, textAlign: "center", fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, color: "#5C5248" }}>
-          No contracts yet. Add one or log work with an ad-hoc reference.
+        <div style={{ border: "1px dashed rgba(26,22,14,0.15)", borderRadius: 6, padding: "40px 24px 24px", textAlign: "center" }}>
+          <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
+            No contracts yet.
+          </div>
+          <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: "4px 0 12px" }}>
+            Add one to start tracking what you're owed.
+          </p>
+          <button
+            type="button"
+            onClick={() => setNewOpen(true)}
+            style={{
+              background: "transparent", border: "none", padding: 0, cursor: "pointer",
+              fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#C4892A",
+            }}
+          >
+            + New contract →
+          </button>
         </div>
       ) : (
         <div className="space-y-3">
