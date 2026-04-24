@@ -36,6 +36,7 @@ const Admin = () => {
   const [generating, setGenerating] = useState(false);
   const [lastCode, setLastCode] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
 
   const loadInvites = async () => {
     const { data } = await supabase.from("invite_codes").select("*").order("created_at", { ascending: false });
@@ -62,32 +63,51 @@ const Admin = () => {
 
   const handleGenerate = async () => {
     setGenerating(true);
-    const code = newCode();
     const max = Math.max(1, parseInt(genMaxUses || "1", 10) || 1);
-    const payload: {
-      code: string;
-      email: string | null;
-      note: string | null;
-      max_uses: number;
-      expires_at: string | null;
-      created_by: string | null;
-    } = {
-      code,
-      email: genEmail.trim() ? genEmail.trim().toLowerCase() : null,
-      note: genNote.trim() ? genNote.trim() : null,
-      max_uses: max,
-      expires_at: genExpires ? new Date(genExpires).toISOString() : null,
-      created_by: user?.id ?? null,
-    };
-    const { error } = await supabase.from("invite_codes").insert(payload);
+    let code = "";
+    let success = false;
+    let lastError: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      code = newCode();
+      const { count } = await supabase
+        .from("invite_codes")
+        .select("id", { count: "exact", head: true })
+        .eq("code", code);
+      if ((count ?? 0) > 0) {
+        toast.error("Code already exists. Generating a new one…");
+        continue;
+      }
+      const { error } = await supabase.from("invite_codes").insert({
+        code,
+        email: genEmail.trim() ? genEmail.trim().toLowerCase() : null,
+        note: genNote.trim() ? genNote.trim() : null,
+        max_uses: max,
+        expires_at: genExpires ? new Date(genExpires).toISOString() : null,
+        created_by: user?.id ?? null,
+      });
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Code already exists. Generating a new one…");
+          continue;
+        }
+        lastError = error.message;
+        break;
+      }
+      success = true;
+      break;
+    }
     setGenerating(false);
-    if (error) {
-      toast.error("Could not generate code", { description: error.message });
+    if (!success) {
+      toast.error(lastError ?? "Failed to generate unique code. Try again.");
       return;
     }
     setLastCode(code);
     setGenEmail(""); setGenExpires(""); setGenMaxUses("1"); setGenNote("");
     await loadInvites();
+    setTimeout(() => {
+      const el = document.getElementById("admin-last-code-input") as HTMLInputElement | null;
+      el?.select();
+    }, 50);
   };
 
   const copy = async (text: string) => {
@@ -101,6 +121,31 @@ const Admin = () => {
     if (r.use_count >= r.max_uses) return { label: "Used", cls: "text-muted-foreground" };
     return { label: "Active", cls: "text-emerald-700 dark:text-emerald-400" };
   };
+
+  const revoke = async (id: string) => {
+    const { error } = await supabase.from("invite_codes").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Invite code revoked.");
+    setRevokeId(null);
+    await loadInvites();
+  };
+
+  const summary = (() => {
+    const total = invites.length;
+    const redeemed = invites.filter((i) => i.use_count > 0 || i.used_at).length;
+    const domains = new Map<string, number>();
+    for (const i of invites) {
+      if (!i.email || !(i.use_count > 0 || i.used_at)) continue;
+      const d = i.email.split("@")[1];
+      if (!d) continue;
+      domains.set(d, (domains.get(d) ?? 0) + 1);
+    }
+    let topDomain: { domain: string; n: number } | null = null;
+    for (const [domain, n] of domains) {
+      if (!topDomain || n > topDomain.n) topDomain = { domain, n };
+    }
+    return { total, redeemed, topDomain };
+  })();
 
   if (authorised === null) return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
   if (!authorised) return (
