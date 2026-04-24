@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { Copy } from "lucide-react";
+import { generateWebhookSecret, sha256Hex } from "@/lib/webhookSecret";
 
 const SOURCES = ["Manual", "Webhook", "File import"] as const;
 type Source = typeof SOURCES[number];
@@ -32,10 +34,12 @@ export const AddTriggerDialog = ({ open, onOpenChange, contractId, onCreated }: 
   const [initial, setInitial] = useState("");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [createdSecret, setCreatedSecret] = useState<{ secret: string; url: string } | null>(null);
 
   const reset = () => {
     setLabel(""); setThreshold(""); setUnit(""); setDirection("Above");
     setSource("Manual"); setInitial(""); setCsvFile(null); setBusy(false);
+    setCreatedSecret(null);
   };
 
   const close = (v: boolean) => { if (!v) reset(); onOpenChange(v); };
@@ -97,7 +101,16 @@ export const AddTriggerDialog = ({ open, onOpenChange, contractId, onCreated }: 
 
     if (source === "Webhook") {
       const webhookUrl = `${SUPABASE_URL}/functions/v1/trigger-webhook/${inserted.id}`;
-      await supabase.from("triggers").update({ webhook_url: webhookUrl }).eq("id", inserted.id);
+      const rawSecret = generateWebhookSecret();
+      const hash = await sha256Hex(rawSecret);
+      await supabase
+        .from("triggers")
+        .update({ webhook_url: webhookUrl, webhook_secret: hash })
+        .eq("id", inserted.id);
+      setBusy(false);
+      setCreatedSecret({ secret: rawSecret, url: webhookUrl });
+      onCreated();
+      return;
     }
 
     setBusy(false);
@@ -105,6 +118,42 @@ export const AddTriggerDialog = ({ open, onOpenChange, contractId, onCreated }: 
     onCreated();
     close(false);
   };
+
+  const copySecret = async () => {
+    if (!createdSecret) return;
+    await navigator.clipboard.writeText(createdSecret.secret);
+    toast.success("Secret copied.");
+  };
+
+  if (createdSecret) {
+    return (
+      <Dialog open={open} onOpenChange={close}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Your webhook secret</DialogTitle>
+            <DialogDescription>
+              Send this in the <code>X-SCORE-Secret</code> header on every request.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3">
+              <code className="flex-1 font-mono text-xs break-all">{createdSecret.secret}</code>
+              <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={copySecret}>
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              This is shown once. Store it securely — SCORE does not store it in recoverable form.
+              If you lose it, rotate the secret from the trigger card.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => close(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={close}>
