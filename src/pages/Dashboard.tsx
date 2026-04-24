@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useDemo } from "@/contexts/DemoContext";
 import { DemoPassportView } from "@/components/demo/DemoPassportView";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
+import { ValueEventCard, type ValueEventCardProps } from "@/components/value-events/ValueEventCard";
+import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
+import { toast } from "sonner";
 
 type Stats = {
   contracts: number;
@@ -21,6 +24,27 @@ type Profile = {
   show_contracts: boolean;
 };
 
+type RecentExecution = {
+  id: string;
+  contract_id: string;
+  title: string;
+  status: "Pending" | "Settled" | "Intent logged" | "Attested" | "Declined";
+  trigger_met: boolean;
+  settled_amount: number | null;
+  currency: string;
+  updated_at: string;
+  confidence: "High" | "Medium" | "Low" | null;
+  resolver_description: string | null;
+  expected_resolution: string | null;
+  evidence_ids: string[];
+  contract_name: string | null;
+  trigger_description: string | null;
+  attestation_required: boolean;
+};
+
+const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
+const formatMoney = (n: number, currency: string) => `${currencySymbol(currency)}${Math.round(n).toLocaleString()}`;
+
 const Stat = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-md border p-3">
     <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -31,9 +55,12 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 const Dashboard = () => {
   const { profile } = useDemo();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [me, setMe] = useState<Profile | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [recent, setRecent] = useState<RecentExecution[]>([]);
+  const [attachFor, setAttachFor] = useState<RecentExecution | null>(null);
 
   useEffect(() => {
     if (!user || profile) return;
@@ -71,6 +98,83 @@ const Dashboard = () => {
     })();
   }, [user, profile]);
 
+  useEffect(() => {
+    if (!user || profile) return;
+    (async () => {
+      const { data } = await supabase
+        .from("executions")
+        .select("id, contract_id, title, status, trigger_met, settled_amount, currency, updated_at, confidence, resolver_description, expected_resolution, evidence_ids, contracts:contract_id ( name, trigger_description, attestation_required )")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(5);
+      const rows = (data ?? []).map((r) => {
+        const c = (r as { contracts: { name: string; trigger_description: string | null; attestation_required: boolean } | null }).contracts;
+        return {
+          id: r.id,
+          contract_id: r.contract_id,
+          title: r.title,
+          status: r.status as RecentExecution["status"],
+          trigger_met: r.trigger_met,
+          settled_amount: r.settled_amount,
+          currency: r.currency,
+          updated_at: r.updated_at,
+          confidence: (r.confidence as RecentExecution["confidence"]) ?? null,
+          resolver_description: r.resolver_description ?? null,
+          expected_resolution: r.expected_resolution ?? null,
+          evidence_ids: (r.evidence_ids as string[] | null) ?? [],
+          contract_name: c?.name ?? null,
+          trigger_description: c?.trigger_description ?? null,
+          attestation_required: c?.attestation_required ?? false,
+        } as RecentExecution;
+      });
+      setRecent(rows);
+    })();
+  }, [user, profile]);
+
+  const cards: (ValueEventCardProps & { key: string; contractId: string; executionId: string; row: RecentExecution })[] = useMemo(() => {
+    return recent.slice(0, 3).map((e) => {
+      const amount = e.settled_amount != null ? Number(e.settled_amount) : null;
+      let status: ValueEventCardProps["status"];
+      let headline = "";
+      let subheadline = "";
+      const cName = e.contract_name ?? "this contract";
+      if (e.status === "Settled") {
+        status = "Resolved";
+        headline = amount != null ? `${formatMoney(amount, e.currency)} received` : "received";
+        subheadline = `${cName} payout was recorded and settled.`;
+      } else if (e.status === "Pending" && e.trigger_met) {
+        status = "Under review";
+        headline = amount != null ? `${formatMoney(amount, e.currency)} on the way` : "on the way";
+        subheadline = `${cName} trigger confirmed. Awaiting settlement.`;
+      } else if (e.status === "Intent logged") {
+        status = "Watching";
+        headline = amount != null ? `${formatMoney(amount, e.currency)} possible` : "possible";
+        subheadline = `Work logged for ${cName}. Trigger not yet met.`;
+      } else {
+        status = "Pending";
+        headline = e.title;
+        subheadline = `${cName}.`;
+      }
+      return {
+        key: e.id,
+        contractId: e.contract_id,
+        executionId: e.id,
+        row: e,
+        amount,
+        currency: e.currency,
+        headline,
+        subheadline,
+        status,
+        confidence: e.confidence,
+        trigger: e.trigger_description ?? undefined,
+        resolver: e.resolver_description ?? undefined,
+        evidence_count: e.evidence_ids.length,
+        expected_resolution: e.expected_resolution ?? undefined,
+        attestationEnabled: e.attestation_required,
+      };
+    });
+  }, [recent]);
+
   if (profile) return <DemoPassportView profile={profile} />;
 
   return (
@@ -103,6 +207,50 @@ const Dashboard = () => {
         <Stat label="Pending" value={stats?.pendingTotal ? stats.pendingTotal.toLocaleString() : "—"} />
       </div>
 
+      <section style={{ marginTop: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+          <h3 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 600, margin: 0, color: "#1A1614" }}>
+            What changed
+          </h3>
+          <Link to="/log-work" style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#C4892A", textDecoration: "none" }}>
+            View all →
+          </Link>
+        </div>
+        {cards.length === 0 ? (
+          <div style={{ border: "1px dashed rgba(26,22,14,0.15)", borderRadius: 6, padding: 24, textAlign: "center" }}>
+            <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: 0 }}>
+              Nothing to show yet. Log your first contribution to see value events here.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {cards.map((c) => (
+              <ValueEventCard
+                key={c.key}
+                amount={c.amount}
+                currency={c.currency}
+                headline={c.headline}
+                subheadline={c.subheadline}
+                status={c.status}
+                confidence={c.confidence}
+                trigger={c.trigger}
+                resolver={c.resolver}
+                evidence_count={c.evidence_count}
+                expected_resolution={c.expected_resolution}
+                attestationEnabled={c.attestationEnabled}
+                onViewDetails={() => navigate("/contracts")}
+                onAddEvidence={() => setAttachFor(c.row)}
+                onRequestConfirmation={
+                  c.attestationEnabled
+                    ? () => toast.info("Open this execution in Contracts to request confirmation.")
+                    : undefined
+                }
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
       {me?.contributor_id && user && (
         <SharePassportDialog
           open={shareOpen}
@@ -116,6 +264,17 @@ const Dashboard = () => {
             show_contracts: me.show_contracts,
           }}
           onPrivacyChange={(p) => setMe((prev) => (prev ? { ...prev, ...p } : prev))}
+        />
+      )}
+
+      {attachFor && (
+        <AttachEvidenceDialog
+          open={!!attachFor}
+          onOpenChange={(v) => !v && setAttachFor(null)}
+          contractId={attachFor.contract_id}
+          executionId={attachFor.id}
+          executionTitle={attachFor.title}
+          onCreated={() => setAttachFor(null)}
         />
       )}
     </div>
