@@ -133,6 +133,11 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, execution
             Record proof that work happened. The fingerprint and timestamp become permanent on save.
           </DialogDescription>
         </DialogHeader>
+        {executionTitle && (
+          <p style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#9A8F84", margin: "0 0 4px" }}>
+            Attaching to: {executionTitle}
+          </p>
+        )}
 
         <div className="rounded-md border bg-muted/40 p-3 flex gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
@@ -178,8 +183,14 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, execution
             <TabsContent value="file" className="pt-3 space-y-2">
               <Label htmlFor="ev-file">File</Label>
               <Input id="ev-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              {file && (
+                <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", lineHeight: 1.6 }}>
+                  <div>File: {file.name}</div>
+                  <div>Size: {file.size < 1024 ? `${file.size} B` : file.size < 1024*1024 ? `${(file.size/1024).toFixed(1)} KB` : `${(file.size/1024/1024).toFixed(2)} MB`}</div>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
-                File never leaves your browser. Only the SHA-256 hash is stored.
+                <em>SCORE stores the fingerprint, not the file. The hash proves this file existed at this moment.</em>
               </p>
             </TabsContent>
           </Tabs>
@@ -198,6 +209,11 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, execution
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
+            {fingerprint && stampedAt && (
+              <p style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", margin: 0 }}>
+                Timestamped: {stampedAt}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -207,6 +223,9 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, execution
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
+          {errorMsg && (
+            <p className="mr-auto text-xs text-destructive self-center">{errorMsg}</p>
+          )}
           <Button variant="ghost" onClick={() => close(false)} disabled={busy}>Cancel</Button>
           <Button onClick={submit} disabled={!canSave}>
             {busy ? "Saving…" : "Save evidence"}
