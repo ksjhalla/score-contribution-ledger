@@ -89,7 +89,7 @@ export const AttachEvidenceDialog = ({ open, onOpenChange, contractId, execution
 
   const copyFingerprint = async () => {
     await navigator.clipboard.writeText(fingerprint);
-    toast.success("Fingerprint copied");
+    toast.success("Fingerprint copied.");
   };
 
   const submit = async () => {

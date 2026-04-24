@@ -107,7 +107,7 @@ export const MarkSettledDialog = ({
     });
 
     setBusy(false);
-    toast.success("Settlement confirmed");
+    toast.success("Settlement confirmed.");
     onSettled();
     ledgerEvents.emit();
     notificationEvents.emit();

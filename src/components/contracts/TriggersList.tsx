@@ -83,7 +83,7 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
 
   const copyUrl = async (url: string) => {
     await navigator.clipboard.writeText(url);
-    toast.success("Webhook URL copied");
+    toast.success("Webhook URL copied.");
   };
 
   return (

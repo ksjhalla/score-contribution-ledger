@@ -111,7 +111,7 @@ export const NewContractDialog = ({ open, onOpenChange, onCreated, sector, initi
       toast.error(error.message);
       return;
     }
-    toast.success("Contract recorded");
+    toast.success("Contract recorded.");
     onCreated();
     close(false);
   };

@@ -449,7 +449,7 @@ export const LogWorkForm = ({ open, onOpenChange, onCreated, initialContractId }
                   </span>
                   <button
                     type="button"
-                    onClick={() => { navigator.clipboard?.writeText(proofHash); toast.success("Hash copied"); }}
+                    onClick={() => { navigator.clipboard?.writeText(proofHash); toast.success("Hash copied."); }}
                     style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: "#9A8F84" }}
                     aria-label="Copy hash"
                   >
