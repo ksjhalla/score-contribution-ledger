@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogWorkForm } from "@/components/log-work/LogWorkForm";
 import { MarkSettledDialog } from "@/components/contracts/MarkSettledDialog";
+import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
 import { toast } from "sonner";
 
 type ExecStatus = "Pending" | "Settled" | "Intent logged" | "Attested" | "Declined";
@@ -23,6 +24,7 @@ type ExecutionRow = {
   settlement_channel: string | null;
   contract_id: string;
   contract_name: string | null;
+  evidence_ids: string[];
 };
 
 const NOTICE_KEY = "work_entries_notice_dismissed";
@@ -45,6 +47,7 @@ const LogWork = () => {
   const [openForm, setOpenForm] = useState(false);
   const [showLegacyNotice, setShowLegacyNotice] = useState(false);
   const [settleFor, setSettleFor] = useState<ExecutionRow | null>(null);
+  const [attachFor, setAttachFor] = useState<ExecutionRow | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
@@ -55,7 +58,7 @@ const LogWork = () => {
     setLoadingList(true);
     const { data, error } = await supabase
       .from("executions")
-      .select("id, title, execution_date, status, trigger_met, settled_amount, currency, settlement_channel, contract_id, contracts:contract_id ( name )")
+      .select("id, title, execution_date, status, trigger_met, settled_amount, currency, settlement_channel, contract_id, evidence_ids, contracts:contract_id ( name )")
       .eq("user_id", user.id)
       .order("execution_date", { ascending: false })
       .order("created_at", { ascending: false })
@@ -75,6 +78,7 @@ const LogWork = () => {
         settlement_channel: r.settlement_channel,
         contract_id: r.contract_id,
         contract_name: c?.name ?? null,
+        evidence_ids: (r.evidence_ids as string[] | null) ?? [],
       } as ExecutionRow;
     });
     setExecutions(rows);
