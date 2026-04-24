@@ -97,6 +97,27 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_requests: {
+        Row: {
+          email: string
+          id: string
+          source: string | null
+          submitted_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          source?: string | null
+          submitted_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          source?: string | null
+          submitted_at?: string
+        }
+        Relationships: []
+      }
       evidence: {
         Row: {
           contract_id: string
