@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
 import { useDemo } from "@/contexts/DemoContext";
+import { Helmet } from "react-helmet-async";
 
 const NAV = [
   { to: "/dashboard", label: "Passport", icon: FileText },
@@ -76,6 +77,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         color: "#1A1614",
       }}
     >
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <style>{`
         .app-shell-link { display:flex; align-items:center; padding:10px 20px; font-family:'DM Sans',system-ui,sans-serif; font-size:13px; font-weight:500; text-decoration:none; color:#5C5248; border-left:2px solid transparent; transition:background-color .12s ease; }
         .app-shell-link:hover { background: rgba(26,22,14,0.03); }
