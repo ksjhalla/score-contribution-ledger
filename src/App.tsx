@@ -17,6 +17,7 @@ import Contracts from "./pages/Contracts.tsx";
 import Account from "./pages/Account.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
+import { DemoProvider } from "./contexts/DemoContext";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <DemoProvider>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
@@ -41,7 +43,8 @@ const App = () => (
             <Route path="/account" element={<AppShell><Account /></AppShell>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </DemoProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

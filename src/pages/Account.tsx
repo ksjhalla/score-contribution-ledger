@@ -1,5 +1,10 @@
+import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
+
 const Account = () => (
   <div style={{ padding: "32px 24px", maxWidth: 920, margin: "0 auto" }}>
+    <div className="md:hidden" style={{ marginBottom: 24 }}>
+      <DemoProfileCards fullWidth />
+    </div>
     <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 600, margin: "0 0 12px" }}>
       Account
     </h2>
