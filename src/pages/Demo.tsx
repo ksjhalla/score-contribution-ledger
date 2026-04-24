@@ -209,38 +209,40 @@ function MainPanel({ profile }: { profile: DemoProfile }) {
 
       {/* Hero card */}
       <Card>
-        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 32 }}>
-          <div>
-            <SectionTitle>Total attributed</SectionTitle>
-            <div style={{ fontFamily: fontDisplay, fontSize: 56, fontWeight: 600, color: palette.amber, lineHeight: 1 }}>
-              {profile.heroTotal}
+        <SectionTitle>Total attributed</SectionTitle>
+        <div style={{ fontFamily: fontDisplay, fontSize: 56, fontWeight: 600, color: palette.amber, lineHeight: 1 }}>
+          {profile.heroTotal}
+        </div>
+        <div style={{
+          marginTop: 28, display: "grid",
+          gridTemplateColumns: `repeat(${profile.breakdown.length}, 1fr)`,
+          gap: 16, borderTop: `1px solid ${palette.border}`, paddingTop: 20,
+        }}>
+          {profile.breakdown.map((b) => (
+            <div key={b.label}>
+              <div style={{ fontFamily: fontMono, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, color: palette.faint }}>
+                {b.label}
+              </div>
+              <div style={{ fontFamily: fontMono, fontSize: 18, color: toneColor(b.tone), marginTop: 6 }}>{b.value}</div>
+              <div style={{ fontFamily: fontBody, fontSize: 12, color: palette.muted, marginTop: 6, lineHeight: 1.5 }}>{b.meta}</div>
             </div>
-            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 14 }}>
-              {profile.breakdown.map((b) => (
-                <div key={b.label} style={{ display: "grid", gridTemplateColumns: "90px 110px 1fr", gap: 12, alignItems: "baseline" }}>
-                  <div style={{ fontFamily: fontMono, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, color: palette.faint }}>
-                    {b.label}
-                  </div>
-                  <div style={{ fontFamily: fontMono, fontSize: 16, color: toneColor(b.tone) }}>{b.value}</div>
-                  <div style={{ fontFamily: fontBody, fontSize: 12, color: palette.muted }}>{b.meta}</div>
-                </div>
-              ))}
+          ))}
+        </div>
+      </Card>
+
+      {/* Recent events */}
+      <Card>
+        <SectionTitle>Recent events</SectionTitle>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {profile.recentEvents.map((e, i) => (
+            <div key={i} style={{ borderTop: `1px solid ${palette.border}`, paddingTop: 12 }}>
+              <div style={{ fontFamily: fontMono, fontSize: 13, color: toneColor(e.amountTone), marginBottom: 4 }}>
+                {e.amount}
+              </div>
+              <div style={{ fontFamily: fontBody, fontSize: 13, color: palette.text }}>{e.title}</div>
+              <div style={{ fontFamily: fontMono, fontSize: 10, color: palette.faint, marginTop: 2 }}>{e.meta}</div>
             </div>
-          </div>
-          <div>
-            <SectionTitle>Recent events</SectionTitle>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.recentEvents.map((e, i) => (
-                <div key={i} style={{ borderTop: `1px solid ${palette.border}`, paddingTop: 12 }}>
-                  <div style={{ fontFamily: fontMono, fontSize: 13, color: toneColor(e.amountTone), marginBottom: 4 }}>
-                    {e.amount}
-                  </div>
-                  <div style={{ fontFamily: fontBody, fontSize: 13, color: palette.text }}>{e.title}</div>
-                  <div style={{ fontFamily: fontMono, fontSize: 10, color: palette.faint, marginTop: 2 }}>{e.meta}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </Card>
 
