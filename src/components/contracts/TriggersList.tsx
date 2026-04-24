@@ -4,11 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Webhook, Copy, Bell } from "lucide-react";
+import { Plus, Webhook, Copy, Bell, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { AddTriggerDialog } from "./AddTriggerDialog";
 import { sendNotification, notificationEvents } from "@/lib/notifications";
 import { useAuth } from "@/hooks/useAuth";
+import { generateWebhookSecret, sha256Hex } from "@/lib/webhookSecret";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type TriggerRow = {
   id: string;
@@ -48,6 +54,9 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
+  const [failedCounts, setFailedCounts] = useState<Record<string, number>>({});
+  const [rotateTarget, setRotateTarget] = useState<TriggerRow | null>(null);
+  const [rotatedSecret, setRotatedSecret] = useState<{ id: string; secret: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,7 +65,22 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
       .select("id, label, current_value, threshold_value, unit, direction, source_type, webhook_url, last_updated")
       .eq("contract_id", contractId)
       .order("created_at", { ascending: false });
-    setTriggers((data ?? []) as TriggerRow[]);
+    const rows = (data ?? []) as TriggerRow[];
+    setTriggers(rows);
+
+    // Per-trigger failed-auth counts in the last 24h.
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const counts: Record<string, number> = {};
+    await Promise.all(rows.map(async (t) => {
+      const { count } = await supabase
+        .from("trigger_events")
+        .select("id", { count: "exact", head: true })
+        .eq("trigger_id", t.id)
+        .eq("auth_failed", true)
+        .gte("received_at", since);
+      counts[t.id] = count ?? 0;
+    }));
+    setFailedCounts(counts);
     setLoading(false);
   }, [contractId]);
 
@@ -85,6 +109,28 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
     await navigator.clipboard.writeText(url);
     toast.success("Webhook URL copied.");
   };
+
+  const copyText = async (text: string, msg = "Copied.") => {
+    await navigator.clipboard.writeText(text);
+    toast.success(msg);
+  };
+
+  const confirmRotate = async () => {
+    if (!rotateTarget) return;
+    const raw = generateWebhookSecret();
+    const hash = await sha256Hex(raw);
+    const { error } = await supabase
+      .from("triggers")
+      .update({ webhook_secret: hash })
+      .eq("id", rotateTarget.id);
+    if (error) { toast.error(error.message); return; }
+    setRotatedSecret({ id: rotateTarget.id, secret: raw });
+    setRotateTarget(null);
+    load();
+  };
+
+  const curlExample = (t: TriggerRow) =>
+    `curl -X POST \\\n  ${t.webhook_url} \\\n  -H "Content-Type: application/json" \\\n  -H "X-SCORE-Secret: whsec_your_secret" \\\n  -d '{"value": 8847}'`;
 
   return (
     <div className="space-y-3">
@@ -151,12 +197,66 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
                 )}
 
                 {t.source_type === "Webhook" && t.webhook_url && (
-                  <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2">
-                    <Webhook className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <code className="flex-1 font-mono text-[10px] truncate">{t.webhook_url}</code>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => copyUrl(t.webhook_url!)}>
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2">
+                      <Webhook className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <code className="flex-1 font-mono text-[10px] truncate">{t.webhook_url}</code>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => copyUrl(t.webhook_url!)}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
+                    <div>
+                      <div className="text-[9px] font-mono uppercase tracking-wide text-muted-foreground mb-1">
+                        How to send values
+                      </div>
+                      <div className="relative rounded-md border bg-muted/40 p-3">
+                        <pre className="font-mono text-[10px] text-foreground overflow-x-auto whitespace-pre">
+{curlExample(t)}
+                        </pre>
+                        <Button
+                          size="icon" variant="ghost"
+                          className="absolute top-1 right-1 h-6 w-6"
+                          onClick={() => copyText(curlExample(t), "Snippet copied.")}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <p className="text-[9px] font-mono text-muted-foreground mt-1">
+                        Your webhook secret was shown once at creation. If you lost it, rotate it below.
+                      </p>
+                    </div>
+
+                    {(failedCounts[t.id] ?? 0) > 0 && (
+                      <div
+                        className="rounded-md p-2"
+                        style={{
+                          backgroundColor: "rgba(154,48,32,0.06)",
+                          border: "1px solid rgba(154,48,32,0.2)",
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "#9A3020" }} />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs" style={{ color: "#9A3020" }}>
+                              {failedCounts[t.id]} failed authentication attempt{failedCounts[t.id] === 1 ? "" : "s"} on this trigger in the last 24 hours.
+                            </div>
+                            <div className="text-[9px] font-mono text-muted-foreground mt-1">
+                              Someone may have obtained your trigger ID. Consider rotating your webhook secret.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setRotateTarget(t)}
+                      className="text-[9px] font-mono hover:underline"
+                      style={{ color: "#C4892A" }}
+                    >
+                      Rotate secret →
+                    </button>
                   </div>
                 )}
 
@@ -177,6 +277,49 @@ export const TriggersList = ({ contractId, onLogExecution }: Props) => {
         contractId={contractId}
         onCreated={load}
       />
+
+      <AlertDialog open={!!rotateTarget} onOpenChange={(o) => !o && setRotateTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate a new webhook secret?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your current secret will stop working immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRotate}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!rotatedSecret} onOpenChange={(o) => !o && setRotatedSecret(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Your new webhook secret</DialogTitle>
+            <DialogDescription>
+              Send this in the <code>X-SCORE-Secret</code> header on every request.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3">
+              <code className="flex-1 font-mono text-xs break-all">{rotatedSecret?.secret}</code>
+              <Button
+                size="icon" variant="ghost" className="h-7 w-7 shrink-0"
+                onClick={() => rotatedSecret && copyText(rotatedSecret.secret, "Secret copied.")}
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              This is shown once. Store it securely — SCORE does not store it in recoverable form.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setRotatedSecret(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
