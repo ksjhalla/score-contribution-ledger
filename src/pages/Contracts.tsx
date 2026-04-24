@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ContractCard, type ContractRow } from "@/components/contracts/ContractCard";
@@ -24,6 +25,7 @@ const Contracts = () => {
   const [sector, setSector] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [searchParams] = useSearchParams();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -38,6 +40,16 @@ const Contracts = () => {
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Auto-expand a contract if ?expand=<id> is present (used by notification "View contract" links).
+  useEffect(() => {
+    const id = searchParams.get("expand");
+    if (id && rows.some((r) => r.id === id)) {
+      setExpanded((p) => ({ ...p, [id]: true }));
+      const el = document.getElementById(`contract-${id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [searchParams, rows]);
 
   useEffect(() => {
     if (!user) return;
@@ -99,6 +111,7 @@ const Contracts = () => {
             return (
               <div
                 key={c.id}
+                id={`contract-${c.id}`}
                 style={{
                   borderLeft: adHoc ? "2px solid #9A8F84" : undefined,
                   paddingLeft: adHoc ? 8 : 0,

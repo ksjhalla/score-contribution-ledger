@@ -133,21 +133,10 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
       }
     }
 
-    // settlement_due notification when work met the trigger but is awaiting settlement.
+    // The DB trigger `executions_settlement_due_notif` creates the settlement_due
+    // notification automatically when status='Pending' and trigger_met=true.
+    // We just nudge the bell to refetch so it shows immediately.
     if (triggerMet && status === "Pending" && created?.id) {
-      const { data: c } = await supabase
-        .from("contracts").select("name").eq("id", contractId).maybeSingle();
-      const name = c?.name ?? "Contract";
-      const amtStr = settledAmount != null
-        ? ` — ${settledAmount.toLocaleString()} ${currency || "USD"}`
-        : "";
-      await sendNotification({
-        userId: user.id,
-        type: "settlement_due",
-        contractId,
-        executionId: created.id,
-        message: `${name}${amtStr} awaiting settlement confirmation`,
-      });
       notificationEvents.emit();
     }
 

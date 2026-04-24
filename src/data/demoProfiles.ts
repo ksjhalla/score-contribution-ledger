@@ -49,6 +49,57 @@ export type DemoValueEvent = {
   evidence_count?: number;
 };
 
+export type DemoNotification = {
+  id: string;
+  type: "trigger_met" | "settlement_due" | "attestation_confirmed" | "attestation_declined" | "evidence_required" | "system";
+  message: string;
+  read: boolean;
+  created_at: string;
+};
+
+const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
+const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString();
+
+export const pharmaNotifications: DemoNotification[] = [
+  {
+    id: "demo-n1",
+    type: "settlement_due",
+    message: "Payment due on GLP-1 TTA Extension. Mark as settled when Novo Nordisk signature confirmed.",
+    read: false,
+    created_at: hoursAgo(2),
+  },
+  {
+    id: "demo-n2",
+    type: "trigger_met",
+    message: "Batch volume threshold reached. 8.2M vials confirmed. Log an execution against the Aspen Process Agreement.",
+    read: true,
+    created_at: daysAgo(3),
+  },
+];
+
+export const ncaaNotifications: DemoNotification[] = [
+  {
+    id: "demo-n3",
+    type: "settlement_due",
+    message: "Payment due on OSU Revenue-Sharing Agreement. Spring 2026 distribution trigger fired. Mark as settled when ACH confirms.",
+    read: false,
+    created_at: hoursAgo(1),
+  },
+  {
+    id: "demo-n4",
+    type: "trigger_met",
+    message: "Seasonal distribution trigger fired for Spring 2026. Log an execution to record the pending payment.",
+    read: true,
+    created_at: daysAgo(5),
+  },
+];
+
+export const demoNotificationsFor = (key: DemoKey | "none"): DemoNotification[] => {
+  if (key === "pharma") return pharmaNotifications;
+  if (key === "ncaa") return ncaaNotifications;
+  return [];
+};
+
 export const demoProfiles: Record<DemoKey, DemoProfile> = {
   pharma: {
     key: "pharma",
