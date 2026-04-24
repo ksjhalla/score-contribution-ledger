@@ -170,11 +170,26 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
               </Button>
             </div>
             {exLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
+              <p className="text-xs" style={{ color: "#9A8F84" }}>Loading…</p>
             ) : executions.length === 0 ? (
-              <div className="rounded-md border border-dashed p-4 flex flex-col items-center text-center gap-1">
-                <Activity className="h-4 w-4 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">No executions logged yet.</p>
+              <div
+                className="rounded-md border border-dashed flex flex-col items-center text-center"
+                style={{ paddingTop: 40, paddingBottom: 24, paddingLeft: 24, paddingRight: 24 }}
+              >
+                <Activity className="h-4 w-4" style={{ color: "#9A8F84", marginBottom: 8 }} />
+                <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 500, color: "#5C5248" }}>
+                  No executions logged yet.
+                </div>
+                <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#9A8F84", margin: "4px 0 12px" }}>
+                  Log work against this contract to start the trail.
+                </p>
+                <button
+                  type="button" onClick={() => setLogOpen(true)}
+                  style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
+                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#C4892A" }}
+                >
+                  + Log execution →
+                </button>
               </div>
             ) : (
               <ol className="relative border-l pl-4 ml-1 space-y-3">
