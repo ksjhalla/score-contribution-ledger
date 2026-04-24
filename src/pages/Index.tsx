@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { earningsPreview, proofPreview, passportPreview } from "@/data/marketingPreviews";
 
 const COLORS = {
   bg: "#F5F1E8",
@@ -273,33 +274,31 @@ export default function Index() {
                   {c.preview === "earnings" && (
                     <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
                       <div style={{ display: "flex" }}>
-                        {[
-                          ["SETTLED", "$52,600", "#2A6A45"],
-                          ["PENDING", "$14,000", COLORS.amber],
-                          ["CONTRACTS", "3", COLORS.text],
-                          ["EXECUTIONS", "7", COLORS.text],
-                        ].map(([l, v, col], j) => (
-                          <div key={j} style={{
-                            flex: 1, padding: "10px 14px",
-                            borderRight: j < 3 ? "1px solid rgba(26,22,14,0.08)" : "none",
-                          }}>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint }}>{l}</div>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: col, marginTop: 4 }}>{v}</div>
-                          </div>
-                        ))}
+                        {earningsPreview.stats.map((s, j, arr) => {
+                          const col = s.tone === "settled" ? "#2A6A45" : s.tone === "pending" ? COLORS.amber : COLORS.text;
+                          return (
+                            <div key={j} style={{
+                              flex: 1, padding: "10px 14px",
+                              borderRight: j < arr.length - 1 ? "1px solid rgba(26,22,14,0.08)" : "none",
+                            }}>
+                              <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint }}>{s.label}</div>
+                              <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: col, marginTop: 4 }}>{s.value}</div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      {[
-                        ["SCORE Protocol Founding Agreement", "$52,600", "#2A6A45"],
-                        ["Sahel Agri Cooperative MSA", "Attribution", "#2A5C8A"],
-                      ].map(([n, val, col], j) => (
-                        <div key={j} style={{
-                          padding: "10px 14px", borderTop: "1px solid rgba(26,22,14,0.08)",
-                          display: "flex", justifyContent: "space-between", alignItems: "center",
-                        }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: COLORS.text }}>{n}</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: col }}>{val}</div>
-                        </div>
-                      ))}
+                      {earningsPreview.rows.map((r, j) => {
+                        const col = r.tone === "settled" ? "#2A6A45" : "#2A5C8A";
+                        return (
+                          <div key={j} style={{
+                            padding: "10px 14px", borderTop: "1px solid rgba(26,22,14,0.08)",
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                          }}>
+                            <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: COLORS.text }}>{r.name}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: col }}>{r.value}</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   {c.preview === "proof" && (
@@ -312,15 +311,15 @@ export default function Index() {
                           alignItems: "center", justifyContent: "center", flexShrink: 0,
                         }}>✓</div>
                         <div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 500, color: COLORS.text }}>API integration · license execution</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 2 }}>License trigger · Nov 2024</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 500, color: COLORS.text }}>{proofPreview.title}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 2 }}>{proofPreview.subtitle}</div>
                           <div style={{
                             display: "inline-block", marginTop: 6,
                             background: COLORS.bg, border: "1px solid rgba(26,22,14,0.10)",
                             borderRadius: 3, padding: "3px 8px",
                             fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint,
-                          }}>sha256: e3b0c44298fc1c14… · RFC 3161: 2024-11-14</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#2A6A45", marginTop: 4 }}>+$12,400</div>
+                          }}>{proofPreview.fingerprint}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#2A6A45", marginTop: 4 }}>{proofPreview.amount}</div>
                         </div>
                       </div>
                     </div>
@@ -336,28 +335,28 @@ export default function Index() {
                           background: "rgba(196,137,42,0.15)", border: "1px solid rgba(196,137,42,0.3)",
                           color: COLORS.amber, fontFamily: FONT_MONO, fontSize: 13, fontWeight: 600,
                           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                        }}>KJ</div>
+                        }}>{passportPreview.initials}</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>Kaushal Jhaveri</div>
-                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>Protocol Architect · Independent</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>SCR-KJ-2024-001</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>{passportPreview.name}</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>{passportPreview.role}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>{passportPreview.contributorId}</div>
                         </div>
                         <div style={{
                           fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45",
                           background: "rgba(42,106,69,0.15)", borderRadius: 20, padding: "3px 9px",
-                        }}>Trust 94/100</div>
+                        }}>{passportPreview.trustScore}</div>
                       </div>
                       <div style={{
                         display: "flex", background: COLORS.dark,
                         borderTop: "1px solid rgba(245,241,232,0.06)",
                       }}>
-                        {[["$52.6K","Attributed"],["3","Contracts"],["7","Executions"]].map(([v,l], j) => (
+                        {passportPreview.stats.map((s, j, arr) => (
                           <div key={j} style={{
                             flex: 1, padding: "10px 0", textAlign: "center",
-                            borderRight: j < 2 ? "1px solid rgba(245,241,232,0.06)" : "none",
+                            borderRight: j < arr.length - 1 ? "1px solid rgba(245,241,232,0.06)" : "none",
                           }}>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{v}</div>
-                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{l}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{s.value}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{s.label}</div>
                           </div>
                         ))}
                       </div>
@@ -366,15 +365,15 @@ export default function Index() {
                         borderTop: "1px solid rgba(245,241,232,0.06)",
                         display: "flex", justifyContent: "space-between", alignItems: "center",
                       }}>
-                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>SCORE Protocol Founding Agreement</div>
-                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>Financial</div>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>{passportPreview.contractName}</div>
+                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>{passportPreview.contractStake}</div>
                       </div>
                       <div style={{
                         background: "rgba(245,241,232,0.04)",
                         borderTop: "1px solid rgba(245,241,232,0.06)",
                         padding: "8px 16px",
                         fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)",
-                      }}>score.xyz/kj · verified contributor</div>
+                      }}>{passportPreview.url}</div>
                     </div>
                   )}
                   <div style={{
