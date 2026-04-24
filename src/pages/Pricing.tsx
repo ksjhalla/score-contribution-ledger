@@ -107,6 +107,7 @@ function TierCard({ tier }: { tier: Tier }) {
   const priceColor = tier.dark ? COLORS.darkText : COLORS.text;
   const subColor = tier.dark ? "rgba(245,241,232,0.5)" : COLORS.faint;
   const featureColor = tier.dark ? "rgba(245,241,232,0.85)" : COLORS.muted;
+  const checkColor = tier.dark ? COLORS.amber : "#2A6A45";
   const ctaStyle: React.CSSProperties = tier.dark
     ? { background: COLORS.amber, color: "#fff", border: "none" }
     : { background: COLORS.card, color: COLORS.text, border: "1px solid rgba(26,22,14,0.15)" };
@@ -131,7 +132,8 @@ function TierCard({ tier }: { tier: Tier }) {
         <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", flex: 1 }}>
           {tier.features.map((f) => (
             <li key={f} style={{ fontFamily: FONT_BODY, fontSize: 13, color: featureColor, lineHeight: 1.8, display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <Check size={14} color="#2A6A45" style={{ flexShrink: 0, marginTop: 6 }} aria-hidden /><span>{f}</span>
+              <Check size={14} color={checkColor} style={{ flexShrink: 0, marginTop: 6, color: checkColor }} aria-hidden />
+              <span style={{ color: featureColor }}>{f}</span>
             </li>
           ))}
         </ul>
