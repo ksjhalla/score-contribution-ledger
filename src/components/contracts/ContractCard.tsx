@@ -83,7 +83,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
     try {
       const { data: prof } = await supabase.from("profiles").select("contributor_id").eq("id", user.id).maybeSingle();
       await exportContractRecord(contract.id, prof?.contributor_id ?? null);
-      toast.success("Record exported");
+      toast.success("Record exported.");
     } catch (e) {
       toast.error("Export failed");
     } finally { setExporting(false); }
@@ -309,7 +309,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
                     <div className="flex items-center justify-between gap-2">
                       <button
                         type="button"
-                        onClick={() => { navigator.clipboard.writeText(e.fingerprint); toast.success("Hash copied"); }}
+                        onClick={() => { navigator.clipboard.writeText(e.fingerprint); toast.success("Hash copied."); }}
                         style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer",
                           fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84",
                           display: "inline-flex", alignItems: "center", gap: 4 }}

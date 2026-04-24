@@ -93,7 +93,7 @@ export const SharePassportDialog = ({
   const copyUrl = async () => {
     await navigator.clipboard.writeText(shareUrl);
     setCopied(true);
-    toast.success("Passport URL copied");
+    toast.success("Passport URL copied.");
     setTimeout(() => setCopied(false), 2000);
   };
 
