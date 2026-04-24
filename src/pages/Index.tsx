@@ -138,6 +138,7 @@ export default function Index() {
       <style>{`
         @media (max-width: 640px) {
           .score-topbar-center { display: none !important; }
+          .score-topbar-signin { display: none !important; }
           .score-hero-h { font-size: 48px !important; }
           .score-cols-3 { grid-template-columns: 1fr !important; }
           .score-cols-2 { grid-template-columns: 1fr !important; }
@@ -160,11 +161,16 @@ export default function Index() {
             border: "1px solid rgba(26,22,14,0.2)", borderRadius: 4,
             padding: "4px 10px", fontFamily: FONT_MONO, fontSize: 10, color: COLORS.muted,
           }}>→ Now available</div>
-          <a href="#cta" onClick={scrollToCta} style={{
-            background: COLORS.dark, color: COLORS.darkText,
-            fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
-            borderRadius: 4, padding: "9px 18px", textDecoration: "none",
-          }}>REQUEST A DEMO</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link to="/login" className="score-topbar-signin" style={{
+              fontFamily: FONT_MONO, fontSize: 11, color: COLORS.muted, textDecoration: "none",
+            }}>Sign in →</Link>
+            <a href="#cta" onClick={scrollToCta} style={{
+              background: COLORS.dark, color: COLORS.darkText,
+              fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em",
+              borderRadius: 4, padding: "9px 18px", textDecoration: "none",
+            }}>REQUEST A DEMO</a>
+          </div>
         </div>
       </header>
 
@@ -201,6 +207,12 @@ export default function Index() {
               background: "transparent", color: COLORS.muted,
               fontFamily: FONT_BODY, fontSize: 14, padding: "12px 8px", textDecoration: "none",
             }} className="score-link-underline">See what it does</Link>
+          </div>
+          <div style={{
+            display: "block", textAlign: "center", marginTop: 10,
+            fontFamily: FONT_BODY, fontSize: 12, color: COLORS.faint,
+          }}>
+            Already have access? <Link to="/login" style={{ color: COLORS.faint, textDecoration: "underline" }}>Sign in →</Link>
           </div>
         </div>
       </Section>
@@ -241,20 +253,136 @@ export default function Index() {
           </div>
           <div className="score-cols-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
             {[
-              { eyebrow: "YOUR EARNINGS", title: "See what you're owed across every project", footer: "EARLY ACCESS ONLY" },
-              { eyebrow: "THE PROOF", title: "Proof that you built it — permanent and portable", footer: "EARLY ACCESS ONLY" },
-              { eyebrow: "INVESTOR & AUDIT REPORTS", title: "One click to a report anyone can verify.", footer: "REQUEST A DEMO →", footerAmber: true },
+              { eyebrow: "YOUR EARNINGS", title: "See what you're owed across every project", footer: "EARLY ACCESS ONLY", preview: "earnings" as const },
+              { eyebrow: "THE PROOF", title: "Proof that you built it — permanent and portable", footer: "EARLY ACCESS ONLY", preview: "proof" as const },
+              { eyebrow: "INVESTOR & AUDIT REPORTS", title: "One click to a report anyone can verify.", footer: "REQUEST A DEMO →", footerAmber: true, preview: "passport" as const },
             ].map((c, i) => (
               <div key={i} style={{
                 border: `1px solid ${COLORS.border}`, borderRadius: 6,
-                background: COLORS.card, padding: "28px 24px",
-                display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 220,
+                background: COLORS.card, padding: 24,
+                display: "flex", flexDirection: "column",
               }}>
                 <div>
                   <div style={{ ...eyebrowStyle, marginBottom: 14 }}>{c.eyebrow}</div>
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, lineHeight: 1.3, margin: 0 }}>{c.title}</h3>
                 </div>
-                <div style={{ marginTop: 24 }}>
+                <div style={{
+                  marginTop: 16, border: "1px solid rgba(26,22,14,0.08)", borderRadius: 4,
+                  background: COLORS.bg, overflow: "hidden", position: "relative", height: 160,
+                }}>
+                  {c.preview === "earnings" && (
+                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
+                      <div style={{ display: "flex" }}>
+                        {[
+                          ["SETTLED", "$52,600", "#2A6A45"],
+                          ["PENDING", "$14,000", COLORS.amber],
+                          ["CONTRACTS", "3", COLORS.text],
+                          ["EXECUTIONS", "7", COLORS.text],
+                        ].map(([l, v, col], j) => (
+                          <div key={j} style={{
+                            flex: 1, padding: "10px 14px",
+                            borderRight: j < 3 ? "1px solid rgba(26,22,14,0.08)" : "none",
+                          }}>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint }}>{l}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: col, marginTop: 4 }}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {[
+                        ["SCORE Protocol Founding Agreement", "$52,600", "#2A6A45"],
+                        ["Sahel Agri Cooperative MSA", "Attribution", "#2A5C8A"],
+                      ].map(([n, val, col], j) => (
+                        <div key={j} style={{
+                          padding: "10px 14px", borderTop: "1px solid rgba(26,22,14,0.08)",
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                        }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: COLORS.text }}>{n}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: col }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {c.preview === "proof" && (
+                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
+                      <div style={{ display: "flex", gap: 10, padding: "12px 14px" }}>
+                        <div style={{
+                          width: 20, height: 20, borderRadius: "50%",
+                          background: "rgba(42,106,69,0.10)", border: "1px solid #2A6A45",
+                          color: "#2A6A45", fontSize: 10, display: "flex",
+                          alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        }}>✓</div>
+                        <div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 500, color: COLORS.text }}>API integration · license execution</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 2 }}>License trigger · Nov 2024</div>
+                          <div style={{
+                            display: "inline-block", marginTop: 6,
+                            background: COLORS.bg, border: "1px solid rgba(26,22,14,0.10)",
+                            borderRadius: 3, padding: "3px 8px",
+                            fontFamily: FONT_MONO, fontSize: 8, color: COLORS.faint,
+                          }}>sha256: e3b0c44298fc1c14… · RFC 3161: 2024-11-14</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#2A6A45", marginTop: 4 }}>+$12,400</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {c.preview === "passport" && (
+                    <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "139%" }}>
+                      <div style={{
+                        background: COLORS.dark, padding: "14px 16px",
+                        display: "flex", alignItems: "center", gap: 12,
+                      }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: "50%",
+                          background: "rgba(196,137,42,0.15)", border: "1px solid rgba(196,137,42,0.3)",
+                          color: COLORS.amber, fontFamily: FONT_MONO, fontSize: 13, fontWeight: 600,
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        }}>KJ</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.darkText }}>Kaushal Jhaveri</div>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(245,241,232,0.5)", marginTop: 2 }}>Protocol Architect · Independent</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)", marginTop: 3 }}>SCR-KJ-2024-001</div>
+                        </div>
+                        <div style={{
+                          fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45",
+                          background: "rgba(42,106,69,0.15)", borderRadius: 20, padding: "3px 9px",
+                        }}>Trust 94/100</div>
+                      </div>
+                      <div style={{
+                        display: "flex", background: COLORS.dark,
+                        borderTop: "1px solid rgba(245,241,232,0.06)",
+                      }}>
+                        {[["$52.6K","Attributed"],["3","Contracts"],["7","Executions"]].map(([v,l], j) => (
+                          <div key={j} style={{
+                            flex: 1, padding: "10px 0", textAlign: "center",
+                            borderRight: j < 2 ? "1px solid rgba(245,241,232,0.06)" : "none",
+                          }}>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber }}>{v}</div>
+                            <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "rgba(245,241,232,0.35)", marginTop: 2 }}>{l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{
+                        background: COLORS.dark, padding: "10px 16px",
+                        borderTop: "1px solid rgba(245,241,232,0.06)",
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                      }}>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: "rgba(245,241,232,0.6)" }}>SCORE Protocol Founding Agreement</div>
+                        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.amber }}>Financial</div>
+                      </div>
+                      <div style={{
+                        background: "rgba(245,241,232,0.04)",
+                        borderTop: "1px solid rgba(245,241,232,0.06)",
+                        padding: "8px 16px",
+                        fontFamily: FONT_MONO, fontSize: 9, color: "rgba(245,241,232,0.3)",
+                      }}>score.xyz/kj · verified contributor</div>
+                    </div>
+                  )}
+                  <div style={{
+                    position: "absolute", bottom: 0, left: 0, right: 0, height: 60,
+                    background: "linear-gradient(transparent, #FDFAF4)", pointerEvents: "none",
+                  }} />
+                </div>
+                <div style={{ marginTop: 16 }}>
                   {c.footerAmber ? (
                     <a href="#cta" onClick={scrollToCta} style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber, textDecoration: "none" }}>{c.footer}</a>
                   ) : (
@@ -268,6 +396,42 @@ export default function Index() {
             <a href="#cta" onClick={scrollToCta} style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, textDecoration: "underline" }}>
               Book a demo to see the full platform →
             </a>
+          </div>
+        </div>
+      </Section>
+
+      {/* HOW IT WORKS */}
+      <Section id="how-it-works" style={{ background: COLORS.surface, padding: "80px 0" }}>
+        <div style={{ ...containerStyle, maxWidth: 760 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={eyebrowStyle}>HOW IT WORKS</div>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 36, lineHeight: 1.2, margin: "0 auto", maxWidth: 700 }}>
+              The contract stays real.<br />The payment stays real.<br />SCORE is the ledger between them.
+            </h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 560, margin: "16px auto 48px", lineHeight: 1.75 }}>
+              SCORE records what was contributed, proves it happened, and notifies when payment is due. Nothing about this requires a blockchain. Evidence is SHA-256 fingerprinted and RFC 3161 timestamped. The record is the value.
+            </p>
+          </div>
+          <div style={{ display: "flex", alignItems: "stretch" }}>
+            {[
+              { n: "01", t: "Contract", b: "A real-world agreement defines what the contributor is owed and what condition must be met. SCORE records the reference — it does not hold the contract." },
+              { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
+              { n: "03", t: "Trigger & payment", b: "When the condition is met — a threshold crossed, a licence executed, a distribution event — SCORE notifies and records settlement. Payment moves through existing channels." },
+            ].map((s, i, arr) => (
+              <div key={s.n} style={{ display: "flex", flex: 1, alignItems: "stretch" }}>
+                <div style={{
+                  flex: 1, padding: "24px 28px", textAlign: "center",
+                  borderRight: i < arr.length - 1 ? "1px solid rgba(26,22,14,0.08)" : "none",
+                }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: COLORS.amber, marginBottom: 12 }}>{s.n}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>{s.t}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.65 }}>{s.b}</div>
+                </div>
+                {i < arr.length - 1 && (
+                  <div style={{ display: "flex", alignItems: "center", fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber, padding: "0 4px" }}>→</div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </Section>
@@ -320,47 +484,37 @@ export default function Index() {
         <div style={containerStyle}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={eyebrowStyle}>WHO IT'S FOR</div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, lineHeight: 1.15, margin: "0 0 20px" }}>
-              Eight industries.<br />One structural problem.
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, lineHeight: 1.15, margin: "0 0 12px" }}>
+              Four industries.<br />One structural problem.
             </h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 540, margin: "0 auto", lineHeight: 1.7 }}>
-              Wherever value creation is separable from employment, revenue has a tail, and no portable attribution infrastructure exists — SCORE fits.
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>
+              Wherever a contribution creates long-tail value and no portable record exists — SCORE fits.
             </p>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginBottom: 40 }}>
-            {["Software & Open Source","Pharma & Biotech","College Athletics","Music & Publishing","Film & Television","Agriculture","Manufacturing","AI Training Data"].map((s) => (
-              <div key={s} style={{
-                border: `1px solid ${COLORS.borderEm}`, background: COLORS.card,
-                borderRadius: 4, padding: "8px 16px",
-                fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, color: COLORS.text,
-              }}>{s}</div>
-            ))}
-          </div>
-          <div className="score-cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="score-cols-2" style={{
+            display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+            maxWidth: 760, margin: "0 auto",
+          }}>
             {[
-              [
-                ["Software", "SCORE Protocol · 40% revenue share · Story Protocol on-chain"],
-                ["Pharma", "Aspen Pharmacare · IFC-financed · Gqeberha · S.21 SA Patents Act"],
-                ["NCAA", "Ohio State · House Settlement · $15.375M football pool · NIL Go FMV"],
-                ["Music", "Co-writing split · DAW session timestamps · sync rights"],
-              ],
-              [
-                ["Film", "WGA/SAG-AFTRA · streaming residuals · independent viewership record"],
-                ["Agriculture", "Sahel Co-op · IoT yield sensor · sorghum protocol · UPOV PVR"],
-                ["Mfg", "Meridian · line efficiency reader · ArbEG inventor compensation"],
-                ["AI Data", "Training data provenance · EU AI Act Art. 53 · RFC 3161 timestamp"],
-              ],
-            ].map((col, ci) => (
-              <div key={ci}>
-                {col.map(([label, val], i) => (
-                  <div key={i} style={{
-                    padding: "12px 0",
-                    borderBottom: `1px solid ${COLORS.borderSoft}`,
-                  }}>
-                    <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: COLORS.faint, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>{val}</div>
-                  </div>
-                ))}
+              { icon: "⌨", title: "Knowledge work & software", body: "Open source contributors, protocol architects, and AI training data labellers whose code or data generates downstream value long after the work is done.", chip: "e.g. SCORE Protocol · Story Protocol on-chain" },
+              { icon: "🧪", title: "Institutional research", body: "Pharma researchers, biotech scientists, and university inventors whose discoveries generate royalties under Bayh-Dole, S.21, or equivalent inventor compensation law.", chip: "e.g. Aspen Pharmacare · IFC-financed · WHO-GMP · Gqeberha" },
+              { icon: "🎬", title: "Creative & performance", body: "Musicians, writers, filmmakers, and athletes whose work generates residuals, splits, NIL licensing revenue, or union distribution rights over years or decades.", chip: "e.g. Ohio State · House Settlement · NIL Go FMV · $15.375M pool" },
+              { icon: "⚙", title: "Industrial & cooperative", body: "Process engineers, floor supervisors, and cooperative farmers whose innovations get adopted globally but whose contribution record stays with the institution.", chip: "e.g. Meridian Manufacturing · ArbEG · line efficiency reader · IoT trigger" },
+            ].map((b) => (
+              <div key={b.title} style={{
+                background: COLORS.card, border: `1px solid ${COLORS.border}`,
+                borderRadius: 6, padding: "20px 22px",
+                display: "flex", flexDirection: "column",
+              }}>
+                <div style={{ fontSize: 16, marginBottom: 10 }}>{b.icon}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: COLORS.text }}>{b.title}</div>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7, margin: "6px 0 0", flex: 1 }}>{b.body}</p>
+                <div style={{
+                  marginTop: 14, alignSelf: "flex-start",
+                  fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint,
+                  background: "rgba(26,22,14,0.04)", border: "1px solid rgba(26,22,14,0.08)",
+                  borderRadius: 3, padding: "4px 8px",
+                }}>{b.chip}</div>
               </div>
             ))}
           </div>
@@ -384,14 +538,14 @@ export default function Index() {
           }}>THE PRIMITIVE DIGITAL GOOD</div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 48, marginTop: 48 }}>
             {[
-              ["$313K", "attributed to date"],
-              ["14", "active contracts"],
-              ["4", "industries live"],
-              ["100%", "portable on exit"],
+              ["Off-chain", "contracts stay in the real world"],
+              ["SHA-256", "every evidence record fingerprinted"],
+              ["RFC 3161", "timestamped at creation · immutable"],
+              ["Portable", "record follows the contributor · not the org"],
             ].map(([num, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, color: COLORS.amber, lineHeight: 1 }}>{num}</div>
-                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "rgba(245,241,232,0.45)", marginTop: 8, letterSpacing: "0.05em" }}>{label}</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: COLORS.amber, lineHeight: 1 }}>{num}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "rgba(245,241,232,0.4)", marginTop: 8, letterSpacing: "0.05em" }}>{label}</div>
               </div>
             ))}
           </div>
