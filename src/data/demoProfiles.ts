@@ -30,6 +30,10 @@ export type DemoProfile = {
   executions: DemoExecution[];
   whatChanged: DemoValueEvent[];
   banner: { text: string; bg: string; border: string };
+  valueMix: { settled: number; pending: number; future: number; currency: string; label: string };
+  bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number }>;
+  quickRead: Array<{ question: string; answer: string; value: string; valueColor: "green" | "amber" | "blue" | "default" }>;
+  milestones: Array<{ status: "ok" | "info" | "watch"; title: string; meta: string; amount?: string | null; amountColor?: "green" | "amber" | "blue" }>;
 };
 
 export type DemoValueEvent = {
@@ -163,6 +167,23 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       bg: "rgba(42,92,138,0.08)",
       border: "rgba(42,92,138,0.2)",
     },
+    valueMix: { settled: 600000, pending: 340000, future: 1200000, currency: "ZAR", label: "Total tracked" },
+    bars: [
+      { label: "GLP-1", value: 340000, status: "pending", evidence_count: 0 },
+      { label: "Insulin", value: 420000, status: "settled", evidence_count: 2 },
+      { label: "API", value: 180000, status: "settled", evidence_count: 1 },
+    ],
+    quickRead: [
+      { question: "What is most solid?", answer: "Two settled patent royalties already paid and recorded", value: "R600K", valueColor: "green" },
+      { question: "What is closest to moving?", answer: "GLP-1 TTA extension awaiting Novo Nordisk signature", value: "R340K", valueColor: "amber" },
+      { question: "Where is the upside?", answer: "Insulin line 2.4% revenue stake above R50M threshold", value: "2.4%", valueColor: "blue" },
+    ],
+    milestones: [
+      { status: "ok", title: "WHO PQ granted · insulin vial line", meta: "WHO/PQ/2024-ZA-0312 · Nov 2024", amount: "+R420,000", amountColor: "green" },
+      { status: "ok", title: "Batch volume 8.2M vials confirmed", meta: "GMP batch register · Jul 2024", amount: "+R180,000", amountColor: "green" },
+      { status: "info", title: "Named inventor · SA Patent 2024/08441", meta: "Filed Aug 2024 · attribution confirmed", amount: null },
+      { status: "watch", title: "GLP-1 TTA extension pending", meta: "Novo Nordisk signature outstanding", amount: "R340,000 est.", amountColor: "amber" },
+    ],
   },
   ncaa: {
     key: "ncaa",
@@ -273,6 +294,22 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       bg: "rgba(154,48,32,0.08)",
       border: "rgba(154,48,32,0.2)",
     },
+    valueMix: { settled: 124800, pending: 124800, future: 8500000, currency: "USD", label: "Total tracked" },
+    bars: [
+      { label: "OSU pool", value: 210000, status: "settled", evidence_count: 1 },
+      { label: "Pro deal", value: 11290000, status: "watching", evidence_count: 0 },
+    ],
+    quickRead: [
+      { question: "What is already paid?", answer: "Fall 2025 OSU revenue share distribution settled", value: "$124.8K", valueColor: "green" },
+      { question: "What is next to move?", answer: "Spring 2026 distribution trigger fired, awaiting settlement", value: "$124.8K", valueColor: "amber" },
+      { question: "Where is the FMV gap?", answer: "SCORE NIL estimate above OSU unilateral allocation", value: "+$13.4K", valueColor: "blue" },
+    ],
+    milestones: [
+      { status: "ok", title: "Revenue-sharing agreement signed · OSU", meta: "SHA-256: osu-rsa-smith-2025.pdf · Aug 2025", amount: null },
+      { status: "ok", title: "Fall 2025–26 distribution settled", meta: "ACH-OSU-SMITH-2026-01 · Jan 2026", amount: "+$124,800", amountColor: "green" },
+      { status: "info", title: "Broadcast evidence logged · 710 snaps", meta: "~440 broadcast mins · SHA-256 fingerprinted", amount: null },
+      { status: "watch", title: "Spring 2026 distribution pending", meta: "Seasonal trigger · awaiting settlement", amount: "$124,800", amountColor: "amber" },
+    ],
   },
 };
 

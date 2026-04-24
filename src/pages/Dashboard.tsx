@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
 import { ValueEventCard, type ValueEventCardProps } from "@/components/value-events/ValueEventCard";
 import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
+import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
+import { ContractSparkBars, type SparkContract } from "@/components/charts/ContractSparkBars";
 import { toast } from "sonner";
 
 type Stats = {
@@ -14,6 +16,14 @@ type Stats = {
   executions: number;
   settledTotal: number;
   pendingTotal: number;
+};
+
+type ChartData = {
+  settled: number;
+  pending: number;
+  currency: string;
+  bars: SparkContract[];
+  hasExecutions: boolean;
 };
 
 type Profile = {
@@ -61,6 +71,7 @@ const Dashboard = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [recent, setRecent] = useState<RecentExecution[]>([]);
   const [attachFor, setAttachFor] = useState<RecentExecution | null>(null);
+  const [chart, setChart] = useState<ChartData | null>(null);
 
   useEffect(() => {
     if (!user || profile) return;
@@ -83,6 +94,58 @@ const Dashboard = () => {
         settledTotal,
         pendingTotal,
       });
+    })();
+  }, [user, profile]);
+
+  useEffect(() => {
+    if (!user || profile) return;
+    (async () => {
+      const { data: execs } = await supabase
+        .from("executions")
+        .select("contract_id, status, trigger_met, settled_amount, currency")
+        .eq("user_id", user.id);
+      const rows = execs ?? [];
+      if (!rows.length) {
+        setChart({ settled: 0, pending: 0, currency: "USD", bars: [], hasExecutions: false });
+        return;
+      }
+      const { data: contractRows } = await supabase
+        .from("contracts")
+        .select("id, name")
+        .eq("user_id", user.id);
+      const contractMap = new Map((contractRows ?? []).map((c) => [c.id, c.name]));
+
+      const { data: evRows } = await supabase
+        .from("evidence")
+        .select("contract_id")
+        .eq("user_id", user.id);
+      const evidenceCount = new Map<string, number>();
+      for (const e of evRows ?? []) {
+        evidenceCount.set(e.contract_id, (evidenceCount.get(e.contract_id) ?? 0) + 1);
+      }
+
+      let settled = 0, pending = 0;
+      const currencyTally = new Map<string, number>();
+      const byContract = new Map<string, { value: number; settled: boolean; pending: boolean }>();
+      for (const r of rows) {
+        const amt = Number(r.settled_amount ?? 0);
+        currencyTally.set(r.currency, (currencyTally.get(r.currency) ?? 0) + 1);
+        if (r.status === "Settled") settled += amt;
+        else if (r.status === "Pending" && r.trigger_met) pending += amt;
+        const e = byContract.get(r.contract_id) ?? { value: 0, settled: false, pending: false };
+        e.value += amt;
+        if (r.status === "Settled") e.settled = true;
+        else if (r.status === "Pending") e.pending = true;
+        byContract.set(r.contract_id, e);
+      }
+      const currency = [...currencyTally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "USD";
+      const bars: SparkContract[] = [...byContract.entries()].map(([cid, v]) => {
+        const name = contractMap.get(cid) ?? "Contract";
+        const label = name.length > 8 ? `${name.slice(0, 8)}…` : name;
+        const status: SparkContract["status"] = v.settled ? "settled" : v.pending ? "pending" : "attributed";
+        return { label, value: v.value, status, evidence_count: evidenceCount.get(cid) ?? 0 };
+      });
+      setChart({ settled, pending, currency, bars, hasExecutions: true });
     })();
   }, [user, profile]);
 
@@ -206,6 +269,26 @@ const Dashboard = () => {
         <Stat label="Settled" value={stats?.settledTotal ? stats.settledTotal.toLocaleString() : "—"} />
         <Stat label="Pending" value={stats?.pendingTotal ? stats.pendingTotal.toLocaleString() : "—"} />
       </div>
+
+      {chart?.hasExecutions && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 24 }}>
+          <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>Value mix</span>
+            </div>
+            <ValueMixDonut settled={chart.settled} pending={chart.pending} future={0} currency={chart.currency} label="Attributed value" />
+          </div>
+          {chart.bars.length > 0 && (
+            <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>By contract</span>
+                <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#2A6A45", background: "rgba(42,106,69,0.08)", padding: "2px 6px", borderRadius: 3 }}>{chart.bars.length} tracked</span>
+              </div>
+              <ContractSparkBars contracts={chart.bars} currency={chart.currency} />
+            </div>
+          )}
+        </div>
+      )}
 
       <section style={{ marginTop: 28 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
