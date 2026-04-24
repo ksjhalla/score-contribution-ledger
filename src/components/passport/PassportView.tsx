@@ -121,7 +121,7 @@ export const PassportView = ({ data }: { data: PassportData }) => {
             className="mt-3 flex flex-wrap gap-x-5 gap-y-2"
             style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 13 }}
           >
-            <Link to="/dashboard" style={{ color: "#C4892A", textDecoration: "underline" }}>
+            <Link to="/" style={{ color: "#C4892A", textDecoration: "underline" }}>
               Add a contract →
             </Link>
             <Link to="/log-work" style={{ color: "#C4892A", textDecoration: "underline" }}>
