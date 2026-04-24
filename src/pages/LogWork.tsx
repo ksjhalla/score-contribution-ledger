@@ -263,6 +263,24 @@ const LogWork = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, demoProfile]);
 
+  const errors = useMemo(
+    () => validate({ title, workDate, hours, category, description, referenceUrl }),
+    [title, workDate, hours, category, description, referenceUrl],
+  );
+
+  const isValid = Object.keys(errors).length === 0;
+
+  const showError = (field: keyof FormErrors) => touched[field] && errors[field];
+
+  const totals = useMemo(() => {
+    const pending = entries.filter((e) => e.status === "Pending").length;
+    const settled = entries.filter((e) => e.status === "Settled").length;
+    const settledValue = entries
+      .filter((e) => e.status === "Settled" && e.settled_amount != null)
+      .reduce((sum, e) => sum + Number(e.settled_amount ?? 0), 0);
+    return { pending, settled, settledValue };
+  }, [entries]);
+
   if (demoProfile) {
     return (
       <div className="min-h-screen bg-background px-4 py-6 sm:py-10">
@@ -306,24 +324,6 @@ const LogWork = () => {
       </div>
     );
   }
-
-  const errors = useMemo(
-    () => validate({ title, workDate, hours, category, description, referenceUrl }),
-    [title, workDate, hours, category, description, referenceUrl],
-  );
-
-  const isValid = Object.keys(errors).length === 0;
-
-  const showError = (field: keyof FormErrors) => touched[field] && errors[field];
-
-  const totals = useMemo(() => {
-    const pending = entries.filter((e) => e.status === "Pending").length;
-    const settled = entries.filter((e) => e.status === "Settled").length;
-    const settledValue = entries
-      .filter((e) => e.status === "Settled" && e.settled_amount != null)
-      .reduce((sum, e) => sum + Number(e.settled_amount ?? 0), 0);
-    return { pending, settled, settledValue };
-  }, [entries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
