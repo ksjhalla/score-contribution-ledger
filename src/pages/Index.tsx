@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { earningsPreview, proofPreview, passportPreview } from "@/data/marketingPreviews";
 
 const COLORS = {
   bg: "#F5F1E8",
