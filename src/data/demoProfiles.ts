@@ -29,7 +29,7 @@ export type DemoProfile = {
   contracts: DemoContract[];
   executions: DemoExecution[];
   whatChanged: DemoValueEvent[];
-  banner: { text: string; bg: string; border: string };
+  banner: { text: string; mobileText?: string; bg: string; border: string };
   valueMix: { settled: number; pending: number; future: number; currency: string; label: string };
   bars: Array<{ label: string; value: number; status: "settled" | "pending" | "watching" | "attributed"; evidence_count?: number }>;
   quickRead: Array<{ question: string; answer: string; value: string; valueColor: "green" | "amber" | "blue" | "default" }>;
@@ -215,6 +215,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
     ],
     banner: {
       text: "Demo · Thandi Mokoena · Aspen Pharmacare · Gqeberha",
+      mobileText: "Demo · Thandi Mokoena",
       bg: "rgba(42,92,138,0.08)",
       border: "rgba(42,92,138,0.2)",
     },
@@ -342,6 +343,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
     ],
     banner: {
       text: "Demo · Jeremiah Smith · Ohio State · House v. NCAA",
+      mobileText: "Demo · Jeremiah Smith",
       bg: "rgba(154,48,32,0.08)",
       border: "rgba(154,48,32,0.2)",
     },

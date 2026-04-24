@@ -206,7 +206,11 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               gap: 12,
             }}
           >
-            <span>{demoProfile.banner.text}</span>
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {isMobile && demoProfile.banner.mobileText
+                ? demoProfile.banner.mobileText
+                : demoProfile.banner.text}
+            </span>
             <button
               type="button"
               onClick={() => setActiveDemo("none")}
