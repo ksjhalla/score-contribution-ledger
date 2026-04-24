@@ -17,17 +17,31 @@ type Props = {
   settled: number;
   pending: number;
   future?: number;
+  esg?: number;
+  esgColor?: string;
+  esgLabel?: string;
   currency: string;
   label: string;
 };
 
-export const ValueMixDonut = ({ settled, pending, future = 0, currency, label }: Props) => {
-  const data = [
+export const ValueMixDonut = ({
+  settled,
+  pending,
+  future = 0,
+  esg = 0,
+  esgColor = "#4A784A",
+  esgLabel = "ESG / system value",
+  currency,
+  label,
+}: Props) => {
+  const allRows = [
     { name: "Settled", value: settled, color: "#2A6A45" },
     { name: "Pending", value: pending, color: "#C4892A" },
+    ...(esg > 0 ? [{ name: esgLabel, value: esg, color: esgColor }] : []),
     { name: "Future", value: future, color: "#2A5C8A" },
-  ].filter((d) => d.value > 0);
-  const total = settled + pending + future;
+  ];
+  const data = allRows.filter((d) => d.value > 0);
+  const total = settled + pending + future + esg;
   const [isNarrow, setIsNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
   useEffect(() => {
     const onResize = () => setIsNarrow(window.innerWidth < 640);
@@ -65,11 +79,7 @@ export const ValueMixDonut = ({ settled, pending, future = 0, currency, label }:
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12 }}>
-        {[
-          { name: "Settled", value: settled, color: "#2A6A45" },
-          { name: "Pending", value: pending, color: "#C4892A" },
-          { name: "Future", value: future, color: "#2A5C8A" },
-        ].map((row) => (
+        {allRows.map((row) => (
           <div key={row.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#EDE8DC", border: "1px solid rgba(26,22,14,0.08)", borderRadius: 4, padding: "7px 10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: row.color, display: "inline-block" }} />
