@@ -179,10 +179,36 @@ const Auth = () => {
                   <Input id="email-up" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
+                  <Label
+                    htmlFor="invite-up"
+                    style={{ fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.05em" }}
+                  >
+                    Invite code
+                  </Label>
+                  <Input
+                    id="invite-up"
+                    type="text"
+                    required
+                    autoComplete="off"
+                    placeholder="SCORE-XXXX-XXXX"
+                    value={inviteCode}
+                    onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); if (inviteError) setInviteError(null); }}
+                    style={{ fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 13, color: "#1A1614", letterSpacing: "0.04em" }}
+                  />
+                  {inviteError && (
+                    <p role="alert" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 11, color: "#9A3020", marginTop: 4 }}>
+                      {inviteError}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="pw-up">Password</Label>
                   <Input id="pw-up" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>Create Account</Button>
+                <p style={{ fontFamily: "'DM Mono', ui-monospace, monospace", fontSize: 9, color: "#9A8F84", textAlign: "center", marginTop: 4 }}>
+                  Don't have a code? <a href="/#cta" style={{ color: "#C4892A", textDecoration: "none" }}>Request access →</a>
+                </p>
               </form>
             </TabsContent>
           </Tabs>
