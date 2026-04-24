@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -411,25 +411,28 @@ export default function Index() {
               SCORE records what was contributed, proves it happened, and notifies when payment is due. Nothing about this requires a blockchain. Evidence is SHA-256 fingerprinted and RFC 3161 timestamped. The record is the value.
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "stretch" }}>
+          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
             {[
               { n: "01", t: "Contract", b: "A real-world agreement defines what the contributor is owed and what condition must be met. SCORE records the reference — it does not hold the contract." },
               { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
               { n: "03", t: "Trigger & payment", b: "When the condition is met — a threshold crossed, a licence executed, a distribution event — SCORE notifies and records settlement. Payment moves through existing channels." },
             ].map((s, i, arr) => (
-              <div key={s.n} style={{ display: "flex", flex: 1, alignItems: "stretch" }}>
+              <Fragment key={s.n}>
                 <div style={{
-                  flex: 1, padding: "24px 28px", textAlign: "center",
-                  borderRight: i < arr.length - 1 ? "1px solid rgba(26,22,14,0.08)" : "none",
+                  flex: 1, minWidth: 0, padding: "24px 28px", textAlign: "center",
+                  wordWrap: "break-word", hyphens: "none",
                 }}>
                   <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: COLORS.amber, marginBottom: 12 }}>{s.n}</div>
                   <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>{s.t}</div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.65 }}>{s.b}</div>
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: COLORS.muted, lineHeight: 1.7 }}>{s.b}</div>
                 </div>
                 {i < arr.length - 1 && (
-                  <div style={{ display: "flex", alignItems: "center", fontFamily: FONT_MONO, fontSize: 16, color: COLORS.amber, padding: "0 4px" }}>→</div>
+                  <div style={{
+                    flexShrink: 0, alignSelf: "center", padding: "0 8px",
+                    fontFamily: FONT_MONO, fontSize: 18, color: COLORS.amber,
+                  }}>→</div>
                 )}
-              </div>
+              </Fragment>
             ))}
           </div>
         </div>
@@ -485,7 +488,7 @@ export default function Index() {
           </div>
           <div className="score-cols-2" style={{
             display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
-            maxWidth: 760, margin: "0 auto",
+            maxWidth: 760, margin: "32px auto 0",
           }}>
             {[
               { icon: "⌨", title: "Knowledge work & software", body: "Open source contributors, protocol architects, and AI training data labellers whose code or data generates downstream value long after the work is done.", chip: "e.g. SCORE Protocol · Story Protocol on-chain" },
@@ -536,7 +539,7 @@ export default function Index() {
               ["Portable", "record follows the contributor · not the org"],
             ].map(([num, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: COLORS.amber, lineHeight: 1 }}>{num}</div>
+                <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 32, color: COLORS.amber, lineHeight: 1, fontVariantLigatures: "none" }}>{num}</div>
                 <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "rgba(245,241,232,0.4)", marginTop: 8, letterSpacing: "0.05em" }}>{label}</div>
               </div>
             ))}

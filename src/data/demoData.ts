@@ -164,7 +164,7 @@ export const demoProfiles: DemoProfile[] = [
         icon: "warn",
         tone: "amber",
         title: "GLP-1 TTA extension pending",
-        meta: "Dec 2025",
+        meta: "Novo Nordisk signature outstanding",
         date: "Dec 2025",
         amount: "R340,000 est. on activation",
       },
@@ -208,7 +208,7 @@ export const demoProfiles: DemoProfile[] = [
     ],
     rightNotice: "GLP-1 TTA extension. Novo Nordisk signature outstanding. R340K estimated on activation.",
     contextNote:
-      "Local insulin production serves 4.1M patients/yr at ~R820/patient/yr savings vs import price. Mokoena's IQ/OQ/PQ work is the technical provenance of that capability. No institution currently records it at the individual level.",
+      "Local insulin production saves ~R820/patient/yr for 4.1M patients. Mokoena's work is the technical provenance of that capability.",
   },
   {
     id: "jeremiah",
