@@ -45,6 +45,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(s?.user ?? null);
       if (event === "SIGNED_IN" && s) {
         const path = window.location.pathname;
+        // Never redirect away from /invite — the user is there intentionally
+        // to complete their profile after Google OAuth. Redirecting here
+        // causes "throttling navigation" warnings in the browser.
+        if (path === "/invite") return;
         if (path === "/" || path.startsWith("/auth")) {
           navigate("/dashboard", { replace: true });
         }
