@@ -13,6 +13,18 @@ const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_BODY = "'DM Sans', system-ui, sans-serif";
 const FONT_MONO = "'DM Mono', ui-monospace, monospace";
 
+const SR_ONLY: React.CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0,0,0,0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 const SECTORS = [
   "Software",
   "Pharma & Biotech",
@@ -52,6 +64,9 @@ const Invite = () => {
   const [codeErr, setCodeErr] = useState<string | null>(null);
   const [formErr, setFormErr] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  // aria-live announcements for screen readers (invisible to sighted users).
+  const [statusMessage, setStatusMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // One-shot session check on mount. No realtime, no auth subscriptions,
   // no pre-render loading state.
@@ -126,18 +141,25 @@ const Invite = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErr(null);
+    setErrorMessage("");
+    setStatusMessage("");
     setTouched({ code: true, fullName: true, role: true, sector: true });
 
-    if (Object.keys(fieldErrors).length > 0) return;
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrorMessage("Error: Please fill in all required fields.");
+      return;
+    }
     if (!sector) return; // narrow type
 
     setBusy(true);
+    setStatusMessage("Verifying invite code…");
 
     // Fresh session check (no subscription).
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     if (!user) {
       setBusy(false);
+      setStatusMessage("");
       navigate("/auth", { replace: true });
       return;
     }
@@ -153,8 +175,12 @@ const Invite = () => {
       setBusy(false);
       setCodeValid(false);
       setCodeErr("This code is invalid, expired, or not for this email.");
+      setStatusMessage("");
+      setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
       return;
     }
+
+    setStatusMessage("Invite code accepted. Creating your account…");
 
     // 2. Create the profile (generates a permanent contributor_id).
     const { error: pErr } = await supabase.rpc("complete_profile_with_contributor_id", {
@@ -166,6 +192,8 @@ const Invite = () => {
     if (pErr) {
       setBusy(false);
       setFormErr("Something went wrong. Try again.");
+      setStatusMessage("");
+      setErrorMessage("Error: Something went wrong. Please try again.");
       return;
     }
 
@@ -177,10 +205,14 @@ const Invite = () => {
     if (rErr) {
       setBusy(false);
       setFormErr("Could not redeem this code. Please try again.");
+      setStatusMessage("");
+      setErrorMessage("Error: Something went wrong. Please try again.");
       return;
     }
 
     setBusy(false);
+    setStatusMessage("");
+    setErrorMessage("");
     navigate("/dashboard", { replace: true });
   };
 
@@ -191,6 +223,13 @@ const Invite = () => {
       <SEO title="Invite required — SCORE" description="Enter your SCORE invite code to complete setup." noindex />
       <Card className="w-full max-w-md my-8">
         <CardContent className="pt-8 pb-6 px-6">
+          {/* Screen reader announcements — visually hidden. */}
+          <div role="status" aria-live="polite" aria-atomic="true" style={SR_ONLY}>
+            {statusMessage}
+          </div>
+          <div role="alert" aria-live="assertive" aria-atomic="true" style={SR_ONLY}>
+            {errorMessage}
+          </div>
           <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
             Invite required
           </div>
