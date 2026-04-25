@@ -6,6 +6,7 @@ import { notificationEvents, type NotificationRow, type NotificationType } from 
 import { ledgerEvents } from "@/lib/ledgerEvents";
 import { useDemo } from "@/contexts/DemoContext";
 import { demoNotificationsFor, type DemoNotification } from "@/data/demoProfiles";
+import { isPublicRoute } from "@/lib/routeGuard";
 
 type BadgeStyle = { bg: string; color: string; label: string };
 
@@ -77,6 +78,8 @@ export const NotificationBell = ({ userId }: Props) => {
 
   useEffect(() => {
     if (activeDemo !== "none") return;
+    // Defensive: never open a realtime channel on public routes.
+    if (typeof window !== "undefined" && isPublicRoute(window.location.pathname)) return;
     const ch = supabase
       .channel(`notifications:${userId}`)
       .on(
