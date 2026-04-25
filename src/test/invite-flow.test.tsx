@@ -94,6 +94,22 @@ describe("/invite page", () => {
     expect(onAuthStateChangeSpy).not.toHaveBeenCalled();
   });
 
+  it("does not call onAuthStateChange anywhere in the /invite route tree", async () => {
+    renderInvite();
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    // Allow any deferred effects from imported hooks to flush
+    await new Promise((r) => setTimeout(r, 100));
+    expect(onAuthStateChangeSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not call supabase.channel anywhere in the /invite route tree", async () => {
+    renderInvite();
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    // Allow any deferred effects from imported hooks to flush
+    await new Promise((r) => setTimeout(r, 100));
+    expect(channelSpy).not.toHaveBeenCalled();
+  });
+
   it("PUBLIC_ROUTES includes /invite", () => {
     expect(PUBLIC_ROUTES).toContain("/invite");
   });
