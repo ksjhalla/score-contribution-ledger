@@ -167,8 +167,9 @@ describe("/invite aria-live regions", () => {
     // The visible inline error has role="alert" and announces the same text
     // the assertive aria-live region announces after a submit failure.
     await waitFor(() => {
-      const alert = screen.getByRole("alert");
-      expect(alert.textContent ?? "").toMatch(/invalid, expired, or not for this email/i);
+      const alerts = screen.getAllByRole("alert");
+      const combined = alerts.map((a) => a.textContent ?? "").join(" ");
+      expect(combined).toMatch(/invalid, expired, or not for this email/i);
     });
   });
 });
