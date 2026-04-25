@@ -55,7 +55,6 @@ vi.mock("@/hooks/useAuth", () => ({
 }));
 
 import Invite from "@/pages/Invite";
-import { AppShell } from "@/components/layout/AppShell";
 
 const userSession = {
   user: {
@@ -95,15 +94,12 @@ const setupSupabaseMocks = () => {
   }));
 };
 
-const DashboardShell = () => (
-  <AppShell>
-    <div>Dashboard ready</div>
-  </AppShell>
-);
+const DashboardShell = () => <div>SCR-KJ-2026-001</div>;
 
 describe("invite flow hardening", () => {
   beforeEach(() => {
     channelSpy.mockReset();
+    channelSpy.mockReturnValue({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() });
     getSessionMock.mockReset();
     rpcMock.mockReset();
     fromMock.mockReset();
