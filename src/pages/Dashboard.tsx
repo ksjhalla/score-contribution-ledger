@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
 import { ValueEventCard, type ValueEventCardProps } from "@/components/value-events/ValueEventCard";
 import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
+import { RequestAttestationDialog } from "@/components/contracts/RequestAttestationDialog";
 import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
 import { ContractSparkBars, type SparkContract } from "@/components/charts/ContractSparkBars";
-import { toast } from "sonner";
 
 type Stats = {
   contracts: number;
@@ -78,6 +78,7 @@ const Dashboard = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [recent, setRecent] = useState<RecentExecution[]>([]);
   const [attachFor, setAttachFor] = useState<RecentExecution | null>(null);
+  const [requestAttestFor, setRequestAttestFor] = useState<RecentExecution | null>(null);
   const [chart, setChart] = useState<ChartData | null>(null);
 
   useEffect(() => {
@@ -352,7 +353,7 @@ const Dashboard = () => {
                 onAddEvidence={() => setAttachFor(c.row)}
                 onRequestConfirmation={
                   c.attestationEnabled
-                    ? () => toast.info("Open this execution in Contracts to request confirmation.")
+                    ? () => setRequestAttestFor(c.row)
                     : undefined
                 }
               />
@@ -385,6 +386,17 @@ const Dashboard = () => {
           executionId={attachFor.id}
           executionTitle={attachFor.title}
           onCreated={() => setAttachFor(null)}
+        />
+      )}
+
+      {requestAttestFor && user && (
+        <RequestAttestationDialog
+          open={!!requestAttestFor}
+          onOpenChange={(v) => !v && setRequestAttestFor(null)}
+          executionId={requestAttestFor.id}
+          contractId={requestAttestFor.contract_id}
+          executionTitle={requestAttestFor.title}
+          userId={user.id}
         />
       )}
     </div>
