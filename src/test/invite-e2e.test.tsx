@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
@@ -29,7 +30,7 @@ vi.mock("@/components/SEO", () => ({ SEO: () => null }));
 vi.mock("react-helmet-async", () => ({ Helmet: () => null }));
 
 vi.mock("@/components/ui/select", () => ({
-  Select: ({ value, onValueChange, children }: { value?: string; onValueChange: (value: string) => void; children: React.ReactNode }) => {
+  Select: ({ value, onValueChange, children }: { value?: string; onValueChange: (value: string) => void; children: ReactNode }) => {
     const options = Array.isArray(children) ? children.flatMap((child) => child) : [children];
     return (
       <select id="sector" aria-label="Sector" value={value ?? ""} onChange={(event) => onValueChange(event.target.value)}>
@@ -38,9 +39,9 @@ vi.mock("@/components/ui/select", () => ({
       </select>
     );
   },
-  SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => <option value={value}>{children}</option>,
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
+  SelectItem: ({ value, children }: { value: string; children: ReactNode }) => <option value={value}>{children}</option>,
+  SelectTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
   SelectValue: () => null,
 }));
 
