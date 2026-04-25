@@ -48,6 +48,14 @@ export const ValueMixDonut = ({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+  // Suppress Canvas2D readback warning by hinting willReadFrequently on
+  // any canvases recharts creates inside this chart.
+  useEffect(() => {
+    const canvases = document.querySelectorAll("canvas");
+    canvases.forEach((canvas) => {
+      try { canvas.getContext("2d", { willReadFrequently: true }); } catch { /* noop */ }
+    });
+  }, []);
   const inner = isNarrow ? 45 : 60;
   const outer = isNarrow ? 65 : 80;
   const chartHeight = isNarrow ? 140 : 180;
