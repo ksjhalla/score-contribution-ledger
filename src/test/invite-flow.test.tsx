@@ -172,4 +172,12 @@ describe("/invite aria-live regions", () => {
       expect(combined).toMatch(/invalid, expired, or not for this email/i);
     });
   });
+
+  it("both aria-live regions are empty simultaneously on initial render", () => {
+    renderInvite();
+    const status = document.querySelector('[role="status"][aria-live="polite"]');
+    const alert = document.querySelector('[role="alert"][aria-live="assertive"]');
+    expect(status?.textContent?.trim() ?? "").toBe("");
+    expect(alert?.textContent?.trim() ?? "").toBe("");
+  });
 });

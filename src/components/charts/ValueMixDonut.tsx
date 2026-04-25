@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -42,26 +42,24 @@ export const ValueMixDonut = ({
   ];
   const data = allRows.filter((d) => d.value > 0);
   const total = settled + pending + future + esg;
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isNarrow, setIsNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
   useEffect(() => {
     const onResize = () => setIsNarrow(window.innerWidth < 640);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  // Suppress Canvas2D readback warning by hinting willReadFrequently on
-  // any canvases recharts creates inside this chart.
   useEffect(() => {
-    const canvases = document.querySelectorAll("canvas");
-    canvases.forEach((canvas) => {
+    containerRef.current?.querySelectorAll("canvas").forEach((canvas) => {
       try { canvas.getContext("2d", { willReadFrequently: true }); } catch { /* noop */ }
     });
-  }, []);
+  });
   const inner = isNarrow ? 45 : 60;
   const outer = isNarrow ? 65 : 80;
   const chartHeight = isNarrow ? 140 : 180;
 
   return (
-    <div>
+    <div ref={containerRef}>
       <div style={{ position: "relative", width: "100%", height: chartHeight }}>
         <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
