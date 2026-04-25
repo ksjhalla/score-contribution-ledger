@@ -127,8 +127,7 @@ describe("invite flow hardening", () => {
 
     await user.type(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i), "SCORE-EARLY-2026");
     await user.type(screen.getByLabelText(/^role$/i), "Protocol Architect");
-    await user.click(screen.getByRole("combobox", { name: /sector/i }));
-    await user.click(await screen.findByRole("option", { name: "Software" }));
+    await user.selectOptions(screen.getByLabelText(/sector/i), "Software");
     await user.click(screen.getByRole("button", { name: /complete setup/i }));
 
     await waitFor(() => {
