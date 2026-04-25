@@ -30,42 +30,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // we do NOT subscribe to onAuthStateChange. This prevents WebSocket churn and
     // post-OAuth redirect loops on /invite. We still fetch the current session
     // once so consumers can read user state.
-    const path = window.location.pathname;
+    const path = location.pathname;
+    let cancelled = false;
+
     if (isPublicRoute(path)) {
       supabase.auth.getSession().then(({ data: { session: s } }) => {
+        if (cancelled) return;
         setSession(s);
         setUser(s?.user ?? null);
         setLoading(false);
       });
-      return;
+      return () => { cancelled = true; };
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      const currentPath = window.location.pathname;
+      const setupRoutes = ["/invite", "/auth"];
+      const isOnSetupRoute = setupRoutes.some((route) =>
+        currentPath === route || currentPath.startsWith(route + "/"),
+      );
+
       setSession(s);
       setUser(s?.user ?? null);
+
       if (event === "SIGNED_IN" && s) {
-        const path = window.location.pathname;
-        // Never redirect away from /invite — the user is there intentionally
-        // to complete their profile after Google OAuth. Redirecting here
-        // causes "throttling navigation" warnings in the browser.
-        if (path === "/invite") return;
-        if (path === "/" || path.startsWith("/auth")) {
+        if (isOnSetupRoute) return;
+
+        const alreadyOnApp =
+          currentPath.startsWith("/dashboard") ||
+          currentPath.startsWith("/contracts") ||
+          currentPath.startsWith("/log-work") ||
+          currentPath.startsWith("/account");
+
+        if (!alreadyOnApp) {
           navigate("/dashboard", { replace: true });
         }
+        return;
       }
+
       if (event === "SIGNED_OUT") {
-        navigate("/", { replace: true });
+        const isProtectedRoute = !isPublicRoute(currentPath);
+        if (isProtectedRoute) {
+          navigate("/", { replace: true });
+        }
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (cancelled) return;
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [navigate, location.pathname]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
