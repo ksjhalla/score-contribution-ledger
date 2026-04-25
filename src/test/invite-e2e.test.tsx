@@ -26,6 +26,8 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 vi.mock("@/components/SEO", () => ({ SEO: () => null }));
 
+vi.mock("react-helmet-async", () => ({ Helmet: () => null }));
+
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     user: { id: "user-google-123", email: "kaushal@example.com" },
