@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +38,11 @@ const SECTORS = [
 ] as const;
 type Sector = typeof SECTORS[number];
 
+const normalizeCode = (raw: string): string =>
+  raw.toUpperCase().trim().replace(/[^A-Z0-9-]/g, "");
+
+const INVITE_CODE_RE = /^SCORE-[A-Z0-9]+-[A-Z0-9]+$/;
+
 const computeInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "XX";
@@ -67,6 +72,7 @@ const Invite = () => {
   // aria-live announcements for screen readers (invisible to sighted users).
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const submittingRef = useRef(false);
 
   // One-shot session check on mount. No realtime, no auth subscriptions,
   // no pre-render loading state.
@@ -116,16 +122,21 @@ const Invite = () => {
 
   const handleCodeBlur = async () => {
     setTouched((t) => ({ ...t, code: true }));
-    const trimmed = code.trim();
-    if (!trimmed) {
+    const normalized = normalizeCode(code);
+    if (!normalized) {
       setCodeValid(null);
       setCodeErr(null);
+      return;
+    }
+    if (!INVITE_CODE_RE.test(normalized)) {
+      setCodeValid(false);
+      setCodeErr("This code is invalid, expired, or not for this email.");
       return;
     }
     setCodeChecking(true);
     setCodeErr(null);
     const { data: valid, error } = await supabase.rpc("validate_invite_code", {
-      p_code: trimmed,
+      p_code: normalized,
       p_email: userEmail ?? "",
     });
     setCodeChecking(false);
@@ -140,6 +151,10 @@ const Invite = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Synchronous re-entry guard — blocks double-submits before any await.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     setFormErr(null);
     setErrorMessage("");
     setStatusMessage("");
@@ -147,73 +162,89 @@ const Invite = () => {
 
     if (Object.keys(fieldErrors).length > 0) {
       setErrorMessage("Error: Please fill in all required fields.");
+      submittingRef.current = false;
       return;
     }
-    if (!sector) return; // narrow type
+    if (!sector) { submittingRef.current = false; return; }
+
+    const normalizedCode = normalizeCode(code);
+    if (!INVITE_CODE_RE.test(normalizedCode)) {
+      setCodeValid(false);
+      setCodeErr("This code is invalid, expired, or not for this email.");
+      setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
+      submittingRef.current = false;
+      return;
+    }
 
     setBusy(true);
     setStatusMessage("Verifying invite code…");
 
-    // Fresh session check (no subscription).
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) {
-      setBusy(false);
+    try {
+      // Fresh session check (no subscription).
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) {
+        setStatusMessage("");
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      // 1. Validate the code (async).
+      const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
+        p_code: normalizedCode,
+        p_email: user.email ?? "",
+      });
+      if (vErr || !valid) {
+        setCodeValid(false);
+        setCodeErr("This code is invalid, expired, or not for this email.");
+        setStatusMessage("");
+        setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
+        return;
+      }
+
+      setStatusMessage("Invite code accepted. Creating your account…");
+
+      // 2. Create the profile (generates a permanent contributor_id).
+      const { error: pErr } = await supabase.rpc("complete_profile_with_contributor_id", {
+        p_full_name: fullName.trim(),
+        p_professional_role: role.trim(),
+        p_organisation: organisation.trim() || null,
+        p_sector: sector,
+      });
+      if (pErr) {
+        // Profile already exists (duplicate submit race) — treat as success.
+        if ((pErr as { code?: string }).code === "23505") {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+        setFormErr("Something went wrong. Try again.");
+        setStatusMessage("");
+        setErrorMessage("Error: Something went wrong. Please try again.");
+        return;
+      }
+
+      // 3. Redeem the code.
+      const { error: rErr } = await supabase.rpc("redeem_invite_code", {
+        p_code: normalizedCode,
+        p_user_id: user.id,
+      });
+      if (rErr) {
+        setFormErr("Could not redeem this code. Please try again.");
+        setStatusMessage("");
+        setErrorMessage("Error: Something went wrong. Please try again.");
+        return;
+      }
+
+      // 4. Preload profile so contributor ID is visible on first dashboard render.
+      await supabase.from("profiles").select("contributor_id").eq("id", user.id).maybeSingle();
+
       setStatusMessage("");
-      navigate("/auth", { replace: true });
-      return;
-    }
-
-    const trimmedCode = code.trim();
-
-    // 1. Validate the code (async).
-    const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
-      p_code: trimmedCode,
-      p_email: user.email ?? "",
-    });
-    if (vErr || !valid) {
+      setErrorMessage("");
+      navigate("/dashboard", { replace: true });
+    } finally {
       setBusy(false);
-      setCodeValid(false);
-      setCodeErr("This code is invalid, expired, or not for this email.");
-      setStatusMessage("");
-      setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
-      return;
+      submittingRef.current = false;
     }
-
-    setStatusMessage("Invite code accepted. Creating your account…");
-
-    // 2. Create the profile (generates a permanent contributor_id).
-    const { error: pErr } = await supabase.rpc("complete_profile_with_contributor_id", {
-      p_full_name: fullName.trim(),
-      p_professional_role: role.trim(),
-      p_organisation: organisation.trim() || null,
-      p_sector: sector,
-    });
-    if (pErr) {
-      setBusy(false);
-      setFormErr("Something went wrong. Try again.");
-      setStatusMessage("");
-      setErrorMessage("Error: Something went wrong. Please try again.");
-      return;
-    }
-
-    // 3. Redeem the code.
-    const { error: rErr } = await supabase.rpc("redeem_invite_code", {
-      p_code: trimmedCode,
-      p_user_id: user.id,
-    });
-    if (rErr) {
-      setBusy(false);
-      setFormErr("Could not redeem this code. Please try again.");
-      setStatusMessage("");
-      setErrorMessage("Error: Something went wrong. Please try again.");
-      return;
-    }
-
-    setBusy(false);
-    setStatusMessage("");
-    setErrorMessage("");
-    navigate("/dashboard", { replace: true });
   };
 
   const errorBorder = "1px solid rgba(154,48,32,0.4)";
@@ -254,7 +285,7 @@ const Invite = () => {
                   placeholder="SCORE-XXXX-XXXX"
                   value={code}
                   onChange={(e) => {
-                    setCode(e.target.value.toUpperCase());
+                    setCode(normalizeCode(e.target.value));
                     if (codeErr) setCodeErr(null);
                     if (codeValid !== null) setCodeValid(null);
                   }}
