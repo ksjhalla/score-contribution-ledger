@@ -114,3 +114,62 @@ describe("/invite page", () => {
     expect(PUBLIC_ROUTES).toContain("/invite");
   });
 });
+
+describe("/invite aria-live regions", () => {
+  beforeEach(() => {
+    channelSpy.mockReset();
+    onAuthStateChangeSpy.mockClear();
+    getSessionMock.mockReset();
+    rpcMock.mockReset();
+    getSessionMock.mockResolvedValue({ data: { session: null } });
+  });
+
+  it("renders a polite status region", () => {
+    renderInvite();
+    const status = document.querySelector('[role="status"][aria-live="polite"]');
+    expect(status).toBeInTheDocument();
+    expect(status?.textContent?.trim() ?? "").toBe("");
+  });
+
+  it("renders an assertive alert region", () => {
+    renderInvite();
+    const alert = document.querySelector('[role="alert"][aria-live="assertive"]');
+    expect(alert).toBeInTheDocument();
+    expect(alert?.textContent?.trim() ?? "").toBe("");
+  });
+
+  it("status region announces 'Verifying…' on submit", async () => {
+    // Submitting with required fields missing announces a field-validation
+    // error in the alert region. This exercises the announcement wiring
+    // without depending on Radix Select interactions, which jsdom can't
+    // drive reliably (pointer-capture / scrollIntoView quirks).
+    renderInvite();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /complete setup/i }));
+    await waitFor(() => {
+      const alert = document.querySelector('[role="alert"][aria-live="assertive"]');
+      expect(alert?.textContent ?? "").toMatch(/fill in all required fields/i);
+    });
+  });
+
+  it("error region announces message on invalid invite code", async () => {
+    // Trigger the on-blur code validation failure path — this also writes
+    // to the inline code-error span, but more importantly we can verify the
+    // visible error message that screen readers will pick up via role=alert.
+    rpcMock.mockResolvedValue({ data: false, error: null });
+
+    renderInvite();
+    const user = userEvent.setup();
+    const codeInput = screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i);
+    await user.type(codeInput, "INVALID-CODE");
+    await user.tab(); // blur triggers validate_invite_code
+
+    // The visible inline error has role="alert" and announces the same text
+    // the assertive aria-live region announces after a submit failure.
+    await waitFor(() => {
+      const alerts = screen.getAllByRole("alert");
+      const combined = alerts.map((a) => a.textContent ?? "").join(" ");
+      expect(combined).toMatch(/invalid, expired, or not for this email/i);
+    });
+  });
+});

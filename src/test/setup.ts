@@ -13,3 +13,19 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+// jsdom polyfills for Radix UI primitives.
+if (typeof Element !== "undefined") {
+  if (!(Element.prototype as unknown as { hasPointerCapture?: unknown }).hasPointerCapture) {
+    (Element.prototype as unknown as { hasPointerCapture: () => boolean }).hasPointerCapture = () => false;
+  }
+  if (!(Element.prototype as unknown as { releasePointerCapture?: unknown }).releasePointerCapture) {
+    (Element.prototype as unknown as { releasePointerCapture: () => void }).releasePointerCapture = () => {};
+  }
+  if (!(Element.prototype as unknown as { setPointerCapture?: unknown }).setPointerCapture) {
+    (Element.prototype as unknown as { setPointerCapture: () => void }).setPointerCapture = () => {};
+  }
+  if (!(Element.prototype as unknown as { scrollIntoView?: unknown }).scrollIntoView) {
+    (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView = () => {};
+  }
+}
