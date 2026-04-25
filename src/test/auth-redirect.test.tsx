@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { channelSpy, getSessionMock, onAuthStateChangeSpy } = vi.hoisted(() => ({
   channelSpy: vi.fn(),
@@ -57,6 +57,10 @@ describe("auth redirects and realtime setup", () => {
       authChangeCallback = callback;
       return { data: { subscription: { unsubscribe: vi.fn() } } };
     });
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("does not subscribe to auth changes or realtime on /invite", async () => {
