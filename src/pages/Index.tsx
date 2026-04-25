@@ -441,43 +441,6 @@ export default function Index() {
               </div>
             ))}
           </div>
-          <div style={{ maxWidth: 760, margin: "32px auto 0", textAlign: "center" }}>
-            <div style={{ ...eyebrowStyle, marginBottom: 14 }}>LIVE EXAMPLES</div>
-            <div className="score-live-examples" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
-              {[
-                { label: "Thandi Mokoena · Pharma", color: "#2A5C8A" },
-                { label: "Jeremiah Smith · NCAA", color: "#9A3020" },
-                { label: "Ayesha Khan · Supply Chain", color: "#4A784A" },
-                { label: "Mateo Alvarez · AI / Open-source", color: "#5B5FBF" },
-              ].map((p) => (
-                <span
-                  key={p.label}
-                  style={{
-                    display: "inline-block",
-                    background: COLORS.card,
-                    border: `1px solid ${COLORS.border}`,
-                    borderLeft: `2px solid ${p.color}`,
-                    borderRadius: 4,
-                    padding: "6px 12px",
-                    fontFamily: FONT_BODY,
-                    fontSize: 12,
-                    color: COLORS.text,
-                    transition: "border-color .15s ease",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.borderColor = p.color; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.borderColor = COLORS.border; (e.currentTarget as HTMLSpanElement).style.borderLeftColor = p.color; }}
-                >
-                  {p.label}
-                </span>
-              ))}
-            </div>
-            <a
-              href="/auth"
-              style={{ display: "inline-block", marginTop: 14, fontFamily: FONT_MONO, fontSize: 10, color: COLORS.amber, textDecoration: "none" }}
-            >
-              Sign in to explore all four →
-            </a>
-          </div>
         </div>
       </Section>
 
@@ -531,7 +494,7 @@ export default function Index() {
                 ))}
               </div>
               <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: COLORS.faint, marginTop: 8 }}>
-                Live example · Kaushal Jhaveri · SCR-KJ-2024-001
+                Example · A. Contributor · SCR-AC-2025-001 · Protocol Architect
               </div>
             </div>
             {/* RIGHT — two stacked cards */}
