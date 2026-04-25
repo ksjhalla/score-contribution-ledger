@@ -65,6 +65,16 @@ const statusDot: Record<ExecutionRow["status"], string> = {
   Declined: "bg-red-500",
 };
 
+// Priority order for the contract-level status indicator.
+const STATUS_PRIORITY: ExecutionRow["status"][] = ["Settled", "Attested", "Pending", "Declined", "Intent logged"];
+
+const contractStatusDot = (executions: ExecutionRow[]): string => {
+  for (const s of STATUS_PRIORITY) {
+    if (executions.some((e) => e.status === s)) return statusDot[s];
+  }
+  return "bg-muted-foreground/60";
+};
+
 export const ContractCard = ({ contract }: { contract: ContractRow }) => {
   const { user } = useAuth();
   const [evidence, setEvidence] = useState<EvidenceRow[]>([]);
@@ -129,7 +139,7 @@ export const ContractCard = ({ contract }: { contract: ContractRow }) => {
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+            <span className={`h-1.5 w-1.5 rounded-full ${contractStatusDot(executions)}`} />
             Recorded · {contract.contract_type}
           </span>
           {contract.attestation_required && (

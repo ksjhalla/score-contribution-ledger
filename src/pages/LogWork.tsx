@@ -11,6 +11,15 @@ import { MarkSettledDialog } from "@/components/contracts/MarkSettledDialog";
 import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
 import { toast } from "sonner";
 
+type AttestRow = {
+  id: string;
+  execution_id: string;
+  attestor_name: string;
+  token: string;
+  status: "Pending" | "Confirmed" | "Declined";
+  last_nudged_at: string | null;
+};
+
 type ExecStatus = "Pending" | "Settled" | "Intent logged" | "Attested" | "Declined";
 
 type ExecutionRow = {
@@ -43,6 +52,8 @@ const LogWork = () => {
   const { profile: demoProfile } = useDemo();
 
   const [executions, setExecutions] = useState<ExecutionRow[]>([]);
+  const [attestations, setAttestations] = useState<AttestRow[]>([]);
+  const [nudging, setNudging] = useState<string | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   const [openForm, setOpenForm] = useState(false);
   const [showLegacyNotice, setShowLegacyNotice] = useState(false);
@@ -82,6 +93,18 @@ const LogWork = () => {
       } as ExecutionRow;
     });
     setExecutions(rows);
+
+    // Load attestation rows for all returned executions.
+    if (rows.length > 0) {
+      const execIds = rows.map((r) => r.id);
+      const { data: attData } = await supabase
+        .from("execution_attestations")
+        .select("id, execution_id, attestor_name, token, status, last_nudged_at")
+        .in("execution_id", execIds);
+      setAttestations((attData ?? []) as AttestRow[]);
+    } else {
+      setAttestations([]);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -104,6 +127,32 @@ const LogWork = () => {
   const dismissNotice = () => {
     localStorage.setItem(NOTICE_KEY, "1");
     setShowLegacyNotice(false);
+  };
+
+  const NUDGE_COOLDOWN_MS = 48 * 60 * 60 * 1000;
+  const canNudge = (last: string | null) => {
+    if (!last) return true;
+    return Date.now() - new Date(last).getTime() >= NUDGE_COOLDOWN_MS;
+  };
+
+  const nudgeFirst = async (rows: AttestRow[]) => {
+    const eligible = rows.filter((r) => r.status === "Pending" && canNudge(r.last_nudged_at));
+    if (!eligible.length || nudging) return;
+    const r = eligible[0];
+    setNudging(r.id);
+    try {
+      const url = `${window.location.origin}/attest/${r.token}`;
+      try { await navigator.clipboard.writeText(url); } catch { /* clipboard denied */ }
+      const { error } = await supabase
+        .from("execution_attestations")
+        .update({ last_nudged_at: new Date().toISOString() })
+        .eq("id", r.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success(`Nudge link copied for ${r.attestor_name}.`);
+      await fetchExecutions();
+    } finally {
+      setNudging(null);
+    }
   };
 
   const totals = useMemo(() => {
@@ -299,6 +348,41 @@ const LogWork = () => {
                           </span>
                         )}
                       </div>
+                      {(() => {
+                        const exAtts = attestations.filter((a) => a.execution_id === e.id);
+                        if (exAtts.length === 0) return null;
+                        const confirmed = exAtts.filter((a) => a.status === "Confirmed").length;
+                        const pending = exAtts.filter((a) => a.status === "Pending");
+                        const hasEligible = pending.some((a) => canNudge(a.last_nudged_at));
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                            <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}>
+                              {confirmed} of {exAtts.length} confirmed · {pending.length} pending
+                            </span>
+                            {pending.length > 0 && (
+                              hasEligible ? (
+                                <button
+                                  type="button"
+                                  onClick={() => nudgeFirst(exAtts)}
+                                  disabled={nudging !== null}
+                                  style={{ background: "transparent", border: "none", padding: 0,
+                                    cursor: nudging ? "not-allowed" : "pointer",
+                                    fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#C4892A" }}
+                                >
+                                  {nudging ? "…" : "Nudge →"}
+                                </button>
+                              ) : (
+                                <span
+                                  title="Next nudge available after 48 h cooldown"
+                                  style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", cursor: "help" }}
+                                >
+                                  Nudged
+                                </span>
+                              )
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div style={{ textAlign: "right", flex: "0 0 auto" }}>
                       {e.status === "Settled" && e.settled_amount != null && (
