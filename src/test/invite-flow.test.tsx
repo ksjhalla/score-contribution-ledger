@@ -114,3 +114,72 @@ describe("/invite page", () => {
     expect(PUBLIC_ROUTES).toContain("/invite");
   });
 });
+
+describe("/invite aria-live regions", () => {
+  beforeEach(() => {
+    channelSpy.mockReset();
+    onAuthStateChangeSpy.mockClear();
+    getSessionMock.mockReset();
+    rpcMock.mockReset();
+    getSessionMock.mockResolvedValue({ data: { session: null } });
+  });
+
+  it("renders a polite status region", () => {
+    renderInvite();
+    const status = document.querySelector('[role="status"][aria-live="polite"]');
+    expect(status).toBeInTheDocument();
+    expect(status?.textContent?.trim() ?? "").toBe("");
+  });
+
+  it("renders an assertive alert region", () => {
+    renderInvite();
+    const alert = document.querySelector('[role="alert"][aria-live="assertive"]');
+    expect(alert).toBeInTheDocument();
+    expect(alert?.textContent?.trim() ?? "").toBe("");
+  });
+
+  it("status region announces 'Verifying…' on submit", async () => {
+    // RPC never resolves so the verifying state persists.
+    rpcMock.mockImplementation(() => new Promise(() => {}));
+    // Pretend we have a session so submit can proceed past the auth check.
+    getSessionMock.mockResolvedValue({
+      data: { session: { user: { id: "u1", email: "test@example.com" } } },
+    });
+
+    renderInvite();
+    const user = userEvent.setup();
+    await user.type(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i), "SCORE-ABCD-1234");
+    await user.type(screen.getByLabelText(/full name/i), "Jane Doe");
+    await user.type(screen.getByLabelText(/^role$/i), "Engineer");
+    // Sector is required — open the select and pick the first option.
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByText("Software"));
+    await user.click(screen.getByRole("button", { name: /complete setup|verifying/i }));
+
+    await waitFor(() => {
+      const status = document.querySelector('[role="status"][aria-live="polite"]');
+      expect(status?.textContent ?? "").toMatch(/verifying/i);
+    });
+  });
+
+  it("error region announces message on invalid invite code", async () => {
+    rpcMock.mockResolvedValue({ data: false, error: null });
+    getSessionMock.mockResolvedValue({
+      data: { session: { user: { id: "u1", email: "test@example.com" } } },
+    });
+
+    renderInvite();
+    const user = userEvent.setup();
+    await user.type(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i), "SCORE-WXYZ-9999");
+    await user.type(screen.getByLabelText(/full name/i), "Jane Doe");
+    await user.type(screen.getByLabelText(/^role$/i), "Engineer");
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByText("Software"));
+    await user.click(screen.getByRole("button", { name: /complete setup/i }));
+
+    await waitFor(() => {
+      const alert = document.querySelector('[role="alert"][aria-live="assertive"]');
+      expect(alert?.textContent ?? "").toMatch(/invalid/i);
+    });
+  });
+});
