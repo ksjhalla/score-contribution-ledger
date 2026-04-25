@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { isPublicRoute } from "@/lib/routeGuard";
 
 type Row = {
   id: string;
@@ -28,6 +29,8 @@ export const ExecutionAttestations = ({ executionId }: { executionId: string }) 
 
   useEffect(() => {
     load();
+    // Defensive: never open realtime on public routes.
+    if (typeof window !== "undefined" && isPublicRoute(window.location.pathname)) return;
     const ch = supabase
       .channel(`att-${executionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "execution_attestations", filter: `execution_id=eq.${executionId}` }, load)
