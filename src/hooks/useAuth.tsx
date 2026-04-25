@@ -30,14 +30,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // we do NOT subscribe to onAuthStateChange. This prevents WebSocket churn and
     // post-OAuth redirect loops on /invite. We still fetch the current session
     // once so consumers can read user state.
-    const path = window.location.pathname;
+    const path = location.pathname;
+    let cancelled = false;
+
     if (isPublicRoute(path)) {
       supabase.auth.getSession().then(({ data: { session: s } }) => {
+        if (cancelled) return;
         setSession(s);
         setUser(s?.user ?? null);
         setLoading(false);
       });
-      return;
+      return () => { cancelled = true; };
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
@@ -74,13 +77,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (cancelled) return;
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [navigate, location.pathname]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
