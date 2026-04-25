@@ -44,13 +44,15 @@ Deno.serve(async (req) => {
       },
     });
   } catch (e) {
-    if ((e as Error).message === 'TIMEOUT') {
+    // Log the full error server-side only — never leak to the client.
+    console.error('[export-user-data] Error:', e);
+    if ((e as Error)?.message === 'TIMEOUT') {
       return new Response(JSON.stringify({ error: 'Export took too long. Please try again.' }), {
         status: 408,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    return new Response(JSON.stringify({ error: 'Export failed. Please try again.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
