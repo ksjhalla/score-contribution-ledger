@@ -3,9 +3,8 @@ import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fromMock, rpcMock, channelSpy, useAuthMock } = vi.hoisted(() => ({
+const { fromMock, channelSpy, useAuthMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
-  rpcMock: vi.fn(),
   channelSpy: vi.fn(),
   useAuthMock: vi.fn(),
 }));
@@ -20,7 +19,7 @@ vi.mock("@/integrations/supabase/client", () => ({
     channel: channelSpy,
     removeChannel: vi.fn(),
     from: fromMock,
-    rpc: rpcMock,
+    rpc: vi.fn(),
   },
 }));
 
@@ -36,13 +35,6 @@ vi.mock("@/contexts/DemoContext", () => ({
 import { AppShell } from "@/components/layout/AppShell";
 
 const SIGNED_IN_USER = { id: "dash-user-001", email: "k@example.com" };
-
-const pendingFrom = () =>
-  fromMock.mockImplementation(() => ({
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    maybeSingle: () => new Promise(() => {}), // never resolves
-  }));
 
 const resolvedFrom = (data: Record<string, unknown> | null) =>
   fromMock.mockImplementation(() => ({
@@ -65,27 +57,17 @@ const renderShell = () =>
 describe("dashboard sidebar identity", () => {
   beforeEach(() => {
     fromMock.mockReset();
-    rpcMock.mockReset();
     channelSpy.mockReset();
     channelSpy.mockReturnValue({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() });
-    // current_user_has_redeemed_invite must return true to avoid redirect
-    rpcMock.mockResolvedValue({ data: true, error: null });
-    useAuthMock.mockReturnValue({ user: SIGNED_IN_USER, loading: false, signOut: vi.fn() });
+    useAuthMock.mockReturnValue({
+      user: SIGNED_IN_USER,
+      session: { user: SIGNED_IN_USER },
+      loading: false,
+      signOut: vi.fn(),
+    });
   });
 
   afterEach(cleanup);
-
-  it("shows ?? initials while profile has not yet loaded", async () => {
-    pendingFrom();
-    renderShell();
-    expect(await screen.findByText("??")).toBeInTheDocument();
-  });
-
-  it("shows Pending contributor-ID label while profile is in-flight", async () => {
-    pendingFrom();
-    renderShell();
-    expect(await screen.findByText("Pending")).toBeInTheDocument();
-  });
 
   it("renders contributor ID in sidebar once profile resolves", async () => {
     resolvedFrom({ full_name: "Kaushal Jhalla", contributor_id: "SCR-KJ-2026-001" });

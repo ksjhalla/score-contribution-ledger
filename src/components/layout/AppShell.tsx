@@ -3,7 +3,6 @@ import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { FileText, PenLine, FileStack, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { isAdminByEmail } from "@/lib/adminBypass";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
 import { useDemo } from "@/contexts/DemoContext";
@@ -31,42 +30,21 @@ const initialsFrom = (name?: string | null) => {
 type Profile = { full_name: string | null; contributor_id: string | null };
 
 export const AppShell = ({ children }: { children: ReactNode }) => {
-  const { user, loading, signOut } = useAuth();
+  const { user, session, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  // undefined = still loading; null = loaded, no profile; Profile = loaded with data
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false
   );
-  const [gateCleared, setGateCleared] = useState(false);
-  const [gateChecking, setGateChecking] = useState(true);
 
   useEffect(() => {
-    if (loading) return;
     if (!user) {
-      setGateCleared(false);
-      setGateChecking(false);
+      setProfile(undefined);
       return;
     }
-    const check = async () => {
-      setGateChecking(true);
-      try {
-        if (isAdminByEmail(user.email)) {
-          setGateCleared(true);
-          return;
-        }
-        const { data: hasRedeemed } = await supabase.rpc("current_user_has_redeemed_invite");
-        setGateCleared(!!hasRedeemed);
-      } finally {
-        setGateChecking(false);
-      }
-    };
-    check();
-  }, [user, loading]);
-
-  useEffect(() => {
-    if (!user) return;
     supabase
       .from("profiles")
       .select("full_name, contributor_id")
@@ -90,13 +68,13 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const pageTitle = titleFor(location.pathname);
   const initials = initialsFrom(profile?.full_name);
 
-  if (loading || gateChecking) {
+  if (loading || profile === undefined) {
     return <div style={{ minHeight: "100vh", background: "#F5F1E8" }} />;
   }
-  if (!user) {
+  if (!session) {
     return <Navigate to="/auth" replace />;
   }
-  if (!gateCleared) {
+  if (!profile?.contributor_id) {
     return <Navigate to="/invite" replace />;
   }
 
@@ -224,7 +202,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           >
             {pageTitle}
           </h1>
-          {user && gateCleared && <NotificationBell userId={user.id} />}
+          {user && <NotificationBell userId={user.id} />}
         </header>
 
         {demoProfile && (
