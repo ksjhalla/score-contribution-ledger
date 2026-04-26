@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
-import { lovable } from "@/integrations/lovable/index";
 
 const Auth = () => {
   const navigate = useNavigate();
