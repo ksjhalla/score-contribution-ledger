@@ -90,15 +90,19 @@ const Invite = () => {
   // or arrived directly).
   useEffect(() => {
     let cancelled = false;
-    // If the user landed here with a leftover OAuth fragment in the URL
-    // (e.g. a redirect chain that didn't strip it), scrub it synchronously
-    // before Supabase's hashchange listener fires a second
-    // _getSessionFromURL pass. Without this, repeated parses trigger
-    // history.replaceState in a tight loop and Chromium throttles
-    // navigation. We use replaceState (not navigate) so React Router
-    // doesn't re-render.
+    // Defence in depth: OAuth callbacks must never land on /invite.
+    // The Auth page enforces this via buildOAuthRedirectUrl, but if a stale
+    // link, refresh, or future call site ever sends a callback here, we:
+    //   1. Scrub the fragment synchronously so Supabase's hashchange
+    //      listener can't re-fire _getSessionFromURL in a loop
+    //      (history.replaceState used so React Router doesn't re-render).
+    //   2. Bounce to /dashboard, which is the canonical post-auth landing
+    //      page and will itself send incomplete profiles back to /invite
+    //      cleanly — no fragment, no loop.
     if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      navigate("/dashboard", { replace: true });
+      return () => { cancelled = true; };
     }
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
