@@ -403,16 +403,25 @@ export default function Index() {
             fontFamily: FONT_BODY, fontSize: 16, color: COLORS.muted,
             maxWidth: 480, margin: "0 auto 36px", lineHeight: 1.7,
           }}>
-            Most people who build things together get paid once, imprecisely, and then it's over.{" "}
-            <em style={{ fontStyle: "italic", fontWeight: 400, color: COLORS.text, fontFamily: FONT_BODY }}>We think that's wrong.</em>{" "}
-            SCORE is a new way for collaborative work to earn — fairly, automatically, and for as long as it's valuable.
+            SCORE is your contribution passport. One place to see what you've built, what you've earned, what's still owed — and what could keep paying you for years.{" "}
+            <em style={{ fontStyle: "italic", fontWeight: 400, color: COLORS.text, fontFamily: FONT_BODY }}>It follows you, not your employer.</em>
           </p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="#cta" onClick={scrollToCta} style={{
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a href="#how-it-works-simple" onClick={smoothScroll("how-it-works-simple")} style={{
               background: COLORS.dark, color: COLORS.darkText,
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
               borderRadius: 4, padding: "12px 24px", textDecoration: "none",
-            }}>Request a demo →</a>
+            }}>See how it works →</a>
+            <a
+              href="/passport/SCR-KA-2026-001"
+              onClick={() => trackEvent("sample_profile_clicked", { source: "hero" })}
+              style={{
+                background: "transparent", color: COLORS.text,
+                border: `1px solid ${COLORS.borderEm}`,
+                fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
+                borderRadius: 4, padding: "12px 24px", textDecoration: "none",
+              }}
+            >View a sample profile</a>
           </div>
           <div style={{
             display: "block", textAlign: "center", marginTop: 10,
