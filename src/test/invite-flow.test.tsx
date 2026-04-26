@@ -60,11 +60,13 @@ describe("/invite page", () => {
     getSessionMock.mockReset();
     rpcMock.mockReset();
     getSessionMock.mockResolvedValue({ data: { session: null } });
+    // Default: any unmocked rpc call (e.g. has_role) returns null => not admin.
+    rpcMock.mockResolvedValue({ data: null, error: null });
   });
 
   it("renders the form immediately with no loading spinner", async () => {
     renderInvite();
-    expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
     expect(screen.queryByText(/^loading/i)).not.toBeInTheDocument();
   });
 
@@ -73,7 +75,7 @@ describe("/invite page", () => {
     renderInvite();
 
     const user = userEvent.setup();
-    await user.type(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i), "INVALID-CODE");
+    await user.type(await screen.findByPlaceholderText(/SCORE-XXXX-XXXX/i), "INVALID-CODE");
     await user.type(screen.getByLabelText(/full name/i), "Jane Doe");
     await user.type(screen.getByLabelText(/^role$/i), "Engineer");
     // Click submit — sector still empty triggers field validation; type-trigger
@@ -132,8 +134,10 @@ describe("/invite admin bypass", () => {
     vi.unstubAllEnvs();
   });
 
-  it("hides invite code field when VITE_ADMIN_EMAILS matches session email", async () => {
-    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+  it("hides invite code field when has_role(uid,'admin') returns true", async () => {
+    rpcMock.mockImplementation((fn: string) =>
+      fn === "has_role" ? Promise.resolve({ data: true, error: null }) : Promise.resolve({ data: null, error: null })
+    );
     getSessionMock.mockResolvedValue({
       data: {
         session: {
@@ -148,13 +152,15 @@ describe("/invite admin bypass", () => {
 
     renderInvite();
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(screen.queryByPlaceholderText(/SCORE-XXXX-XXXX/i)).not.toBeInTheDocument();
   });
 
-  it("shows invite code field for non-admin emails", async () => {
-    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+  it("shows invite code field for non-admin users", async () => {
+    rpcMock.mockImplementation((fn: string) =>
+      fn === "has_role" ? Promise.resolve({ data: false, error: null }) : Promise.resolve({ data: null, error: null })
+    );
     getSessionMock.mockResolvedValue({
       data: {
         session: {
@@ -169,13 +175,13 @@ describe("/invite admin bypass", () => {
 
     renderInvite();
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
   });
 
-  it("shows invite code field when no VITE_ADMIN_EMAILS is set", async () => {
-    vi.stubEnv("VITE_ADMIN_EMAILS", "");
+  it("shows invite code field when has_role RPC errors or returns null", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: null });
     getSessionMock.mockResolvedValue({
       data: {
         session: {
@@ -186,7 +192,7 @@ describe("/invite admin bypass", () => {
 
     renderInvite();
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
   });
@@ -269,7 +275,7 @@ describe("/invite aria-live regions", () => {
 
     renderInvite();
     const user = userEvent.setup();
-    const codeInput = screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i);
+    const codeInput = await screen.findByPlaceholderText(/SCORE-XXXX-XXXX/i);
     await user.type(codeInput, "INVALID-CODE");
     await user.tab(); // blur triggers validate_invite_code
 

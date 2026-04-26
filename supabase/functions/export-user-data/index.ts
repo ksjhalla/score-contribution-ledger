@@ -59,7 +59,8 @@ Deno.serve(async (req) => {
   }
 });
 
-async function buildExport(supabase: ReturnType<typeof createClient>, uid: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function buildExport(supabase: any, uid: string) {
   const [profile, contracts, executions, evidence, triggers, triggerEvents, attestors, attestations] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', uid).maybeSingle().then(r => r.data),
     supabase.from('contracts').select('*').eq('user_id', uid).then(r => r.data ?? []),

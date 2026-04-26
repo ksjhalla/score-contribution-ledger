@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SEO } from "@/components/SEO";
 import { Check, Loader2 } from "lucide-react";
+import { isAdminByEmail } from "@/lib/adminBypass";
 
 const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_BODY = "'DM Sans', system-ui, sans-serif";
@@ -56,8 +57,16 @@ const Invite = () => {
 
   // Form state — visible immediately, no gating, no pre-render loading.
   const [code, setCode] = useState("");
-  // Admin users (listed in VITE_ADMIN_EMAILS) skip invite code entirely.
+  // Admin users (has_role(uid,'admin') in user_roles) skip invite code entirely.
   const [skipInviteCode, setSkipInviteCode] = useState(false);
+  // True once we know whether a session exists (and, if signed in, whether
+  // the user is an admin). Until then we don't render the invite-code field.
+  const [authResolved, setAuthResolved] = useState(false);
+  // Whether we've finished checking admin status for the current session.
+  // Default true (no session = no admin check needed = render field
+  // immediately). Set to false only while we're awaiting the has_role RPC
+  // for a signed-in user, to prevent a flash of the field for admins.
+  const [adminResolved, setAdminResolved] = useState(true);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [codeChecking, setCodeChecking] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -85,9 +94,30 @@ const Invite = () => {
   // or arrived directly).
   useEffect(() => {
     let cancelled = false;
+    // Defence in depth: OAuth callbacks must never land on /invite.
+    // The Auth page enforces this via buildOAuthRedirectUrl, but if a stale
+    // link, refresh, or future call site ever sends a callback here, we:
+    //   1. Scrub the fragment synchronously so Supabase's hashchange
+    //      listener can't re-fire _getSessionFromURL in a loop
+    //      (history.replaceState used so React Router doesn't re-render).
+    //   2. Bounce to /dashboard, which is the canonical post-auth landing
+    //      page and will itself send incomplete profiles back to /invite
+    //      cleanly — no fragment, no loop.
+    if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      navigate("/dashboard", { replace: true });
+      return () => { cancelled = true; };
+    }
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (cancelled || !session?.user) return;
+      if (cancelled) return;
+      if (!session?.user) {
+        setAuthResolved(true);
+        return;
+      }
+      // We have a session — must resolve admin status before showing the
+      // invite-code field, to avoid a flash for admin users.
+      setAdminResolved(false);
       const email = session.user.email ?? "";
       setUserEmail(email);
       const meta = session.user.user_metadata as Record<string, unknown> | undefined;
@@ -108,14 +138,17 @@ const Invite = () => {
         return;
       }
 
-      // Admin bypass: skip invite code validation for whitelisted emails.
-      const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
-        .split(",")
-        .map((e: string) => e.trim().toLowerCase())
-        .filter(Boolean);
-      if (adminEmails.includes(email.toLowerCase())) {
-        setSkipInviteCode(true);
-      }
+      // Admin bypass: server-side check against user_roles via has_role RPC.
+      // Augmented by hardcoded email allowlist as a Lovable-friendly fallback.
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: session.user.id,
+        _role: "admin",
+      });
+      if (cancelled) return;
+      const isAdminBypass = isAdmin === true || isAdminByEmail(email);
+      if (isAdminBypass) setSkipInviteCode(true);
+      setAdminResolved(true);
+      setAuthResolved(true);
     })();
     return () => { cancelled = true; };
   }, [navigate]);
@@ -292,7 +325,7 @@ const Invite = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {/* Section 1 — Invite code (hidden for admin users) */}
-            {!skipInviteCode && (
+            {authResolved && adminResolved && !skipInviteCode && (
             <div className="space-y-2">
               <Label htmlFor="invite-code" style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Invite code
