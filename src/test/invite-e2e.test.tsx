@@ -67,7 +67,6 @@ const userSession = {
 const setupSupabaseMocks = () => {
   getSessionMock.mockResolvedValue({ data: { session: userSession } });
   rpcMock.mockImplementation((fn: string) => {
-    if (fn === "current_user_has_redeemed_invite") return Promise.resolve({ data: true, error: null });
     if (fn === "validate_invite_code") return Promise.resolve({ data: true, error: null });
     if (fn === "complete_profile_with_contributor_id") {
       return Promise.resolve({ data: { contributor_id: "SCR-KJ-2026-001" }, error: null });
