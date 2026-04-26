@@ -80,21 +80,16 @@ const Auth = () => {
 
   const handleGoogle = async () => {
     setBusy(true);
-    // Always send OAuth to /dashboard. Dashboard's profile-completion check
-    // routes incomplete users to /invite *after* the session is fully
-    // established and the URL hash is gone. Sending OAuth directly to
-    // /invite caused Supabase's detectSessionInUrl to re-parse the hash on
-    // every mount, triggering Chromium navigation throttling.
-    const { buildOAuthRedirectUrl } = await import("@/lib/oauthRedirect");
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: buildOAuthRedirectUrl("/dashboard"),
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-    if (result.error) {
+    if (error) {
       setBusy(false);
-      toast.error(result.error.message ?? "Google sign-in failed.");
+      toast.error(error.message ?? "Google sign-in failed.");
     }
-    // If redirected, the browser will navigate away. If session is set,
-    // the AuthProvider will pick it up and the redirect effect will fire.
   };
 
   const GoogleButton = () => (
