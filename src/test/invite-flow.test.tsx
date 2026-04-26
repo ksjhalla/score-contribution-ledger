@@ -66,7 +66,7 @@ describe("/invite page", () => {
 
   it("renders the form immediately with no loading spinner", async () => {
     renderInvite();
-    expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
     expect(screen.queryByText(/^loading/i)).not.toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe("/invite page", () => {
     renderInvite();
 
     const user = userEvent.setup();
-    await user.type(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i), "INVALID-CODE");
+    await user.type(await screen.findByPlaceholderText(/SCORE-XXXX-XXXX/i), "INVALID-CODE");
     await user.type(screen.getByLabelText(/full name/i), "Jane Doe");
     await user.type(screen.getByLabelText(/^role$/i), "Engineer");
     // Click submit — sector still empty triggers field validation; type-trigger
@@ -243,7 +243,7 @@ describe("/invite aria-live regions", () => {
 
     renderInvite();
     const user = userEvent.setup();
-    const codeInput = screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i);
+    const codeInput = await screen.findByPlaceholderText(/SCORE-XXXX-XXXX/i);
     await user.type(codeInput, "INVALID-CODE");
     await user.tab(); // blur triggers validate_invite_code
 
