@@ -59,23 +59,14 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         .filter(Boolean);
       const isAdmin = user?.email && adminEmails.includes(user.email.toLowerCase());
 
+      // Admin users bypass the invite gate entirely.
       if (isAdmin) {
-        // For admins, check contributor_id instead of invite redemption.
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("contributor_id")
-          .eq("id", user!.id)
-          .maybeSingle();
-        if (prof?.contributor_id) {
-          setGateCleared(true);
-        } else {
-          navigate("/invite", { replace: true });
-        }
+        setGateCleared(true);
         return;
       }
 
-      const { data } = await supabase.rpc("current_user_has_redeemed_invite");
-      if (data === false) {
+      const { data: hasRedeemed } = await supabase.rpc("current_user_has_redeemed_invite");
+      if (!hasRedeemed) {
         navigate("/invite", { replace: true });
       } else {
         setGateCleared(true);
