@@ -13,5 +13,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // OAuth callback handling. Explicit so the behaviour is documented:
+    // Supabase parses the URL fragment once on init, exchanges it for a
+    // session, then calls history.replaceState to clean the URL.
+    detectSessionInUrl: true,
+    flowType: "pkce",
   }
 });

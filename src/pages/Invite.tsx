@@ -90,6 +90,16 @@ const Invite = () => {
   // or arrived directly).
   useEffect(() => {
     let cancelled = false;
+    // If the user landed here with a leftover OAuth fragment in the URL
+    // (e.g. a redirect chain that didn't strip it), scrub it synchronously
+    // before Supabase's hashchange listener fires a second
+    // _getSessionFromURL pass. Without this, repeated parses trigger
+    // history.replaceState in a tight loop and Chromium throttles
+    // navigation. We use replaceState (not navigate) so React Router
+    // doesn't re-render.
+    if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session?.user) return;
