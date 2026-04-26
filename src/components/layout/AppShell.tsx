@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { FileText, PenLine, FileStack, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminByEmail } from "@/lib/adminBypass";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
 import { useDemo } from "@/contexts/DemoContext";
@@ -50,17 +51,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       return;
     }
     // Soft invite gate: signed-in users without a redeemed code go to /invite.
-    // Admin users (VITE_ADMIN_EMAILS) skip invite redemption entirely — if they
-    // have a contributor_id they are considered fully onboarded.
+    // Admin users bypass the gate entirely (hardcoded list + VITE_ADMIN_EMAILS).
     (async () => {
-      const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
-        .split(",")
-        .map((e: string) => e.trim().toLowerCase())
-        .filter(Boolean);
-      const isAdmin = user?.email && adminEmails.includes(user.email.toLowerCase());
-
-      // Admin users bypass the invite gate entirely.
-      if (isAdmin) {
+      if (isAdminByEmail(user?.email)) {
         setGateCleared(true);
         return;
       }
