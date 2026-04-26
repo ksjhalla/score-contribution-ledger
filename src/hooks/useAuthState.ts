@@ -13,6 +13,13 @@ export function useAuthState(): AuthState {
     let cancelled = false
 
     async function check() {
+      // After OAuth redirect, the URL hash contains access_token.
+      // Let Supabase parse it and establish the session, then clean the URL.
+      if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
+        await supabase.auth.getSession()
+        window.history.replaceState(null, "", window.location.pathname)
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession()
