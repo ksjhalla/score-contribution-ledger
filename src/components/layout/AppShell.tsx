@@ -37,7 +37,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
   const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
   );
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   if (!session) {
     return <Navigate to="/auth" replace />;
   }
-  if (!profile?.contributor_id) {
+  if (!profile === null) {
     return <Navigate to="/invite" replace />;
   }
 
@@ -104,16 +104,23 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       {!isMobile && (
         <aside
           style={{
-            position: "fixed", top: 0, left: 0, bottom: 0,
-            width: 260, background: "#FDFAF4",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: 260,
+            background: "#FDFAF4",
             borderRight: "1px solid rgba(26,22,14,0.08)",
-            display: "flex", flexDirection: "column",
+            display: "flex",
+            flexDirection: "column",
             zIndex: 40,
           }}
         >
           <div style={{ padding: "18px 20px", borderBottom: "1px solid rgba(26,22,14,0.08)" }}>
             <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 15, color: "#C4892A" }}>SCORE</div>
-            <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", marginTop: 2 }}>
+            <div
+              style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", marginTop: 2 }}
+            >
               Contribution Ledger
             </div>
           </div>
@@ -136,13 +143,18 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
                 style={{
-                  width: 32, height: 32, borderRadius: "50%",
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
                   background: "rgba(196,137,42,0.12)",
                   border: "1px solid rgba(196,137,42,0.3)",
                   color: "#C4892A",
                   fontFamily: "'DM Mono',ui-monospace,monospace",
-                  fontSize: 13, fontWeight: 600,
-                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
@@ -152,8 +164,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                 <div
                   style={{
                     fontFamily: "'DM Sans',system-ui,sans-serif",
-                    fontSize: 13, fontWeight: 500, color: "#1A1614",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#1A1614",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   {profile?.full_name ?? "—"}
@@ -161,14 +177,19 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                 <div
                   style={{
                     fontFamily: "'DM Mono',ui-monospace,monospace",
-                    fontSize: 9, color: "#9A8F84",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    fontSize: 9,
+                    color: "#9A8F84",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   {profile?.contributor_id ?? "Pending"}
                 </div>
               </div>
-              <button onClick={handleSignOut} className="app-shell-signout">Sign out</button>
+              <button onClick={handleSignOut} className="app-shell-signout">
+                Sign out
+              </button>
             </div>
           </div>
         </aside>
@@ -178,26 +199,34 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         style={{
           marginLeft: isMobile ? 0 : 260,
           minHeight: "100vh",
-          display: "flex", flexDirection: "column",
+          display: "flex",
+          flexDirection: "column",
           paddingBottom: isMobile ? 72 : 0,
         }}
       >
         <header
           style={{
-            position: "sticky", top: 0, zIndex: 30,
+            position: "sticky",
+            top: 0,
+            zIndex: 30,
             height: 52,
             background: "rgba(253,250,244,0.95)",
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
             borderBottom: "1px solid rgba(26,22,14,0.08)",
             padding: "0 24px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
           <h1
             style={{
               fontFamily: "'Playfair Display',Georgia,serif",
-              fontSize: 18, fontWeight: 600, color: "#1A1614", margin: 0,
+              fontSize: 18,
+              fontWeight: 600,
+              color: "#1A1614",
+              margin: 0,
             }}
           >
             {pageTitle}
@@ -221,9 +250,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             }}
           >
             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {isMobile && demoProfile.banner.mobileText
-                ? demoProfile.banner.mobileText
-                : demoProfile.banner.text}
+              {isMobile && demoProfile.banner.mobileText ? demoProfile.banner.mobileText : demoProfile.banner.text}
             </span>
             <button
               type="button"
@@ -249,11 +276,15 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       {isMobile && (
         <nav
           style={{
-            position: "fixed", bottom: 0, left: 0, right: 0,
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
             height: 56,
             background: "#FDFAF4",
             borderTop: "1px solid rgba(26,22,14,0.10)",
-            display: "flex", alignItems: "stretch",
+            display: "flex",
+            alignItems: "stretch",
             zIndex: 40,
           }}
         >
