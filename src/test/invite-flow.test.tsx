@@ -60,6 +60,8 @@ describe("/invite page", () => {
     getSessionMock.mockReset();
     rpcMock.mockReset();
     getSessionMock.mockResolvedValue({ data: { session: null } });
+    // Default: any unmocked rpc call (e.g. has_role) returns null => not admin.
+    rpcMock.mockResolvedValue({ data: null, error: null });
   });
 
   it("renders the form immediately with no loading spinner", async () => {
