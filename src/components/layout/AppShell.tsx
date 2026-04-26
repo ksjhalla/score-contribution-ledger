@@ -74,7 +74,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   if (!session) {
     return <Navigate to="/auth" replace />;
   }
-  if (!profile === null) {
+  if (profile === null) {
     return <Navigate to="/invite" replace />;
   }
 
