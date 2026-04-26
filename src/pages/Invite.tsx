@@ -51,6 +51,25 @@ const computeInitials = (name: string): string => {
   return `${first}${last}`.toUpperCase() || "XX";
 };
 
+/**
+ * Admin bypass email allowlist.
+ * Primary: user_roles table via has_role RPC. Fallback: hardcoded emails +
+ * optional VITE_ADMIN_EMAILS (comma-separated). All comparisons lowercased.
+ */
+const HARDCODED_ADMIN_EMAILS = ["ksjhalla@gmail.com"];
+
+const getAdminEmails = (): string[] => {
+  const fromEnv = (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? "";
+  const envList = fromEnv.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const all = [...HARDCODED_ADMIN_EMAILS.map((e) => e.toLowerCase().trim()), ...envList];
+  return Array.from(new Set(all));
+};
+
+const isAdminByEmail = (email: string | null | undefined): boolean => {
+  if (!email) return false;
+  return getAdminEmails().includes(email.trim().toLowerCase());
+};
+
 const Invite = () => {
   const navigate = useNavigate();
 
@@ -58,6 +77,9 @@ const Invite = () => {
   const [code, setCode] = useState("");
   // Admin users (has_role(uid,'admin') in user_roles) skip invite code entirely.
   const [skipInviteCode, setSkipInviteCode] = useState(false);
+  // True once we know whether a session exists (and, if signed in, whether
+  // the user is an admin). Until then we don't render the invite-code field.
+  const [authResolved, setAuthResolved] = useState(false);
   // Whether we've finished checking admin status for the current session.
   // Default true (no session = no admin check needed = render field
   // immediately). Set to false only while we're awaiting the has_role RPC
@@ -106,7 +128,11 @@ const Invite = () => {
     }
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (cancelled || !session?.user) return;
+      if (cancelled) return;
+      if (!session?.user) {
+        setAuthResolved(true);
+        return;
+      }
       // We have a session — must resolve admin status before showing the
       // invite-code field, to avoid a flash for admin users.
       setAdminResolved(false);
@@ -125,20 +151,39 @@ const Invite = () => {
         .eq("id", session.user.id)
         .maybeSingle();
       if (cancelled) return;
+      const profileExists = prof?.profile_completed === true;
       if (prof?.profile_completed) {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log("[invite] profile complete → /dashboard", { email, profileExists });
+        }
         navigate("/dashboard", { replace: true });
         return;
       }
 
       // Admin bypass: server-side check against user_roles via has_role RPC.
-      // No frontend secret, no env drift — secure by RLS.
+      // Augmented by hardcoded email allowlist as a Lovable-friendly fallback.
       const { data: isAdmin } = await supabase.rpc("has_role", {
         _user_id: session.user.id,
         _role: "admin",
       });
       if (cancelled) return;
-      if (isAdmin === true) setSkipInviteCode(true);
+      const adminEmails = getAdminEmails();
+      const isAdminBypass = isAdmin === true || isAdminByEmail(email);
+      if (isAdminBypass) setSkipInviteCode(true);
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[invite] auth resolved", {
+          email,
+          adminEmails,
+          isAdminRoleRpc: isAdmin,
+          isAdminBypass,
+          profileExists,
+          redirectTarget: "/invite (stay)",
+        });
+      }
       setAdminResolved(true);
+      setAuthResolved(true);
     })();
     return () => { cancelled = true; };
   }, [navigate]);
@@ -156,7 +201,7 @@ const Invite = () => {
     if (!role.trim()) e.role = "Professional role is required.";
     if (!sector) e.sector = "Please select a sector.";
     return e;
-  }, [code, fullName, role, sector]);
+  }, [code, fullName, role, sector, skipInviteCode]);
 
   const handleCodeBlur = async () => {
     setTouched((t) => ({ ...t, code: true }));
@@ -206,7 +251,7 @@ const Invite = () => {
     if (!sector) { submittingRef.current = false; return; }
 
     const normalizedCode = normalizeCode(code);
-    if (!INVITE_CODE_RE.test(normalizedCode)) {
+    if (!skipInviteCode && !INVITE_CODE_RE.test(normalizedCode)) {
       setCodeValid(false);
       setCodeErr("This code is invalid, expired, or not for this email.");
       setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
@@ -215,7 +260,7 @@ const Invite = () => {
     }
 
     setBusy(true);
-    setStatusMessage("Verifying invite code…");
+    setStatusMessage(skipInviteCode ? "Creating your account…" : "Verifying invite code…");
 
     try {
       // Fresh session check (no subscription).
@@ -227,20 +272,21 @@ const Invite = () => {
         return;
       }
 
-      // 1. Validate the code (async).
-      const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
-        p_code: normalizedCode,
-        p_email: user.email ?? "",
-      });
-      if (vErr || !valid) {
-        setCodeValid(false);
-        setCodeErr("This code is invalid, expired, or not for this email.");
-        setStatusMessage("");
-        setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
-        return;
+      // 1. Validate the code — skipped entirely for admin bypass.
+      if (!skipInviteCode) {
+        const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
+          p_code: normalizedCode,
+          p_email: user.email ?? "",
+        });
+        if (vErr || !valid) {
+          setCodeValid(false);
+          setCodeErr("This code is invalid, expired, or not for this email.");
+          setStatusMessage("");
+          setErrorMessage("Error: This invite code is invalid, expired, or not for this email address.");
+          return;
+        }
+        setStatusMessage("Invite code accepted. Creating your account…");
       }
-
-      setStatusMessage("Invite code accepted. Creating your account…");
 
       // 2. Create the profile (generates a permanent contributor_id).
       const { error: pErr } = await supabase.rpc("complete_profile_with_contributor_id", {
@@ -261,21 +307,27 @@ const Invite = () => {
         return;
       }
 
-      // 3. Redeem the code.
-      const { error: rErr } = await supabase.rpc("redeem_invite_code", {
-        p_code: normalizedCode,
-        p_user_id: user.id,
-      });
-      if (rErr) {
-        setFormErr("Could not redeem this code. Please try again.");
-        setStatusMessage("");
-        setErrorMessage("Error: Something went wrong. Please try again.");
-        return;
+      // 3. Redeem the code — skipped for admin bypass (no code was entered).
+      if (!skipInviteCode) {
+        const { error: rErr } = await supabase.rpc("redeem_invite_code", {
+          p_code: normalizedCode,
+          p_user_id: user.id,
+        });
+        if (rErr) {
+          setFormErr("Could not redeem this code. Please try again.");
+          setStatusMessage("");
+          setErrorMessage("Error: Something went wrong. Please try again.");
+          return;
+        }
       }
 
       // 4. Preload profile so contributor ID is visible on first dashboard render.
       await supabase.from("profiles").select("contributor_id").eq("id", user.id).maybeSingle();
 
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[invite] setup complete → /dashboard", { skipInviteCode });
+      }
       setStatusMessage("");
       setErrorMessage("");
       navigate("/dashboard", { replace: true });
@@ -311,7 +363,7 @@ const Invite = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {/* Section 1 — Invite code (hidden for admin users) */}
-            {adminResolved && !skipInviteCode && (
+            {authResolved && adminResolved && !skipInviteCode && (
             <div className="space-y-2">
               <Label htmlFor="invite-code" style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Invite code
