@@ -133,7 +133,7 @@ const Invite = () => {
     if (!role.trim()) e.role = "Professional role is required.";
     if (!sector) e.sector = "Please select a sector.";
     return e;
-  }, [code, fullName, role, sector]);
+  }, [code, fullName, role, sector, skipInviteCode]);
 
   const handleCodeBlur = async () => {
     setTouched((t) => ({ ...t, code: true }));
