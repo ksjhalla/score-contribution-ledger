@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SEO } from "@/components/SEO";
 import { Check, Loader2 } from "lucide-react";
-import { getAdminEmails, isAdminByEmail } from "@/lib/adminBypass";
+import { isAdminByEmail } from "@/lib/adminBypass";
 
 const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_BODY = "'DM Sans', system-ui, sans-serif";
@@ -133,12 +133,7 @@ const Invite = () => {
         .eq("id", session.user.id)
         .maybeSingle();
       if (cancelled) return;
-      const profileExists = prof?.profile_completed === true;
       if (prof?.profile_completed) {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log("[invite] profile complete → /dashboard", { email, profileExists });
-        }
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -150,20 +145,8 @@ const Invite = () => {
         _role: "admin",
       });
       if (cancelled) return;
-      const adminEmails = getAdminEmails();
       const isAdminBypass = isAdmin === true || isAdminByEmail(email);
       if (isAdminBypass) setSkipInviteCode(true);
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("[invite] auth resolved", {
-          email,
-          adminEmails,
-          isAdminRoleRpc: isAdmin,
-          isAdminBypass,
-          profileExists,
-          redirectTarget: "/invite (stay)",
-        });
-      }
       setAdminResolved(true);
       setAuthResolved(true);
     })();
@@ -306,10 +289,6 @@ const Invite = () => {
       // 4. Preload profile so contributor ID is visible on first dashboard render.
       await supabase.from("profiles").select("contributor_id").eq("id", user.id).maybeSingle();
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("[invite] setup complete → /dashboard", { skipInviteCode });
-      }
       setStatusMessage("");
       setErrorMessage("");
       navigate("/dashboard", { replace: true });
