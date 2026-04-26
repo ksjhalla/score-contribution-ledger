@@ -56,8 +56,13 @@ const Invite = () => {
 
   // Form state — visible immediately, no gating, no pre-render loading.
   const [code, setCode] = useState("");
-  // Admin users (listed in VITE_ADMIN_EMAILS) skip invite code entirely.
+  // Admin users (has_role(uid,'admin') in user_roles) skip invite code entirely.
   const [skipInviteCode, setSkipInviteCode] = useState(false);
+  // Whether we've finished checking admin status for the current session.
+  // Default true (no session = no admin check needed = render field
+  // immediately). Set to false only while we're awaiting the has_role RPC
+  // for a signed-in user, to prevent a flash of the field for admins.
+  const [adminResolved, setAdminResolved] = useState(true);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [codeChecking, setCodeChecking] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -88,6 +93,9 @@ const Invite = () => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session?.user) return;
+      // We have a session — must resolve admin status before showing the
+      // invite-code field, to avoid a flash for admin users.
+      setAdminResolved(false);
       const email = session.user.email ?? "";
       setUserEmail(email);
       const meta = session.user.user_metadata as Record<string, unknown> | undefined;
@@ -108,14 +116,15 @@ const Invite = () => {
         return;
       }
 
-      // Admin bypass: skip invite code validation for whitelisted emails.
-      const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
-        .split(",")
-        .map((e: string) => e.trim().toLowerCase())
-        .filter(Boolean);
-      if (adminEmails.includes(email.toLowerCase())) {
-        setSkipInviteCode(true);
-      }
+      // Admin bypass: server-side check against user_roles via has_role RPC.
+      // No frontend secret, no env drift — secure by RLS.
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: session.user.id,
+        _role: "admin",
+      });
+      if (cancelled) return;
+      if (isAdmin === true) setSkipInviteCode(true);
+      setAdminResolved(true);
     })();
     return () => { cancelled = true; };
   }, [navigate]);
@@ -288,7 +297,7 @@ const Invite = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {/* Section 1 — Invite code (hidden for admin users) */}
-            {!skipInviteCode && (
+            {adminResolved && !skipInviteCode && (
             <div className="space-y-2">
               <Label htmlFor="invite-code" style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Invite code
