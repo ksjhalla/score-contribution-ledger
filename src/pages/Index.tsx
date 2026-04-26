@@ -403,16 +403,25 @@ export default function Index() {
             fontFamily: FONT_BODY, fontSize: 16, color: COLORS.muted,
             maxWidth: 480, margin: "0 auto 36px", lineHeight: 1.7,
           }}>
-            Most people who build things together get paid once, imprecisely, and then it's over.{" "}
-            <em style={{ fontStyle: "italic", fontWeight: 400, color: COLORS.text, fontFamily: FONT_BODY }}>We think that's wrong.</em>{" "}
-            SCORE is a new way for collaborative work to earn — fairly, automatically, and for as long as it's valuable.
+            SCORE is your contribution passport. One place to see what you've built, what you've earned, what's still owed — and what could keep paying you for years.{" "}
+            <em style={{ fontStyle: "italic", fontWeight: 400, color: COLORS.text, fontFamily: FONT_BODY }}>It follows you, not your employer.</em>
           </p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="#cta" onClick={scrollToCta} style={{
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a href="#how-it-works-simple" onClick={smoothScroll("how-it-works-simple")} style={{
               background: COLORS.dark, color: COLORS.darkText,
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
               borderRadius: 4, padding: "12px 24px", textDecoration: "none",
-            }}>Request a demo →</a>
+            }}>See how it works →</a>
+            <a
+              href="/passport/SCR-KA-2026-001"
+              onClick={() => trackEvent("sample_profile_clicked", { source: "hero" })}
+              style={{
+                background: "transparent", color: COLORS.text,
+                border: `1px solid ${COLORS.borderEm}`,
+                fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
+                borderRadius: 4, padding: "12px 24px", textDecoration: "none",
+              }}
+            >View a sample profile</a>
           </div>
           <div style={{
             display: "block", textAlign: "center", marginTop: 10,
@@ -530,11 +539,108 @@ export default function Index() {
         </div>
       </Section>
 
-      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS — plain-language */}
+      <Section id="how-it-works-simple" style={{ background: COLORS.surface, padding: "80px 0" }}>
+        <div style={{ ...containerStyle, maxWidth: 880 }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={eyebrowStyle}>HOW IT WORKS</div>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, lineHeight: 1.15, margin: "0 0 14px" }}>
+              Four steps. <em style={{ fontStyle: "italic", color: COLORS.text }}>That's it.</em>
+            </h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+              From the work you do today to the value it returns tomorrow — and the years after.
+            </p>
+          </div>
+          <div className="score-cols-2" style={{
+            display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+          }}>
+            {[
+              { n: "01", t: "Work gets recorded", b: "You log a contribution — a contract, a patent filing, a session, a commit. SCORE captures what you did and when." },
+              { n: "02", t: "Value gets connected", b: "Each record is linked to the agreement that says what it's worth — royalties, milestones, splits, residuals." },
+              { n: "03", t: "You see the full picture", b: "One view of what's been paid, what's pending, and what's still on its way. No spreadsheets. No guessing." },
+              { n: "04", t: "You carry it forward", b: "The record follows you across jobs, deals, and platforms. Your contribution history is yours — permanent and portable." },
+            ].map((s) => (
+              <div key={s.n} style={{
+                background: COLORS.card,
+                border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                padding: "24px 26px",
+              }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: COLORS.amber, marginBottom: 10 }}>{s.n}</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, color: COLORS.text, marginBottom: 8 }}>{s.t}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, lineHeight: 1.7 }}>{s.b}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* USE CASES — 4 ways value shows up */}
+      <Section id="use-cases" style={{ background: COLORS.bg, padding: "80px 0" }}>
+        <div style={containerStyle}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={eyebrowStyle}>WHERE IT FITS</div>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, lineHeight: 1.15, margin: "0 0 14px" }}>
+              Four ways value<br /><em style={{ fontStyle: "italic", color: COLORS.text }}>shows up.</em>
+            </h2>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+              Different industries, same pattern. Work that keeps earning long after it's done.
+            </p>
+          </div>
+          <div className="score-cols-2" style={{
+            display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+          }}>
+            {[
+              {
+                tag: "PHARMA / IP",
+                title: "Work that pays over time",
+                body: "A patent you co-invented today still earns when the drug ships. Royalties land where they should — for as long as they're due.",
+                example: "$420K paid · $380K pending",
+              },
+              {
+                tag: "ATHLETE / CONTRACT",
+                title: "Work that follows your career",
+                body: "Endorsements, NIL deals, performance bonuses. One record, across teams and seasons, that doesn't reset when you switch jerseys.",
+                example: "$112K paid · $48K pending",
+              },
+              {
+                tag: "SUPPLY CHAIN",
+                title: "Work that scales across systems",
+                body: "A cooperative, a grower, a supplier. Your contribution to the final product is logged once and tracked everywhere it goes.",
+                example: "$86K paid · $24K pending",
+              },
+              {
+                tag: "OPEN / AI",
+                title: "Work that gets reused everywhere",
+                body: "Code, datasets, training contributions. When something you built is used downstream, the credit and the payment find you.",
+                example: "$31K paid · $19K pending",
+              },
+            ].map((c) => (
+              <div key={c.tag} style={{
+                background: COLORS.card,
+                border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                padding: "24px 26px",
+                display: "flex", flexDirection: "column",
+              }}>
+                <div style={{ ...eyebrowStyle, marginBottom: 10 }}>{c.tag}</div>
+                <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 20, color: COLORS.text, marginBottom: 8, lineHeight: 1.3 }}>{c.title}</div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: COLORS.muted, lineHeight: 1.7, marginBottom: 14 }}>{c.body}</div>
+                <div style={{
+                  marginTop: "auto",
+                  background: COLORS.surface, borderRadius: 4,
+                  padding: "8px 12px",
+                  fontFamily: FONT_MONO, fontSize: 11, color: COLORS.text,
+                }}>{c.example}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* HOW IT WORKS — mechanism (technical) */}
       <Section id="how-it-works" style={{ background: COLORS.surface, padding: "80px 0" }}>
         <div style={{ ...containerStyle, maxWidth: 760 }}>
           <div style={{ textAlign: "center" }}>
-            <div style={eyebrowStyle}>HOW IT WORKS</div>
+            <div style={eyebrowStyle}>THE MECHANISM</div>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 36, lineHeight: 1.2, margin: "0 auto", maxWidth: 700 }}>
               The contract stays real.<br />The payment stays real.<br />SCORE is the ledger between them.
             </h2>
