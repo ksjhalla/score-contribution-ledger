@@ -45,22 +45,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       const currentPath = window.location.pathname;
-      const setupRoutes = ["/invite", "/auth"];
-      const isOnSetupRoute = setupRoutes.some((route) =>
-        currentPath === route || currentPath.startsWith(route + "/"),
+
+      // /invite handles its own post-submit navigation — never redirect from there.
+      const neverRedirect = ["/invite"];
+      const isNeverRedirect = neverRedirect.some(
+        (r) => currentPath === r || currentPath.startsWith(r + "/"),
       );
 
       setSession(s);
       setUser(s?.user ?? null);
 
       if (event === "SIGNED_IN" && s) {
-        if (isOnSetupRoute) return;
+        if (isNeverRedirect) return;
 
-        const alreadyOnApp =
-          currentPath.startsWith("/dashboard") ||
-          currentPath.startsWith("/contracts") ||
-          currentPath.startsWith("/log-work") ||
-          currentPath.startsWith("/account");
+        // /auth and all other non-app routes: redirect to dashboard on sign-in.
+        const alreadyOnApp = ["/dashboard", "/contracts", "/log-work", "/account"].some(
+          (r) => currentPath.startsWith(r),
+        );
 
         if (!alreadyOnApp) {
           navigate("/dashboard", { replace: true });
