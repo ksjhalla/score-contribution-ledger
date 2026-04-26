@@ -62,12 +62,12 @@ Deno.serve(async (req) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function buildExport(supabase: any, uid: string) {
   const [profile, contracts, executions, evidence, triggers, triggerEvents, attestors, attestations] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', uid).maybeSingle().then(r => r.data),
-    supabase.from('contracts').select('*').eq('user_id', uid).then(r => r.data ?? []),
-    supabase.from('executions').select('*').eq('user_id', uid).then(r => r.data ?? []),
-    supabase.from('evidence').select('id, contract_id, title, evidence_type, fingerprint, timestamp_created, source_url, description, notes, created_at').eq('user_id', uid).then(r => r.data ?? []),
-    supabase.from('triggers').select('*').eq('user_id', uid).then(r => r.data ?? []),
-    supabase.from('contracts').select('id').eq('user_id', uid).then(async (cRes) => {
+    supabase.from('profiles').select('*').eq('id', uid).maybeSingle().then((r: any) => r.data),
+    supabase.from('contracts').select('*').eq('user_id', uid).then((r: any) => r.data ?? []),
+    supabase.from('executions').select('*').eq('user_id', uid).then((r: any) => r.data ?? []),
+    supabase.from('evidence').select('id, contract_id, title, evidence_type, fingerprint, timestamp_created, source_url, description, notes, created_at').eq('user_id', uid).then((r: any) => r.data ?? []),
+    supabase.from('triggers').select('*').eq('user_id', uid).then((r: any) => r.data ?? []),
+    supabase.from('contracts').select('id').eq('user_id', uid).then(async (cRes: any) => {
       const ids = (cRes.data ?? []).map((c: any) => c.id);
       if (ids.length === 0) return [];
       const { data: trgs } = await supabase.from('triggers').select('id').eq('user_id', uid);
@@ -76,8 +76,8 @@ async function buildExport(supabase: any, uid: string) {
       const { data } = await supabase.from('trigger_events').select('*').in('trigger_id', tIds);
       return data ?? [];
     }),
-    supabase.from('contract_attestors').select('*').eq('user_id', uid).then(r => r.data ?? []),
-    supabase.from('execution_attestations').select('*').eq('user_id', uid).then(r => r.data ?? []),
+    supabase.from('contract_attestors').select('*').eq('user_id', uid).then((r: any) => r.data ?? []),
+    supabase.from('execution_attestations').select('*').eq('user_id', uid).then((r: any) => r.data ?? []),
   ]);
 
   return {
