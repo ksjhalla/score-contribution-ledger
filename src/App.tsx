@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Contracts from "./pages/Contracts.tsx";
 import Account from "./pages/Account.tsx";
 import Pricing from "./pages/Pricing.tsx";
+import AuthCallback from "./pages/AuthCallback.tsx";
 import EnvHelp from "./pages/EnvHelp.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
@@ -35,6 +36,7 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/invite" element={<Invite />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />

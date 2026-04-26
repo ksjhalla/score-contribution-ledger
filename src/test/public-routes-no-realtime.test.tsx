@@ -111,7 +111,7 @@ describe("public routes never open realtime channels", () => {
   it("PUBLIC_ROUTES constant matches the paths exercised by this test", () => {
     // Guard against drift: if a new public route is added, surface it here.
     expect([...PUBLIC_ROUTES].sort()).toEqual(
-      ["/", "/pricing", "/auth", "/invite", "/attest", "/passport", "/report"].sort(),
+      ["/", "/pricing", "/auth", "/auth/callback", "/invite", "/attest", "/passport", "/report"].sort(),
     );
   });
 });
