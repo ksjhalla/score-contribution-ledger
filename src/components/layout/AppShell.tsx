@@ -76,9 +76,6 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   if (authState.status === "unauthenticated") {
     return <Navigate to="/auth" replace />;
   }
-  if (!authState.hasProfile) {
-    return <Navigate to="/invite" replace />;
-  }
 
   return (
     <div

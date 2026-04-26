@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 type AuthState =
   | { status: "loading" }
   | { status: "unauthenticated" }
-  | { status: "authenticated"; userId: string; email: string; hasProfile: boolean }
+  | { status: "authenticated"; userId: string; email: string }
 
 export function useAuthState(): AuthState {
   const [state, setState] = useState<AuthState>({ status: "loading" })
@@ -24,19 +24,10 @@ export function useAuthState(): AuthState {
         return
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("contributor_id")
-        .eq("id", session.user.id)
-        .maybeSingle()
-
-      if (cancelled) return
-
       setState({
         status: "authenticated",
         userId: session.user.id,
         email: session.user.email ?? "",
-        hasProfile: !!(profile?.contributor_id),
       })
     }
 
@@ -53,7 +44,11 @@ export function useAuthState(): AuthState {
       }
 
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await check()
+        setState({
+          status: "authenticated",
+          userId: session.user.id,
+          email: session.user.email ?? "",
+        })
       }
     })
 

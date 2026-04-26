@@ -26,11 +26,7 @@ const Auth = () => {
   useEffect(() => {
     if (authState.status === "loading") return
     if (authState.status === "authenticated") {
-      if (authState.hasProfile) {
-        navigate("/dashboard", { replace: true })
-      } else {
-        navigate("/invite", { replace: true })
-      }
+      navigate("/dashboard", { replace: true })
     }
     // unauthenticated: stay, show the form
   }, [authState, navigate])
