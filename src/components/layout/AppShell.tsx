@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { FileText, PenLine, FileStack, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,33 +39,31 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false
   );
-  // True only after the invite gate confirms the user has a redeemed invite.
-  // Keeps NotificationBell from opening a realtime channel before we know
-  // whether we're about to redirect this user to /invite.
   const [gateCleared, setGateCleared] = useState(false);
+  const [gateChecking, setGateChecking] = useState(true);
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      navigate("/auth", { replace: true });
+      setGateCleared(false);
+      setGateChecking(false);
       return;
     }
-    // Soft invite gate: signed-in users without a redeemed code go to /invite.
-    // Admin users bypass the gate entirely (hardcoded list + VITE_ADMIN_EMAILS).
-    (async () => {
-      if (isAdminByEmail(user?.email)) {
-        setGateCleared(true);
-        return;
+    const check = async () => {
+      setGateChecking(true);
+      try {
+        if (isAdminByEmail(user.email)) {
+          setGateCleared(true);
+          return;
+        }
+        const { data: hasRedeemed } = await supabase.rpc("current_user_has_redeemed_invite");
+        setGateCleared(!!hasRedeemed);
+      } finally {
+        setGateChecking(false);
       }
-
-      const { data: hasRedeemed } = await supabase.rpc("current_user_has_redeemed_invite");
-      if (!hasRedeemed) {
-        navigate("/invite", { replace: true });
-      } else {
-        setGateCleared(true);
-      }
-    })();
-  }, [user, loading, navigate]);
+    };
+    check();
+  }, [user, loading]);
 
   useEffect(() => {
     if (!user) return;
@@ -91,6 +89,16 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
 
   const pageTitle = titleFor(location.pathname);
   const initials = initialsFrom(profile?.full_name);
+
+  if (loading || gateChecking) {
+    return <div style={{ minHeight: "100vh", background: "#F5F1E8" }} />;
+  }
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  if (!gateCleared) {
+    return <Navigate to="/invite" replace />;
+  }
 
   return (
     <div

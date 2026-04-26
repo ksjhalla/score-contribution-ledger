@@ -75,16 +75,16 @@ describe("dashboard sidebar identity", () => {
 
   afterEach(cleanup);
 
-  it("shows ?? initials while profile has not yet loaded", () => {
+  it("shows ?? initials while profile has not yet loaded", async () => {
     pendingFrom();
     renderShell();
-    expect(screen.getByText("??")).toBeInTheDocument();
+    expect(await screen.findByText("??")).toBeInTheDocument();
   });
 
-  it("shows Pending contributor-ID label while profile is in-flight", () => {
+  it("shows Pending contributor-ID label while profile is in-flight", async () => {
     pendingFrom();
     renderShell();
-    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(await screen.findByText("Pending")).toBeInTheDocument();
   });
 
   it("renders contributor ID in sidebar once profile resolves", async () => {
