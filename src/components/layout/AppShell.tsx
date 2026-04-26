@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { FileText, PenLine, FileStack, User } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
@@ -30,28 +30,29 @@ const initialsFrom = (name?: string | null) => {
 type Profile = { full_name: string | null; contributor_id: string | null };
 
 export const AppShell = ({ children }: { children: ReactNode }) => {
-  const { user, session, loading, signOut } = useAuth();
+  const authState = useAuthState();
   const navigate = useNavigate();
   const location = useLocation();
-  // undefined = still loading; null = loaded, no profile; Profile = loaded with data
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
   );
 
+  const userId = authState.status === "authenticated" ? authState.userId : null;
+
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setProfile(undefined);
       return;
     }
     supabase
       .from("profiles")
       .select("full_name, contributor_id")
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle()
       .then(({ data }) => setProfile((data as Profile) ?? null));
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -61,20 +62,21 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleSignOut = async () => {
-    await signOut();
+    await supabase.auth.signOut();
     navigate("/", { replace: true });
   };
 
   const pageTitle = titleFor(location.pathname);
   const initials = initialsFrom(profile?.full_name);
 
-  if (loading || profile === undefined) {
+  // Auth guard — three outcomes only
+  if (authState.status === "loading") {
     return <div style={{ minHeight: "100vh", background: "#F5F1E8" }} />;
   }
-  if (!session) {
+  if (authState.status === "unauthenticated") {
     return <Navigate to="/auth" replace />;
   }
-  if (profile === null) {
+  if (!authState.hasProfile) {
     return <Navigate to="/invite" replace />;
   }
 
@@ -231,7 +233,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           >
             {pageTitle}
           </h1>
-          {user && <NotificationBell userId={user.id} />}
+          <NotificationBell userId={authState.userId} />
         </header>
 
         {demoProfile && (

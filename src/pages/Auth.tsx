@@ -1,105 +1,109 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { SEO } from "@/components/SEO";
-import { lovable } from "@/integrations/lovable/index";
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { supabase } from "@/integrations/supabase/client"
+import { lovable } from "@/integrations/lovable/index"
+import { useAuthState } from "@/hooks/useAuthState"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
+import { SEO } from "@/components/SEO"
+
+const FONT_MONO = "'DM Mono', ui-monospace, monospace"
+const FONT_BODY = "'DM Sans', system-ui, sans-serif"
 
 const Auth = () => {
-  const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const navigate = useNavigate()
+  const authState = useAuthState()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [inviteCode, setInviteCode] = useState("")
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    if (loading) return;
-    if (user) {
-      navigate("/dashboard", { replace: true });
-      return;
-    }
-    // Fallback: check session directly
-    // in case useAuth hasn't hydrated yet
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        navigate("/dashboard", { replace: true });
+    if (authState.status === "loading") return
+    if (authState.status === "authenticated") {
+      if (authState.hasProfile) {
+        navigate("/dashboard", { replace: true })
+      } else {
+        navigate("/invite", { replace: true })
       }
-    });
-  }, [user, loading, navigate]);
+    }
+    // unauthenticated: stay, show the form
+  }, [authState, navigate])
+
+  if (authState.status === "loading") {
+    return <div style={{ minHeight: "100vh", background: "#F5F1E8" }} />
+  }
+  if (authState.status === "authenticated") {
+    return <div style={{ minHeight: "100vh", background: "#F5F1E8" }} />
+  }
+
+  const handleGoogle = async () => {
+    setBusy(true)
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin + "/auth",
+    })
+    if (result.error) {
+      setBusy(false)
+      toast.error(result.error.message ?? "Google sign-in failed.")
+    }
+  }
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setBusy(false)
+    if (error) toast.error(error.message)
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInviteError(null);
+    e.preventDefault()
+    setInviteError(null)
 
-    const code = inviteCode.trim();
+    const code = inviteCode.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "")
     if (!code) {
-      setInviteError("An invite code is required to create an account.");
-      return;
+      setInviteError("An invite code is required to create an account.")
+      return
     }
 
-    setBusy(true);
+    setBusy(true)
 
-    // 1) Validate the code against the email BEFORE creating the auth user
     const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
       p_code: code,
       p_email: email,
-    });
+    })
     if (vErr || !valid) {
-      setBusy(false);
-      setInviteError("This invite code is invalid, expired, or not for this email.");
-      return;
+      setBusy(false)
+      setInviteError("This invite code is invalid, expired, or not for this email.")
+      return
     }
 
-    // 2) Create the account
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
-    });
+      options: { emailRedirectTo: window.location.origin + "/auth" },
+    })
     if (error) {
-      setBusy(false);
-      toast.error(error.message);
-      return;
+      setBusy(false)
+      toast.error(error.message)
+      return
     }
 
-    // 3) Redeem the code (best-effort — failure here doesn't block the user)
     const {
       data: { user: newUser },
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
     if (newUser) {
-      await supabase.rpc("redeem_invite_code", { p_code: code, p_user_id: newUser.id });
+      await supabase.rpc("redeem_invite_code", { p_code: code, p_user_id: newUser.id })
     }
 
-    setBusy(false);
-    toast.success("Account created. You're signed in.");
-  };
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) toast.error(error.message);
-  };
-
-  const handleGoogle = async () => {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/auth/callback`,
-    });
-    if (result.error) {
-      setBusy(false);
-      toast.error(result.error.message ?? "Google sign-in failed.");
-    }
-  };
+    setBusy(false)
+    toast.success("Account created. You're signed in.")
+  }
 
   const GoogleButton = () => (
     <button
@@ -107,7 +111,7 @@ const Auth = () => {
       onClick={handleGoogle}
       disabled={busy}
       className="w-full flex items-center justify-center gap-2 rounded-[4px] bg-white px-4 py-2.5 text-sm font-medium text-[#1A1614] hover:bg-muted/40 transition-colors"
-      style={{ border: "1px solid rgba(26,22,14,0.15)", fontFamily: "'DM Sans', system-ui, sans-serif" }}
+      style={{ border: "1px solid rgba(26,22,14,0.15)", fontFamily: FONT_BODY }}
     >
       <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
         <path
@@ -129,14 +133,14 @@ const Auth = () => {
       </svg>
       Continue with Google
     </button>
-  );
+  )
 
   const Divider = () => (
     <div className="flex items-center gap-3 my-4">
       <div className="flex-1 h-px" style={{ background: "rgba(26,22,14,0.10)" }} />
       <span
         style={{
-          fontFamily: "'DM Mono', ui-monospace, monospace",
+          fontFamily: FONT_MONO,
           fontSize: 10,
           color: "#9A8F84",
           textTransform: "uppercase",
@@ -147,7 +151,7 @@ const Auth = () => {
       </span>
       <div className="flex-1 h-px" style={{ background: "rgba(26,22,14,0.10)" }} />
     </div>
-  );
+  )
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
@@ -159,7 +163,7 @@ const Auth = () => {
           top: 0,
           left: 0,
           padding: "12px 24px",
-          fontFamily: "'DM Mono', ui-monospace, monospace",
+          fontFamily: FONT_MONO,
           fontSize: 10,
           color: "#9A8F84",
           textDecoration: "none",
@@ -186,7 +190,14 @@ const Auth = () => {
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email-in">Email</Label>
-                  <Input id="email-in" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="email-in"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pw-in">Password</Label>
@@ -194,6 +205,7 @@ const Auth = () => {
                     id="pw-in"
                     type="password"
                     required
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -211,13 +223,20 @@ const Auth = () => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email-up">Email</Label>
-                  <Input id="email-up" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input
+                    id="email-up"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="invite-up"
                     style={{
-                      fontFamily: "'DM Mono', ui-monospace, monospace",
+                      fontFamily: FONT_MONO,
                       fontSize: 10,
                       color: "#9A8F84",
                       textTransform: "uppercase",
@@ -234,11 +253,11 @@ const Auth = () => {
                     placeholder="SCORE-XXXX-XXXX"
                     value={inviteCode}
                     onChange={(e) => {
-                      setInviteCode(e.target.value.toUpperCase());
-                      if (inviteError) setInviteError(null);
+                      setInviteCode(e.target.value.toUpperCase())
+                      if (inviteError) setInviteError(null)
                     }}
                     style={{
-                      fontFamily: "'DM Mono', ui-monospace, monospace",
+                      fontFamily: FONT_MONO,
                       fontSize: 13,
                       color: "#1A1614",
                       letterSpacing: "0.04em",
@@ -248,7 +267,7 @@ const Auth = () => {
                     <p
                       role="alert"
                       style={{
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontFamily: FONT_BODY,
                         fontSize: 11,
                         color: "#9A3020",
                         marginTop: 4,
@@ -265,6 +284,7 @@ const Auth = () => {
                     type="password"
                     required
                     minLength={6}
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -274,7 +294,7 @@ const Auth = () => {
                 </Button>
                 <p
                   style={{
-                    fontFamily: "'DM Mono', ui-monospace, monospace",
+                    fontFamily: FONT_MONO,
                     fontSize: 9,
                     color: "#9A8F84",
                     textAlign: "center",
@@ -292,7 +312,7 @@ const Auth = () => {
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Auth;
+export default Auth
