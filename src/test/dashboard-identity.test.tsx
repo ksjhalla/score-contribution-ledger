@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fromMock, channelSpy, useAuthMock } = vi.hoisted(() => ({
+const { fromMock, channelSpy, useAuthStateMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
   channelSpy: vi.fn(),
-  useAuthMock: vi.fn(),
+  useAuthStateMock: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -26,7 +26,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 vi.mock("react-helmet-async", () => ({ Helmet: () => null }));
 vi.mock("@/components/NotificationBell", () => ({ NotificationBell: () => null }));
 vi.mock("@/components/demo/DemoProfileCards", () => ({ DemoProfileCards: () => null }));
-vi.mock("@/hooks/useAuth", () => ({ useAuth: useAuthMock }));
+vi.mock("@/hooks/useAuthState", () => ({ useAuthState: useAuthStateMock }));
 vi.mock("@/contexts/DemoContext", () => ({
   useDemo: () => ({ activeDemo: "none", profile: null, setActiveDemo: vi.fn() }),
   DemoProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -59,11 +59,11 @@ describe("dashboard sidebar identity", () => {
     fromMock.mockReset();
     channelSpy.mockReset();
     channelSpy.mockReturnValue({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() });
-    useAuthMock.mockReturnValue({
-      user: SIGNED_IN_USER,
-      session: { user: SIGNED_IN_USER },
-      loading: false,
-      signOut: vi.fn(),
+    useAuthStateMock.mockReturnValue({
+      status: "authenticated",
+      userId: SIGNED_IN_USER.id,
+      email: SIGNED_IN_USER.email,
+      hasProfile: true,
     });
   });
 
