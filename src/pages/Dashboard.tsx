@@ -75,6 +75,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [me, setMe] = useState<Profile | null>(null);
+  const [meLoaded, setMeLoaded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [recent, setRecent] = useState<RecentExecution[]>([]);
   const [attachFor, setAttachFor] = useState<RecentExecution | null>(null);
@@ -165,7 +166,8 @@ const Dashboard = () => {
         .select("contributor_id, passport_visible, show_amounts, show_counterparties, show_contracts")
         .eq("id", user.id)
         .maybeSingle();
-      if (data) setMe(data as Profile);
+      setMe((data as Profile) ?? null);
+      setMeLoaded(true);
     })();
   }, [user, profile]);
 
@@ -247,6 +249,54 @@ const Dashboard = () => {
   }, [recent]);
 
   if (profile) return <DemoPassportView profile={profile} />;
+
+  if (meLoaded && (!me || !me.contributor_id)) {
+    return (
+      <div
+        className="px-4 sm:px-6 py-12"
+        style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}
+      >
+        <h2
+          style={{
+            fontFamily: "'Playfair Display',Georgia,serif",
+            fontSize: 24,
+            fontWeight: 600,
+            color: "#1A1614",
+            margin: "0 0 12px",
+          }}
+        >
+          Welcome to SCORE.
+        </h2>
+        <p
+          style={{
+            fontFamily: "'DM Sans',system-ui,sans-serif",
+            fontSize: 14,
+            color: "#5C5248",
+            lineHeight: 1.6,
+            margin: "0 0 24px",
+          }}
+        >
+          Complete your profile to get your Contributor ID and start logging contributions.
+        </p>
+        <Link
+          to="/invite"
+          style={{
+            display: "inline-block",
+            background: "#1A1614",
+            color: "#F5F1E8",
+            fontFamily: "'DM Sans',system-ui,sans-serif",
+            fontSize: 14,
+            fontWeight: 500,
+            padding: "10px 20px",
+            borderRadius: 4,
+            textDecoration: "none",
+          }}
+        >
+          Complete profile →
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto" }}>

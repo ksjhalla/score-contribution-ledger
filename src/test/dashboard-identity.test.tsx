@@ -63,7 +63,6 @@ describe("dashboard sidebar identity", () => {
       status: "authenticated",
       userId: SIGNED_IN_USER.id,
       email: SIGNED_IN_USER.email,
-      hasProfile: true,
     });
   });
 
