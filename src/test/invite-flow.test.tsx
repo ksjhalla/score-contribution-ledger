@@ -132,8 +132,10 @@ describe("/invite admin bypass", () => {
     vi.unstubAllEnvs();
   });
 
-  it("hides invite code field when VITE_ADMIN_EMAILS matches session email", async () => {
-    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+  it("hides invite code field when has_role(uid,'admin') returns true", async () => {
+    rpcMock.mockImplementation((fn: string) =>
+      fn === "has_role" ? Promise.resolve({ data: true, error: null }) : Promise.resolve({ data: null, error: null })
+    );
     getSessionMock.mockResolvedValue({
       data: {
         session: {
@@ -148,13 +150,15 @@ describe("/invite admin bypass", () => {
 
     renderInvite();
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(screen.queryByPlaceholderText(/SCORE-XXXX-XXXX/i)).not.toBeInTheDocument();
   });
 
-  it("shows invite code field for non-admin emails", async () => {
-    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+  it("shows invite code field for non-admin users", async () => {
+    rpcMock.mockImplementation((fn: string) =>
+      fn === "has_role" ? Promise.resolve({ data: false, error: null }) : Promise.resolve({ data: null, error: null })
+    );
     getSessionMock.mockResolvedValue({
       data: {
         session: {
@@ -169,13 +173,13 @@ describe("/invite admin bypass", () => {
 
     renderInvite();
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
   });
 
-  it("shows invite code field when no VITE_ADMIN_EMAILS is set", async () => {
-    vi.stubEnv("VITE_ADMIN_EMAILS", "");
+  it("shows invite code field when has_role RPC errors or returns null", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: null });
     getSessionMock.mockResolvedValue({
       data: {
         session: {
@@ -186,7 +190,7 @@ describe("/invite admin bypass", () => {
 
     renderInvite();
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
   });
