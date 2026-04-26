@@ -21,7 +21,18 @@ const Auth = () => {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate("/dashboard", { replace: true });
+    if (loading) return;
+    if (user) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    // Fallback: check session directly
+    // in case useAuth hasn't hydrated yet
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate("/dashboard", { replace: true });
+      }
+    });
   }, [user, loading, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
