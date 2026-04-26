@@ -7,6 +7,7 @@ export const PUBLIC_ROUTES = [
   "/",
   "/pricing",
   "/auth",
+  "/auth/callback",
   "/invite",
   "/attest", // prefix match (/attest/:token)
   "/passport", // prefix match (/passport/:contributorId)
