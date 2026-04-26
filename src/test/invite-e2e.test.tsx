@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 
 const { channelSpy, getSessionMock, rpcMock, fromMock } = vi.hoisted(() => ({
   channelSpy: vi.fn(),
@@ -84,8 +84,8 @@ const setupSupabaseMocks = () => {
       data: table === "profiles"
         ? {
             profile_completed: false,
+            contributor_id: null,
             full_name: "Kaushal Jhalla",
-            contributor_id: "SCR-KJ-2026-001",
           }
         : null,
       error: null,
@@ -104,6 +104,10 @@ describe("invite flow hardening", () => {
     rpcMock.mockReset();
     fromMock.mockReset();
     setupSupabaseMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("completes invite setup and shows contributor ID on dashboard", async () => {
@@ -133,6 +137,77 @@ describe("invite flow hardening", () => {
       );
     });
     await waitFor(() => expect(screen.getByText("SCR-KJ-2026-001")).toBeInTheDocument());
+  });
+
+  it("admin user: skips validate_invite_code and redeem_invite_code on submit", async () => {
+    vi.stubEnv("VITE_ADMIN_EMAILS", "kaushal@example.com");
+    const user = userEvent.setup();
+    rpcMock.mockImplementation((fn: string) => {
+      if (fn === "complete_profile_with_contributor_id")
+        return Promise.resolve({ data: null, error: null });
+      return Promise.resolve({ data: null, error: null });
+    });
+    fromMock.mockImplementation(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { profile_completed: false, contributor_id: null },
+        error: null,
+      }),
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/invite"]}>
+        <Routes>
+          <Route path="/invite" element={<Invite />} />
+          <Route path="/dashboard" element={<div data-testid="dashboard" />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Code field must be hidden for the admin
+    expect(screen.queryByPlaceholderText(/SCORE-XXXX-XXXX/i)).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/full name/i), "Admin User");
+    await user.type(screen.getByLabelText(/^role$/i), "Administrator");
+    await user.selectOptions(screen.getByLabelText(/sector/i), "Software");
+    await user.click(screen.getByRole("button", { name: /complete setup/i }));
+
+    await waitFor(() => screen.getByTestId("dashboard"));
+
+    const rpcCalls = rpcMock.mock.calls.map((c: unknown[]) => c[0]);
+    expect(rpcCalls).not.toContain("validate_invite_code");
+    expect(rpcCalls).not.toContain("redeem_invite_code");
+    expect(rpcCalls).toContain("complete_profile_with_contributor_id");
+
+    vi.unstubAllEnvs();
+  });
+
+  it("admin user: redirects to /dashboard on mount when contributor_id already set", async () => {
+    vi.stubEnv("VITE_ADMIN_EMAILS", "kaushal@example.com");
+    fromMock.mockImplementation(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { profile_completed: false, contributor_id: "SCR-KJ-2026-001" },
+        error: null,
+      }),
+    }));
+
+    render(
+      <MemoryRouter initialEntries={["/invite"]}>
+        <Routes>
+          <Route path="/invite" element={<Invite />} />
+          <Route path="/dashboard" element={<div data-testid="dashboard" />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => screen.getByTestId("dashboard"));
+    vi.unstubAllEnvs();
   });
 
   it("creates zero realtime channels while /invite has an active Google session", async () => {

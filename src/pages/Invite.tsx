@@ -129,11 +129,11 @@ const Invite = () => {
 
       const { data: prof } = await supabase
         .from("profiles")
-        .select("profile_completed")
+        .select("profile_completed, contributor_id")
         .eq("id", session.user.id)
         .maybeSingle();
       if (cancelled) return;
-      if (prof?.profile_completed) {
+      if (prof?.profile_completed || prof?.contributor_id) {
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -215,7 +215,7 @@ const Invite = () => {
     }
     if (!sector) { submittingRef.current = false; return; }
 
-    const normalizedCode = normalizeCode(code);
+    const normalizedCode = skipInviteCode ? "" : normalizeCode(code);
     if (!skipInviteCode && !INVITE_CODE_RE.test(normalizedCode)) {
       setCodeValid(false);
       setCodeErr("This code is invalid, expired, or not for this email.");
@@ -237,7 +237,7 @@ const Invite = () => {
         return;
       }
 
-      // 1. Validate the code — skipped entirely for admin bypass.
+      // 1. Validate the code (skipped for admin users).
       if (!skipInviteCode) {
         const { data: valid, error: vErr } = await supabase.rpc("validate_invite_code", {
           p_code: normalizedCode,
@@ -261,18 +261,19 @@ const Invite = () => {
         p_sector: sector,
       });
       if (pErr) {
-        // Profile already exists (duplicate submit race) — treat as success.
+        // Profile already exists — treat as success regardless of how it got there.
         if ((pErr as { code?: string }).code === "23505") {
           navigate("/dashboard", { replace: true });
           return;
         }
+        console.error("[invite] complete_profile_with_contributor_id error:", pErr);
         setFormErr("Something went wrong. Try again.");
         setStatusMessage("");
         setErrorMessage("Error: Something went wrong. Please try again.");
         return;
       }
 
-      // 3. Redeem the code — skipped for admin bypass (no code was entered).
+      // 3. Redeem the code (skipped for admin users).
       if (!skipInviteCode) {
         const { error: rErr } = await supabase.rpc("redeem_invite_code", {
           p_code: normalizedCode,

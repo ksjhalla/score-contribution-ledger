@@ -196,6 +196,38 @@ describe("/invite admin bypass", () => {
 
     expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
   });
+
+  it("contributor_id fallback: gate check selects profile_completed and contributor_id", async () => {
+    // Verify the select query now includes contributor_id so the fallback check
+    // can fire. We capture the select() call args on the mock chain.
+    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+    const selectSpy = vi.fn().mockReturnValue({
+      eq: () => ({
+        maybeSingle: () =>
+          Promise.resolve({
+            data: { profile_completed: false, contributor_id: null },
+            error: null,
+          }),
+      }),
+    });
+    fromMock.mockReturnValue({ select: selectSpy });
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: "admin-id", email: "admin@example.com", user_metadata: {} },
+        },
+      },
+    });
+
+    renderInvite();
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+
+    // The mount-time select must request both fields for the fallback to work.
+    expect(selectSpy).toHaveBeenCalledWith(
+      expect.stringContaining("contributor_id"),
+    );
+  });
 });
 
 describe("/invite aria-live regions", () => {
