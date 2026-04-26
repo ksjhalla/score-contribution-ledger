@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -112,6 +112,83 @@ describe("/invite page", () => {
 
   it("PUBLIC_ROUTES includes /invite", () => {
     expect(PUBLIC_ROUTES).toContain("/invite");
+  });
+});
+
+describe("/invite admin bypass", () => {
+  beforeEach(() => {
+    channelSpy.mockReset();
+    onAuthStateChangeSpy.mockClear();
+    getSessionMock.mockReset();
+    rpcMock.mockReset();
+    fromMock.mockReturnValue({
+      select: () => ({
+        eq: () => ({ maybeSingle: () => Promise.resolve({ data: { profile_completed: false }, error: null }) }),
+      }),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("hides invite code field when VITE_ADMIN_EMAILS matches session email", async () => {
+    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: {
+            id: "admin-id",
+            email: "admin@example.com",
+            user_metadata: { full_name: "Admin User" },
+          },
+        },
+      },
+    });
+
+    renderInvite();
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(screen.queryByPlaceholderText(/SCORE-XXXX-XXXX/i)).not.toBeInTheDocument();
+  });
+
+  it("shows invite code field for non-admin emails", async () => {
+    vi.stubEnv("VITE_ADMIN_EMAILS", "admin@example.com");
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: {
+            id: "user-id",
+            email: "regular@example.com",
+            user_metadata: {},
+          },
+        },
+      },
+    });
+
+    renderInvite();
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
+  });
+
+  it("shows invite code field when no VITE_ADMIN_EMAILS is set", async () => {
+    vi.stubEnv("VITE_ADMIN_EMAILS", "");
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: "u1", email: "anyone@example.com", user_metadata: {} },
+        },
+      },
+    });
+
+    renderInvite();
+    await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(screen.getByPlaceholderText(/SCORE-XXXX-XXXX/i)).toBeInTheDocument();
   });
 });
 

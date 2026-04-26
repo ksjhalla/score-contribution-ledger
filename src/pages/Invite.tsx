@@ -56,6 +56,8 @@ const Invite = () => {
 
   // Form state — visible immediately, no gating, no pre-render loading.
   const [code, setCode] = useState("");
+  // Admin users (listed in VITE_ADMIN_EMAILS) skip invite code entirely.
+  const [skipInviteCode, setSkipInviteCode] = useState(false);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [codeChecking, setCodeChecking] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -77,6 +79,7 @@ const Invite = () => {
   // One-shot session check on mount. No realtime, no auth subscriptions,
   // no pre-render loading state.
   // If signed in AND profile is complete → /dashboard.
+  // If signed in AND admin email → skip invite code (or go to /dashboard if profile exists).
   // If signed in (any state) → pre-fill name + email from OAuth metadata.
   // If signed out → render form as-is (user came from OAuth without profile,
   // or arrived directly).
@@ -85,7 +88,8 @@ const Invite = () => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session?.user) return;
-      setUserEmail(session.user.email ?? null);
+      const email = session.user.email ?? "";
+      setUserEmail(email);
       const meta = session.user.user_metadata as Record<string, unknown> | undefined;
       const oauthName =
         (typeof meta?.full_name === "string" && meta.full_name) ||
@@ -98,8 +102,19 @@ const Invite = () => {
         .select("profile_completed")
         .eq("id", session.user.id)
         .maybeSingle();
-      if (!cancelled && prof?.profile_completed) {
+      if (cancelled) return;
+      if (prof?.profile_completed) {
         navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Admin bypass: skip invite code validation for whitelisted emails.
+      const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
+        .split(",")
+        .map((e: string) => e.trim().toLowerCase())
+        .filter(Boolean);
+      if (adminEmails.includes(email.toLowerCase())) {
+        setSkipInviteCode(true);
       }
     })();
     return () => { cancelled = true; };
@@ -111,7 +126,7 @@ const Invite = () => {
 
   const fieldErrors = useMemo(() => {
     const e: { code?: string; fullName?: string; role?: string; sector?: string } = {};
-    if (!code.trim()) e.code = "Please enter your invite code.";
+    if (!skipInviteCode && !code.trim()) e.code = "Please enter your invite code.";
     const name = fullName.trim();
     if (!name) e.fullName = "Full name is required.";
     else if (!/\s/.test(name)) e.fullName = "Please enter your first and last name.";
@@ -272,7 +287,8 @@ const Invite = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            {/* Section 1 — Invite code */}
+            {/* Section 1 — Invite code (hidden for admin users) */}
+            {!skipInviteCode && (
             <div className="space-y-2">
               <Label htmlFor="invite-code" style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Invite code
@@ -316,6 +332,7 @@ const Invite = () => {
                 <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#9A3020" }}>{fieldErrors.code}</p>
               )}
             </div>
+            )}
 
             {/* Section 2 — Profile */}
             <div className="space-y-2">

@@ -38,6 +38,10 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false
   );
+  // True only after the invite gate confirms the user has a redeemed invite.
+  // Keeps NotificationBell from opening a realtime channel before we know
+  // whether we're about to redirect this user to /invite.
+  const [gateCleared, setGateCleared] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -50,6 +54,8 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       const { data } = await supabase.rpc("current_user_has_redeemed_invite");
       if (data === false) {
         navigate("/invite", { replace: true });
+      } else {
+        setGateCleared(true);
       }
     })();
   }, [user, loading, navigate]);
@@ -203,7 +209,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           >
             {pageTitle}
           </h1>
-          {user && <NotificationBell userId={user.id} />}
+          {user && gateCleared && <NotificationBell userId={user.id} />}
         </header>
 
         {demoProfile && (
