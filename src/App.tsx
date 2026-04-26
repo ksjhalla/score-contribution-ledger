@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Contracts from "./pages/Contracts.tsx";
 import Account from "./pages/Account.tsx";
 import Pricing from "./pages/Pricing.tsx";
+import EnvHelp from "./pages/EnvHelp.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { DemoProvider } from "./contexts/DemoContext";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/log-work" element={<AppShell><LogWork /></AppShell>} />
             <Route path="/contracts" element={<AppShell><Contracts /></AppShell>} />
             <Route path="/account" element={<AppShell><Account /></AppShell>} />
+            <Route path="/help/env" element={<AppShell><EnvHelp /></AppShell>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
