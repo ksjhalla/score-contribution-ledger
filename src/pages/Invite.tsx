@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SEO } from "@/components/SEO";
 import { Check, Loader2 } from "lucide-react";
+import { getAdminEmails, isAdminByEmail } from "@/lib/adminBypass";
 
 const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_BODY = "'DM Sans', system-ui, sans-serif";
@@ -49,25 +50,6 @@ const computeInitials = (name: string): string => {
   const first = parts[0][0] ?? "";
   const last = parts.length > 1 ? parts[parts.length - 1][0] ?? "" : "";
   return `${first}${last}`.toUpperCase() || "XX";
-};
-
-/**
- * Admin bypass email allowlist.
- * Primary: user_roles table via has_role RPC. Fallback: hardcoded emails +
- * optional VITE_ADMIN_EMAILS (comma-separated). All comparisons lowercased.
- */
-const HARDCODED_ADMIN_EMAILS = ["ksjhalla@gmail.com"];
-
-const getAdminEmails = (): string[] => {
-  const fromEnv = (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? "";
-  const envList = fromEnv.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-  const all = [...HARDCODED_ADMIN_EMAILS.map((e) => e.toLowerCase().trim()), ...envList];
-  return Array.from(new Set(all));
-};
-
-const isAdminByEmail = (email: string | null | undefined): boolean => {
-  if (!email) return false;
-  return getAdminEmails().includes(email.trim().toLowerCase());
 };
 
 const Invite = () => {
