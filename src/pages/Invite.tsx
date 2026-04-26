@@ -58,9 +58,11 @@ const Invite = () => {
   const [code, setCode] = useState("");
   // Admin users (has_role(uid,'admin') in user_roles) skip invite code entirely.
   const [skipInviteCode, setSkipInviteCode] = useState(false);
-  // Whether we've finished checking admin status. Until true, we hide the
-  // invite-code field to prevent a flash of the field for admins.
-  const [adminResolved, setAdminResolved] = useState(false);
+  // Whether we've finished checking admin status for the current session.
+  // Default true (no session = no admin check needed = render field
+  // immediately). Set to false only while we're awaiting the has_role RPC
+  // for a signed-in user, to prevent a flash of the field for admins.
+  const [adminResolved, setAdminResolved] = useState(true);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [codeChecking, setCodeChecking] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -91,6 +93,9 @@ const Invite = () => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session?.user) return;
+      // We have a session — must resolve admin status before showing the
+      // invite-code field, to avoid a flash for admin users.
+      setAdminResolved(false);
       const email = session.user.email ?? "";
       setUserEmail(email);
       const meta = session.user.user_metadata as Record<string, unknown> | undefined;
