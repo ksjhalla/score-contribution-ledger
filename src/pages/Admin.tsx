@@ -11,6 +11,8 @@ import { toast } from "sonner";
 type Stats = { total_contracts: number; total_executions: number; total_settled_value: number; total_users: number; active_users_30d: number };
 type UserRow = { id: string; contributor_id: string | null; full_name: string | null; sector: string | null; created_at: string; anonymised: boolean; deleted_at: string | null; contract_count: number; execution_count: number; last_active: string | null };
 type InviteRow = { id: string; code: string; email: string | null; note: string | null; max_uses: number; use_count: number; expires_at: string | null; used_at: string | null; created_at: string };
+type SignerRoleValue = "viewer" | "reviewer" | "approver";
+type SignerRoleRow = { id: string; full_name: string | null; contributor_id: string | null; signer_role: SignerRoleValue; organisation: string | null; professional_role: string | null; created_at: string };
 
 const randomSegment = (len = 4) => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -37,6 +39,15 @@ const Admin = () => {
   const [lastCode, setLastCode] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [signerRoles, setSignerRoles] = useState<SignerRoleRow[]>([]);
+  const [signerSearch, setSignerSearch] = useState("");
+  const [signerSaving, setSignerSaving] = useState<string | null>(null);
+
+  const loadSignerRoles = async () => {
+    const { data, error } = await supabase.rpc("admin_list_signer_roles");
+    if (error) { toast.error(error.message); return; }
+    setSignerRoles((data as unknown as SignerRoleRow[]) ?? []);
+  };
 
   const loadInvites = async () => {
     const { data } = await supabase.from("invite_codes").select("*").order("created_at", { ascending: false });
@@ -55,6 +66,7 @@ const Admin = () => {
         supabase.rpc("get_admin_stats"),
         supabase.rpc("get_admin_user_list"),
         loadInvites(),
+        loadSignerRoles(),
       ]);
       setStats(s.data as unknown as Stats);
       setUsers((u.data as unknown as UserRow[]) ?? []);
@@ -129,6 +141,25 @@ const Admin = () => {
     setRevokeId(null);
     await loadInvites();
   };
+
+  const updateSignerRole = async (userId: string, role: SignerRoleValue) => {
+    setSignerSaving(userId);
+    const { error } = await supabase.rpc("admin_set_signer_role", { p_user_id: userId, p_role: role });
+    setSignerSaving(null);
+    if (error) { toast.error(error.message); return; }
+    setSignerRoles((rows) => rows.map((r) => (r.id === userId ? { ...r, signer_role: role } : r)));
+    toast.success("Signer role updated.");
+  };
+
+  const filteredSignerRoles = signerRoles.filter((r) => {
+    if (!signerSearch.trim()) return true;
+    const q = signerSearch.trim().toLowerCase();
+    return (
+      (r.full_name ?? "").toLowerCase().includes(q) ||
+      (r.contributor_id ?? "").toLowerCase().includes(q) ||
+      (r.organisation ?? "").toLowerCase().includes(q)
+    );
+  });
 
   const summary = (() => {
     const total = invites.length;
@@ -343,6 +374,75 @@ const Admin = () => {
                       <td className="text-right">{u.last_active ? new Date(u.last_active).toLocaleDateString() : "—"}</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Signer roles</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="text-[11px] text-muted-foreground">
+              Set each contributor's evidence sign-off level. Server-enforced — viewers cannot sign off even if they switch the UI role.
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={signerSearch}
+                onChange={(e) => setSignerSearch(e.target.value)}
+                placeholder="Search by name, contributor ID, or organisation"
+                className="h-9 text-xs max-w-sm"
+              />
+              <div className="font-mono text-[10px] text-muted-foreground">
+                {filteredSignerRoles.length} of {signerRoles.length}
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="text-left py-2">Contributor</th>
+                    <th className="text-left">Organisation</th>
+                    <th className="text-left">Current role</th>
+                    <th className="text-right">Set role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSignerRoles.length === 0 && (
+                    <tr><td colSpan={4} className="py-3 text-muted-foreground text-center">No contributors match.</td></tr>
+                  )}
+                  {filteredSignerRoles.map((r) => {
+                    const saving = signerSaving === r.id;
+                    return (
+                      <tr key={r.id} className="border-b">
+                        <td className="py-2">
+                          <div className="font-medium">{r.full_name ?? "—"}</div>
+                          <div className="font-mono text-[10px] text-muted-foreground">{r.contributor_id ?? "—"}</div>
+                        </td>
+                        <td className="font-mono text-[11px]">{r.organisation ?? "—"}</td>
+                        <td className="font-mono text-[11px] capitalize">{r.signer_role}</td>
+                        <td className="text-right">
+                          <div className="inline-flex items-center gap-1">
+                            {(["viewer", "reviewer", "approver"] as SignerRoleValue[]).map((role) => {
+                              const active = r.signer_role === role;
+                              return (
+                                <Button
+                                  key={role}
+                                  variant={active ? "default" : "outline"}
+                                  size="sm"
+                                  className="h-7 px-2 text-[11px] capitalize"
+                                  disabled={active || saving}
+                                  onClick={() => updateSignerRole(r.id, role)}
+                                >
+                                  {role}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
