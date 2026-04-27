@@ -42,7 +42,24 @@ const fullNumber = (n: number, c: string) => {
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
   if (!contracts.length) return null;
-  const [sortMode, setSortMode] = useState<"original" | "value">("original");
+  const SORT_STORAGE_KEY = "contractSparkBars.sortMode";
+  const [sortMode, setSortMode] = useState<"original" | "value">(() => {
+    if (typeof window === "undefined") return "original";
+    try {
+      const v = window.localStorage.getItem(SORT_STORAGE_KEY);
+      return v === "value" || v === "original" ? v : "original";
+    } catch {
+      return "original";
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(SORT_STORAGE_KEY, sortMode);
+    } catch {
+      /* storage unavailable — ignore */
+    }
+  }, [sortMode]);
   const [activeStatuses, setActiveStatuses] = useState<Set<SparkContract["status"]>>(
     () => new Set(["settled", "pending", "watching", "attributed"]),
   );
