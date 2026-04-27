@@ -25,7 +25,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
     key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead,
     milestones, bio, badges, valueStreams, evidenceMappings, siteUptime, exampleCards,
   } = profile;
-  const isPpp = key === "ppp";
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
@@ -317,77 +316,63 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         </div>
       </div>
 
-      {isPpp ? (
-        ((evidenceMappings && evidenceMappings.length > 0) ||
-         (siteUptime && siteUptime.length > 0) ||
-         (exampleCards && exampleCards.length > 0)) && (
-          <details
+      {((evidenceMappings && evidenceMappings.length > 0) ||
+        (siteUptime && siteUptime.length > 0) ||
+        (exampleCards && exampleCards.length > 0)) && (
+        <details
+          style={{
+            marginTop: 8,
+            border: "1px solid rgba(26,22,14,0.10)",
+            borderRadius: 6,
+            background: "#FDFAF4",
+          }}
+        >
+          <summary
             style={{
-              marginTop: 8,
-              border: "1px solid rgba(26,22,14,0.10)",
-              borderRadius: 6,
-              background: "#FDFAF4",
+              cursor: "pointer",
+              listStyle: "none",
+              padding: "14px 16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              userSelect: "none",
             }}
           >
-            <summary
+            <div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>
+                Audit & evidence details
+              </div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
+                Audit trail, evidence → ledger, reconciliation, attached evidence, export report
+              </div>
+            </div>
+            <span
               style={{
-                cursor: "pointer",
-                listStyle: "none",
-                padding: "14px 16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                userSelect: "none",
+                fontFamily: FONT_MONO,
+                fontSize: 10,
+                color: accent,
+                background: "rgba(0,0,0,0.03)",
+                padding: "4px 8px",
+                borderRadius: 3,
+                whiteSpace: "nowrap",
               }}
             >
-              <div>
-                <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>
-                  View details
-                </div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
-                  Audit trail, site uptime, evidence logs
-                </div>
-              </div>
-              <span
-                style={{
-                  fontFamily: FONT_MONO,
-                  fontSize: 10,
-                  color: accent,
-                  background: "rgba(0,0,0,0.03)",
-                  padding: "4px 8px",
-                  borderRadius: 3,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Expand ↓
-              </span>
-            </summary>
-            <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
-              {evidenceMappings && evidenceMappings.length > 0 && (
-                <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
-              )}
-              {siteUptime && siteUptime.length > 0 && (
-                <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
-              )}
-              {exampleCards && exampleCards.length > 0 && (
-                <MiniGridExampleCards cards={exampleCards} accent={accent} />
-              )}
-            </div>
-          </details>
-        )
-      ) : (
-        <>
-          {evidenceMappings && evidenceMappings.length > 0 && (
-            <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
-          )}
-          {siteUptime && siteUptime.length > 0 && (
-            <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
-          )}
-          {exampleCards && exampleCards.length > 0 && (
-            <MiniGridExampleCards cards={exampleCards} accent={accent} />
-          )}
-        </>
+              Expand ↓
+            </span>
+          </summary>
+          <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
+            {evidenceMappings && evidenceMappings.length > 0 && (
+              <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
+            )}
+            {siteUptime && siteUptime.length > 0 && (
+              <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
+            )}
+            {exampleCards && exampleCards.length > 0 && (
+              <MiniGridExampleCards cards={exampleCards} accent={accent} />
+            )}
+          </div>
+        </details>
       )}
     </div>
   );

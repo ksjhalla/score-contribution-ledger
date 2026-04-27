@@ -566,15 +566,57 @@ const Dashboard = () => {
             </div>
             <ValueMixDonut settled={chart.settled} pending={chart.pending} future={0} currency={chart.currency} label="Attributed value" />
           </div>
-          {chart.bars.length > 0 && (
-            <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>By contract</span>
+          <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>By contract</span>
+              {chart.bars.length > 0 && (
                 <span style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#2A6A45", background: "rgba(42,106,69,0.08)", padding: "2px 6px", borderRadius: 3 }}>{chart.bars.length} tracked</span>
-              </div>
-              <ContractSparkBars contracts={chart.bars} currency={chart.currency} />
+              )}
             </div>
-          )}
+            {chart.bars.length > 0 ? (
+              <ContractSparkBars contracts={chart.bars} currency={chart.currency} />
+            ) : (
+              <div style={{ padding: "8px 4px 4px" }}>
+                <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 600, color: "#1A1614", marginBottom: 6 }}>
+                  No contracts yet
+                </div>
+                <p style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#5C5248", lineHeight: 1.6, margin: "0 0 12px" }}>
+                  A <strong>contract</strong> is the link between work you log and the value it earns — a stake, a payout rule, or an attribution claim. Once you log work tied to one, bars show up here.
+                </p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <Link
+                    to="/log-work"
+                    style={{
+                      fontFamily: "'DM Mono',ui-monospace,monospace",
+                      fontSize: 10,
+                      color: "#FDFAF4",
+                      background: "#1A1614",
+                      padding: "6px 12px",
+                      borderRadius: 4,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Log first work item →
+                  </Link>
+                  <Link
+                    to="/log-work"
+                    style={{
+                      fontFamily: "'DM Mono',ui-monospace,monospace",
+                      fontSize: 10,
+                      color: "#1A1614",
+                      background: "transparent",
+                      border: "1px solid rgba(26,22,14,0.20)",
+                      padding: "6px 12px",
+                      borderRadius: 4,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Import contract
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
