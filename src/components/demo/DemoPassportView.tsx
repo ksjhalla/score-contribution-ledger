@@ -316,9 +316,17 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         </div>
       </div>
 
-      {((evidenceMappings && evidenceMappings.length > 0) ||
-        (siteUptime && siteUptime.length > 0) ||
-        (exampleCards && exampleCards.length > 0)) && (
+      {siteUptime && siteUptime.length > 0 && (
+        <div style={{ marginTop: 8, marginBottom: 20 }}>
+          <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
+        </div>
+      )}
+      {exampleCards && exampleCards.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <MiniGridExampleCards cards={exampleCards} accent={accent} />
+        </div>
+      )}
+      {evidenceMappings && evidenceMappings.length > 0 && (
         <details
           style={{
             marginTop: 8,
@@ -362,15 +370,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             </span>
           </summary>
           <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
-            {evidenceMappings && evidenceMappings.length > 0 && (
-              <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
-            )}
-            {siteUptime && siteUptime.length > 0 && (
-              <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
-            )}
-            {exampleCards && exampleCards.length > 0 && (
-              <MiniGridExampleCards cards={exampleCards} accent={accent} />
-            )}
+            <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
           </div>
         </details>
       )}
