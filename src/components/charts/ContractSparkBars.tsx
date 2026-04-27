@@ -42,7 +42,24 @@ const fullNumber = (n: number, c: string) => {
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
   if (!contracts.length) return null;
-  const [sortMode, setSortMode] = useState<"original" | "value">("original");
+  const SORT_STORAGE_KEY = "contractSparkBars.sortMode";
+  const [sortMode, setSortMode] = useState<"original" | "value">(() => {
+    if (typeof window === "undefined") return "original";
+    try {
+      const v = window.localStorage.getItem(SORT_STORAGE_KEY);
+      return v === "value" || v === "original" ? v : "original";
+    } catch {
+      return "original";
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(SORT_STORAGE_KEY, sortMode);
+    } catch {
+      /* storage unavailable — ignore */
+    }
+  }, [sortMode]);
   const [activeStatuses, setActiveStatuses] = useState<Set<SparkContract["status"]>>(
     () => new Set(["settled", "pending", "watching", "attributed"]),
   );
@@ -88,6 +105,14 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
     // Floor so even tiny values keep a visible sliver.
     return Math.max(4, Math.round(ratio * 100));
   };
+  // Raw scaled ratio (no floor) — for the popover "relative score" readout.
+  const relativeScore = (v: number) => {
+    if (max <= 0) return 0;
+    return Math.round(Math.sqrt(Math.max(0, v) / max) * 100);
+  };
+  const totalShown = ordered.reduce((sum, c) => sum + Math.max(0, c.value), 0);
+  const minShown = ordered.length ? Math.min(...ordered.map((c) => c.value)) : 0;
+  const maxShown = ordered.length ? Math.max(...ordered.map((c) => c.value)) : 0;
   const rowGap = narrow ? 14 : 10;
   const labelSize = narrow ? 12 : 11;
   const valueSize = narrow ? 12 : 11;
@@ -191,6 +216,41 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
       >
         Bar length = relative {currency} value (√-scaled). Tap a row for details.
       </div>
+      {ordered.length > 0 ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            gap: 8,
+            flexWrap: "wrap",
+            padding: "6px 8px",
+            borderRadius: 6,
+            background: "rgba(26,22,14,0.04)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: FONT_MONO,
+              fontSize: metaSize,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              color: "#1A1614",
+            }}
+          >
+            {ordered.length} of {contracts.length} contracts
+          </span>
+          <span
+            style={{
+              fontFamily: FONT_MONO,
+              fontSize: metaSize,
+              color: "#1A1614",
+            }}
+          >
+            {fmt(minShown, currency)}–{fmt(maxShown, currency)} · total {fmt(totalShown, currency)}
+          </span>
+        </div>
+      ) : null}
       {ordered.length === 0 ? (
         <div
           style={{
@@ -329,6 +389,14 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614" }}>
                     {fullNumber(c.value, currency)}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
+                    Relative score
+                  </span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614" }}>
+                    {relativeScore(c.value)}% of max (√-scaled)
                   </span>
                 </div>
                 {c.evidence_count ? (
