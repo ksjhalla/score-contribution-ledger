@@ -7,6 +7,9 @@ import { QuickReadPanel } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc } from "@/components/charts/MilestoneArc";
 import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
 import { EvidenceLedgerWorkflow } from "@/components/demo/EvidenceLedgerWorkflow";
+import { Phase2Tracker } from "@/components/demo/Phase2Tracker";
+import { SiteUptimeBreakdown } from "@/components/demo/SiteUptimeBreakdown";
+import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -19,7 +22,10 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
-  const { key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones, bio, badges, valueStreams, evidenceMappings } = profile;
+  const {
+    key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead,
+    milestones, bio, badges, valueStreams, evidenceMappings, phase2Tracker, siteUptime, exampleCards,
+  } = profile;
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div style={{ marginBottom: 20 }}>
@@ -313,6 +319,18 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
 
       {evidenceMappings && evidenceMappings.length > 0 && (
         <EvidenceLedgerWorkflow mappings={evidenceMappings} accent={accent} />
+      )}
+
+      {siteUptime && siteUptime.length > 0 && (
+        <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
+      )}
+
+      {phase2Tracker && phase2Tracker.length > 0 && (
+        <Phase2Tracker milestones={phase2Tracker} accent={accent} />
+      )}
+
+      {exampleCards && exampleCards.length > 0 && (
+        <MiniGridExampleCards cards={exampleCards} accent={accent} />
       )}
     </div>
   );
