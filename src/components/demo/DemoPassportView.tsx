@@ -6,6 +6,7 @@ import { ContractSparkBars } from "@/components/charts/ContractSparkBars";
 import { QuickReadPanel } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc } from "@/components/charts/MilestoneArc";
 import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
+import { EvidenceLedgerWorkflow } from "@/components/demo/EvidenceLedgerWorkflow";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -18,7 +19,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
-  const { key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones, bio, badges, valueStreams } = profile;
+  const { key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead, milestones, bio, badges, valueStreams, evidenceMappings } = profile;
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div style={{ marginBottom: 20 }}>
@@ -309,6 +310,10 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           <MilestoneArc milestones={milestones} />
         </div>
       </div>
+
+      {evidenceMappings && evidenceMappings.length > 0 && (
+        <EvidenceLedgerWorkflow mappings={evidenceMappings} accent={accent} />
+      )}
     </div>
   );
 };
