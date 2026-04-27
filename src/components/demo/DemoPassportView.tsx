@@ -236,7 +236,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         {valueStreams ? "Value streams" : "Contracts"}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28, alignItems: "start" }}>
+      <div className={isPpp ? "grid grid-cols-1 gap-3.5" : "grid grid-cols-1 md:grid-cols-2 gap-3.5"} style={{ marginBottom: 28, alignItems: "start" }}>
       {valueStreams ? (
         <div
           style={{
@@ -249,7 +249,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             gap: 14,
           }}
         >
-          {valueStreams.map((s) => {
+          {(visibleValueStreams ?? valueStreams).map((s) => {
             const Icon =
               s.icon === "droplets" ? Droplets :
               s.icon === "leaf" ? Leaf :
@@ -316,26 +316,156 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         ))}
       </div>
       )}
+        {!isPpp && (
         <div>
           <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Milestone arc</div>
           <MilestoneArc milestones={milestones} />
         </div>
+        )}
       </div>
 
-      {evidenceMappings && evidenceMappings.length > 0 && (
-        <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
-      )}
+      {isPpp ? (
+        <details
+          style={{
+            marginTop: 8,
+            border: "1px solid rgba(26,22,14,0.10)",
+            borderRadius: 6,
+            background: "#FDFAF4",
+          }}
+        >
+          <summary
+            style={{
+              cursor: "pointer",
+              listStyle: "none",
+              padding: "14px 16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              userSelect: "none",
+            }}
+          >
+            <div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>
+                View details
+              </div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
+                Value mix, contract breakdown, audit trail, site uptime, Phase 2 tracking, evidence logs
+              </div>
+            </div>
+            <span
+              style={{
+                fontFamily: FONT_MONO,
+                fontSize: 10,
+                color: accent,
+                background: "rgba(0,0,0,0.03)",
+                padding: "4px 8px",
+                borderRadius: 3,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Expand ↓
+            </span>
+          </summary>
+          <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FFFEFA", padding: "14px 16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>Value mix</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A5C8A", background: "rgba(42,92,138,0.08)", padding: "2px 6px", borderRadius: 3 }}>At a glance</span>
+                </div>
+                <ValueMixDonut {...valueMix} />
+              </div>
+              <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FFFEFA", padding: "14px 16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>By contract</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A6A45", background: "rgba(42,106,69,0.08)", padding: "2px 6px", borderRadius: 3 }}>{bars.length} tracked</span>
+                </div>
+                <ContractSparkBars contracts={bars} currency={valueMix.currency} />
+              </div>
+            </div>
 
-      {siteUptime && siteUptime.length > 0 && (
-        <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
-      )}
+            <QuickReadPanel rows={quickRead} />
 
-      {phase2Tracker && phase2Tracker.length > 0 && (
-        <Phase2Tracker milestones={phase2Tracker} accent={accent} />
-      )}
+            {hiddenValueStreams && hiddenValueStreams.length > 0 && (
+              <div
+                style={{
+                  border: "1px solid rgba(26,22,14,0.10)",
+                  borderRadius: 6,
+                  background: "#FFFEFA",
+                  padding: 16,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14,
+                }}
+              >
+                <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>Additional value streams</div>
+                {hiddenValueStreams.map((s) => {
+                  const Icon =
+                    s.icon === "droplets" ? Droplets :
+                    s.icon === "leaf" ? Leaf :
+                    s.icon === "code" ? Code2 :
+                    s.icon === "git-fork" ? GitFork :
+                    s.icon === "brain" ? Brain :
+                    Network;
+                  return (
+                    <div key={s.name} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <Icon size={18} color={s.iconColor} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                          <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 600, color: "#1A1614" }}>{s.name}</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#1A1614", whiteSpace: "nowrap" }}>{s.value}</div>
+                        </div>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 4, lineHeight: 1.6 }}>
+                          {s.description}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-      {exampleCards && exampleCards.length > 0 && (
-        <MiniGridExampleCards cards={exampleCards} accent={accent} />
+            <div>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Milestone arc</div>
+              <MilestoneArc milestones={milestones} />
+            </div>
+
+            {evidenceMappings && evidenceMappings.length > 0 && (
+              <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
+            )}
+
+            {siteUptime && siteUptime.length > 0 && (
+              <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
+            )}
+
+            {phase2Tracker && phase2Tracker.length > 0 && (
+              <Phase2Tracker milestones={phase2Tracker} accent={accent} />
+            )}
+
+            {exampleCards && exampleCards.length > 0 && (
+              <MiniGridExampleCards cards={exampleCards} accent={accent} />
+            )}
+          </div>
+        </details>
+      ) : (
+        <>
+          {evidenceMappings && evidenceMappings.length > 0 && (
+            <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
+          )}
+
+          {siteUptime && siteUptime.length > 0 && (
+            <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
+          )}
+
+          {phase2Tracker && phase2Tracker.length > 0 && (
+            <Phase2Tracker milestones={phase2Tracker} accent={accent} />
+          )}
+
+          {exampleCards && exampleCards.length > 0 && (
+            <MiniGridExampleCards cards={exampleCards} accent={accent} />
+          )}
+        </>
       )}
     </div>
   );
