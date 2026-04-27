@@ -87,10 +87,10 @@ const CARDS: CardSpec[] = [
   },
   {
     key: "ppp",
-    initials: "LD",
-    name: "Lerato Dube",
-    role: "Acme Infra · N4 Toll Road",
-    tag: "PPP · Infra",
+    initials: "KA",
+    name: "Kwame Asante",
+    role: "Sunlite Power · Volta Mini-Grid",
+    tag: "PPP · Energy",
     accent: "#7A5C2A",
     accentSoft: "rgba(122,92,42,0.10)",
     accentBorder: "rgba(122,92,42,0.25)",
@@ -98,8 +98,8 @@ const CARDS: CardSpec[] = [
     avatarBg: "rgba(122,92,42,0.12)",
     avatarBorder: "rgba(122,92,42,0.3)",
     stats: [
-      { value: "$18.4M", label: "paid", settled: true },
-      { value: "$4.6M", label: "pending", settled: false },
+      { value: "$2.84M", label: "paid", settled: true },
+      { value: "$720K", label: "pending", settled: false },
     ],
   },
 ];
