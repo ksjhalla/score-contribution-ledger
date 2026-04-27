@@ -122,14 +122,14 @@ export const pharmaNotifications: DemoNotification[] = [
   {
     id: "demo-n1",
     type: "settlement_due",
-    message: "Payment expected on GLP-1 TTA Extension. Confirm here when Novo Nordisk signature is received.",
+    message: "Payment expected on GLP-1 TTA Extension. Mark it paid once Novo Nordisk signs.",
     read: false,
     created_at: hoursAgo(2),
   },
   {
     id: "demo-n2",
     type: "trigger_met",
-    message: "Batch volume threshold reached. 8.2M vials confirmed. Log an execution against the Aspen Process Agreement.",
+    message: "Batch threshold hit — 8.2M vials. Log it against the Aspen Process Agreement.",
     read: true,
     created_at: daysAgo(3),
   },
@@ -139,14 +139,14 @@ export const ncaaNotifications: DemoNotification[] = [
   {
     id: "demo-n3",
     type: "settlement_due",
-    message: "Payment expected on OSU Revenue-Sharing Agreement. Spring 2026 trigger fired — confirm when ACH arrives.",
+    message: "Payment expected from OSU. Spring 2026 trigger fired — mark it paid when the ACH lands.",
     read: false,
     created_at: hoursAgo(1),
   },
   {
     id: "demo-n4",
     type: "trigger_met",
-    message: "Seasonal trigger fired for Spring 2026. Log an execution to record the pending payment.",
+    message: "Spring 2026 seasonal trigger fired. Log it to track the upcoming payment.",
     read: true,
     created_at: daysAgo(5),
   },
@@ -157,7 +157,7 @@ export const supplyChainNotifications: DemoNotification[] = [
     id: "demo-n5",
     type: "settlement_due",
     message:
-      "Payment expected on Supplier Network Expansion Agreement. 5-facility adoption confirmed — confirm when transfer arrives.",
+      "Payment expected — 5-facility adoption confirmed. Mark it paid when the transfer arrives.",
     read: false,
     created_at: hoursAgo(4),
   },
@@ -165,7 +165,7 @@ export const supplyChainNotifications: DemoNotification[] = [
     id: "demo-n6",
     type: "trigger_met",
     message:
-      "Tier 1 supplier adoption threshold reached. Log an execution against the Supplier Network Expansion Agreement.",
+      "Tier 1 supplier threshold reached. Log it against the Supplier Network Expansion Agreement.",
     read: true,
     created_at: daysAgo(2),
   },
@@ -176,7 +176,7 @@ export const aiNotifications: DemoNotification[] = [
     id: "demo-n7",
     type: "trigger_met",
     message:
-      "Dataset adoption signal detected — referenced in a production model release. Log an execution against the Dataset Attribution Record.",
+      "Your dataset showed up in a production model release. Log it against the Dataset Attribution Record.",
     read: false,
     created_at: hoursAgo(3),
   },
@@ -184,7 +184,7 @@ export const aiNotifications: DemoNotification[] = [
     id: "demo-n8",
     type: "settlement_due",
     message:
-      "Enterprise integration usage signal confirmed. Library deployed in production. Mark the Integration Royalty as awaiting payment confirmation.",
+      "Your library is live in an enterprise tool. Mark the Integration Royalty as waiting on payment.",
     read: true,
     created_at: daysAgo(4),
   },
@@ -195,7 +195,7 @@ export const pppNotifications: DemoNotification[] = [
     id: "demo-n9",
     type: "settlement_due",
     message:
-      "Q1 2026 tariff revenue ready to record. Audited kWh + collection report received. Confirm when concession transfer arrives.",
+      "Q1 2026 tariff revenue ready to log. Audit report in. Mark it paid when the transfer arrives.",
     read: false,
     created_at: hoursAgo(5),
   },
@@ -203,7 +203,7 @@ export const pppNotifications: DemoNotification[] = [
     id: "demo-n10",
     type: "trigger_met",
     message:
-      "Uptime performance bonus confirmed — 99.2% grid availability for 2025. Log an execution against the Concession Performance Agreement.",
+      "Uptime bonus confirmed — 99.2% grid availability in 2025. Log it against the Concession Performance Agreement.",
     read: true,
     created_at: daysAgo(6),
   },
@@ -436,7 +436,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 124800, currency: "USD",
         headline: "pending",
-        subheadline: "Spring 2026 revenue share trigger fired. Awaiting payment confirmation from OSU.",
+        subheadline: "Spring 2026 revenue share trigger fired. Waiting on OSU.",
         status: "Under review", confidence: "High",
         trigger: "Seasonal revenue share · Jan 2026",
         resolver: "OSU Athletics Department",
@@ -445,7 +445,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 124800, currency: "USD",
         headline: "received",
-        subheadline: "Fall 2025–26 revenue share payment recorded.",
+        subheadline: "Fall 2025–26 revenue share — paid.",
         status: "Resolved", confidence: "High",
         trigger: "Seasonal revenue share · Aug 2025",
         resolver: "OSU Athletics · ACH",
@@ -584,7 +584,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 380000, currency: "USD",
         headline: "on the way",
-        subheadline: "Tier 1 supplier expansion confirmed across 5 facilities. Awaiting payment confirmation.",
+        subheadline: "Tier 1 expansion confirmed across 5 facilities. Waiting on payment.",
         status: "Under review", confidence: "Medium",
         trigger: "Adoption across 5 supplier facilities confirmed",
         resolver: "Supplier network + global brand ops",
@@ -593,7 +593,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 220000, currency: "USD",
         headline: "received",
-        subheadline: "Local adoption across 2 facilities confirmed. Payment recorded.",
+        subheadline: "Local adoption across 2 facilities — paid.",
         status: "Resolved", confidence: "High",
         trigger: "Plant ops report confirmed",
         resolver: "Regional Textile Group",
@@ -745,7 +745,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 200000, currency: "USD",
         headline: "on the way",
-        subheadline: "Library integrated into an enterprise tool. Awaiting attestation and payment confirmation.",
+        subheadline: "Library is live in an enterprise tool. Waiting on attestation and payment.",
         status: "Under review", confidence: "Medium",
         trigger: "Enterprise deployment confirmed",
         resolver: "Company attestation + usage metrics",
@@ -908,7 +908,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 720000, currency: "USD",
         headline: "received",
-        subheadline: "Q4 2025 tariff revenue recorded. Audited kWh + collection report confirmed by trustee.",
+        subheadline: "Q4 2025 tariff revenue — paid. Audit confirmed by trustee.",
         status: "Resolved", confidence: "High",
         trigger: "Quarterly kWh sales + collection audited",
         resolver: "Independent meter auditor + concession trustee",
@@ -917,7 +917,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
       {
         amount: 720000, currency: "USD",
         headline: "on the way",
-        subheadline: "Grid uptime hit 99.2% for 2025 across 12 sites — performance bonus confirmed, awaiting audit sign-off.",
+        subheadline: "Grid uptime hit 99.2% across 12 sites in 2025. Bonus confirmed, waiting on audit sign-off.",
         status: "Under review", confidence: "High",
         trigger: "Annual grid uptime ≥ 99.0%",
         resolver: "Independent technical auditor",
