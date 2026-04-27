@@ -714,7 +714,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "support"
+      app_role: "admin" | "support" | "evidence_reviewer" | "evidence_approver"
       attestation_status: "Pending" | "Confirmed" | "Declined"
       contract_type: "Off-chain" | "On-chain reference"
       counterparty_type:
@@ -896,7 +896,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "support"],
+      app_role: ["admin", "support", "evidence_reviewer", "evidence_approver"],
       attestation_status: ["Pending", "Confirmed", "Declined"],
       contract_type: ["Off-chain", "On-chain reference"],
       counterparty_type: [
