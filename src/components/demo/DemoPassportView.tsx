@@ -25,7 +25,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
     key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead,
     milestones, bio, badges, valueStreams, evidenceMappings, siteUptime, exampleCards,
   } = profile;
-  const isPpp = key === "ppp";
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
