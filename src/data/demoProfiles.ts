@@ -37,6 +37,27 @@ export type DemoProfile = {
   bio?: string;
   badges?: string[];
   valueStreams?: Array<{ icon: "droplets" | "leaf" | "network" | "code" | "git-fork" | "brain"; iconColor: string; name: string; description: string; value: string }>;
+  evidenceMappings?: EvidenceMapping[];
+};
+
+export type EvidenceMapping = {
+  evidence: {
+    type: "kWh audit" | "Mobile-money collection" | "Uptime audit" | "Annual financials" | "Ministry filing";
+    title: string;
+    source: string;
+    period: string;
+    fingerprint?: string;
+    metric: string;
+  };
+  ledger: {
+    bucket: "Paid" | "Pending" | "Contract";
+    entry: string;
+    amount: number | null;
+    currency: string;
+    contract: string;
+  };
+  rule: string;
+  status: "Reconciled" | "Awaiting sign-off" | "Watching";
 };
 
 export type DemoValueEvent = {
@@ -928,6 +949,102 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         name: "Expansion Upside",
         description: "First-refusal rights on Phase 2 (18 villages) plus 55% revenue share on new sites",
         value: "$14.5M future",
+      },
+    ],
+    evidenceMappings: [
+      {
+        evidence: {
+          type: "kWh audit",
+          title: "Audited kWh sales · Q4 2025",
+          source: "Independent meter auditor (SGS Ghana)",
+          period: "Oct–Dec 2025 · 12 sites",
+          fingerprint: "kwh-q4-2025.pdf · a8c1d4e2…",
+          metric: "1,842,000 kWh sold",
+        },
+        ledger: {
+          bucket: "Paid",
+          entry: "Q4 2025 tariff revenue distribution",
+          amount: 720000,
+          currency: "USD",
+          contract: "Volta Mini-Grid Concession · 2024–2044",
+        },
+        rule: "Quarterly kWh × tariff × 62% Sunlite share, after collection-rate adjustment",
+        status: "Reconciled",
+      },
+      {
+        evidence: {
+          type: "Mobile-money collection",
+          title: "MTN MoMo + Vodafone Cash log · Q4 2025",
+          source: "Concession trustee · reconciled with telco settlement files",
+          period: "Oct–Dec 2025 · 12 sites",
+          fingerprint: "momo-q4-2025.csv · 4f9b2a17…",
+          metric: "94.6% collection rate · $1.16M gross",
+        },
+        ledger: {
+          bucket: "Paid",
+          entry: "Q4 2025 tariff revenue distribution",
+          amount: 720000,
+          currency: "USD",
+          contract: "Volta Mini-Grid Concession · 2024–2044",
+        },
+        rule: "Collection rate gates kWh-derived entitlement — drops below 90% reduce share pro-rata",
+        status: "Reconciled",
+      },
+      {
+        evidence: {
+          type: "kWh audit",
+          title: "Audited kWh sales · Q1 2026 (in flight)",
+          source: "Independent meter auditor (SGS Ghana)",
+          period: "Jan–Mar 2026 · 12 sites",
+          fingerprint: "kwh-q1-2026.pdf · pending sign-off",
+          metric: "1,910,000 kWh sold (provisional)",
+        },
+        ledger: {
+          bucket: "Pending",
+          entry: "Q1 2026 tariff revenue distribution",
+          amount: 745000,
+          currency: "USD",
+          contract: "Volta Mini-Grid Concession · 2024–2044",
+        },
+        rule: "Provisional entry until trustee counter-signs auditor + telco files",
+        status: "Awaiting sign-off",
+      },
+      {
+        evidence: {
+          type: "Uptime audit",
+          title: "Grid availability + SAIDI/SAIFI logs · 2025",
+          source: "Independent technical auditor",
+          period: "Full year 2025 · 12 sites",
+          fingerprint: "uptime-2025.pdf · pending",
+          metric: "99.2% availability · SAIDI 7.0h/yr",
+        },
+        ledger: {
+          bucket: "Pending",
+          entry: "Uptime performance bonus · 2025",
+          amount: 720000,
+          currency: "USD",
+          contract: "Service Performance Agreement · Uptime Bonus",
+        },
+        rule: "Bonus released when annual uptime ≥ 99.0% confirmed by independent auditor",
+        status: "Awaiting sign-off",
+      },
+      {
+        evidence: {
+          type: "Mobile-money collection",
+          title: "12-month rolling collection trend",
+          source: "Telco settlement files + trustee reconciliation",
+          period: "2025 full year",
+          metric: "Avg 93.8% collection · trending up",
+        },
+        ledger: {
+          bucket: "Contract",
+          entry: "Phase 2 expansion · 18 villages",
+          amount: 14500000,
+          currency: "USD",
+          contract: "Phase 2 Expansion Option · 18 additional villages",
+        },
+        rule: "Sustained collection ≥ 90% strengthens Ministry case for Phase 2 capital approval",
+        status: "Watching",
       },
     ],
   },
