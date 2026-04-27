@@ -341,7 +341,7 @@ const Admin = () => {
               <Stat label="Active 30d" value={String(stats.active_users_30d)} />
               <Stat label="Contracts" value={String(stats.total_contracts)} />
               <Stat label="Executions" value={String(stats.total_executions)} />
-              <Stat label="Settled value" value={Number(stats.total_settled_value).toLocaleString()} />
+              <Stat label="Received value" value={Number(stats.total_settled_value).toLocaleString()} />
             </>
           )}
         </section>

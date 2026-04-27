@@ -389,7 +389,7 @@ const Account = () => {
           {[
             { key: "show_contracts" as const, label: "Attribution records", desc: "Contribution names, types, and verified authorship" },
             { key: "show_counterparties" as const, label: "Contract names and counterparties", desc: "Which organisations you have agreements with" },
-            { key: "show_amounts" as const, label: "Financial amounts", desc: "Settled and pending payment figures" },
+            { key: "show_amounts" as const, label: "Financial amounts", desc: "Received and pending payment figures" },
           ].map((row) => (
             <div key={row.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(26,22,14,0.07)", gap: 12 }}>
               <div style={{ minWidth: 0 }}>
