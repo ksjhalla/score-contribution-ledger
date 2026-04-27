@@ -115,7 +115,7 @@ export const PassportView = ({ data }: { data: PassportData }) => {
               margin: 0,
             }}
           >
-            Your attributed total updates automatically when you confirm a payment received. Start by adding a contract, logging your first contribution, and confirming the trigger was met.
+            Your total updates as soon as you mark a payment received. Add a contract, log your first contribution, then confirm when the trigger is met.
           </p>
           <div
             className="mt-3 flex flex-wrap gap-x-5 gap-y-2"
@@ -140,7 +140,7 @@ export const PassportView = ({ data }: { data: PassportData }) => {
           <div className="grid grid-cols-3 gap-3">
             <Stat label="Pending" value={String(data.summary.work_pending ?? 0)} />
             <Stat label="Received" value={String(data.summary.work_settled ?? 0)} />
-            <Stat label="Received value" value={workSettledValue} />
+            <Stat label="Total received" value={workSettledValue} />
           </div>
         </section>
       )}

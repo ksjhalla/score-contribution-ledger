@@ -214,15 +214,15 @@ const Dashboard = () => {
       if (e.status === "Settled") {
         status = "Resolved";
         headline = amount != null ? `${formatMoney(amount, e.currency)} received` : "received";
-        subheadline = `${cName} payment confirmed and recorded.`;
+        subheadline = `${cName} — payment received.`;
       } else if (e.status === "Pending" && e.trigger_met) {
         status = "Under review";
         headline = amount != null ? `${formatMoney(amount, e.currency)} on the way` : "on the way";
-        subheadline = `${cName} trigger confirmed. Awaiting payment confirmation.`;
+        subheadline = `${cName} — trigger met. Waiting on payment.`;
       } else if (e.status === "Intent logged") {
         status = "Watching";
         headline = amount != null ? `${formatMoney(amount, e.currency)} possible` : "possible";
-        subheadline = `Work logged for ${cName}. Trigger not yet met.`;
+        subheadline = `Work logged for ${cName}. Trigger not met yet.`;
       } else {
         status = "Pending";
         headline = e.title;

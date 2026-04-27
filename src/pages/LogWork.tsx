@@ -230,7 +230,7 @@ const LogWork = () => {
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">Log work</h1>
             <p className="text-sm text-muted-foreground">
-              Each entry is an execution against a contract. Status flows from Intent logged → Pending → Received.
+              Each entry is a piece of work tied to a contract. It moves from Logged → Pending → Received.
             </p>
           </div>
           <button
@@ -277,7 +277,7 @@ const LogWork = () => {
             <div className="text-lg font-semibold mt-1">{totals.settled}</div>
           </div>
           <div className="rounded-md border p-3">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Received value</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Received</div>
             <div className="text-lg font-semibold mt-1">
               {totals.settledValue ? totals.settledValue.toLocaleString() : "—"}
             </div>
@@ -412,7 +412,7 @@ const LogWork = () => {
                             onClick={() => setSettleFor(e)}
                             style={{ background: "transparent", border: "none", padding: 0, color: "#C4892A", textDecoration: "underline", cursor: "pointer", fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, marginTop: 2 }}
                           >
-                            Confirm payment received
+                            Mark as paid
                           </button>
                         </>
                       )}

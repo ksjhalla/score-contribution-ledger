@@ -80,11 +80,11 @@ export const MarkSettledDialog = ({
       .insert({
         contract_id: updated.contract_id,
         user_id: updated.user_id,
-        title: `Payment received — ${contractName}`,
+        title: `Paid — ${contractName}`,
         evidence_type: "Document",
         fingerprint,
         timestamp_created: settledAt,
-        notes: `Auto-generated when payment was confirmed. Reference: ${ref}`,
+        notes: `Auto-generated when marked paid. Reference: ${ref}`,
       })
       .select("id")
       .maybeSingle();
@@ -103,11 +103,11 @@ export const MarkSettledDialog = ({
       type: "system",
       contractId: updated.contract_id,
       executionId: updated.id,
-      message: `${contractName} — ${amt.toLocaleString()} ${cur} payment confirmed and recorded.`,
+      message: `${contractName} — ${amt.toLocaleString()} ${cur} marked as paid.`,
     });
 
     setBusy(false);
-    toast.success("Payment recorded.");
+    toast.success("Marked as paid.");
     onSettled();
     ledgerEvents.emit();
     notificationEvents.emit();
