@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
@@ -41,9 +42,20 @@ const fullNumber = (n: number, c: string) => {
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
   if (!contracts.length) return null;
+  const [sortMode, setSortMode] = useState<"original" | "value">("original");
+  const ordered = useMemo(() => {
+    if (sortMode === "value") {
+      return [...contracts].sort((a, b) => b.value - a.value);
+    }
+    return contracts;
+  }, [contracts, sortMode]);
+  const presentStatuses = useMemo(() => {
+    const set = new Set<string>(contracts.map((c) => c.status));
+    return (Object.keys(STATUS_LABEL) as Array<SparkContract["status"]>).filter((s) => set.has(s));
+  }, [contracts]);
   // Use sqrt scaling so a single huge entry (e.g. a multi-million "Phase 2" bet)
   // doesn't flatten the smaller paid/pending bars to invisibility.
-  const max = Math.max(...contracts.map((c) => c.value), 1);
+  const max = Math.max(...ordered.map((c) => c.value), 1);
   const widthFor = (v: number) => {
     const ratio = Math.sqrt(Math.max(0, v) / max);
     // Floor so even tiny values keep a visible sliver.
@@ -51,7 +63,84 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
   };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {contracts.map((c, i) => {
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "inline-flex", borderRadius: 6, border: "1px solid rgba(26,22,14,0.12)", overflow: "hidden" }}>
+          {([
+            { key: "original", label: "Original" },
+            { key: "value", label: "Highest value" },
+          ] as const).map((opt) => {
+            const active = sortMode === opt.key;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setSortMode(opt.key)}
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 9,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  padding: "4px 8px",
+                  background: active ? "#1A1614" : "transparent",
+                  color: active ? "#FFFFFF" : "#1A1614",
+                  border: 0,
+                  cursor: "pointer",
+                }}
+                aria-pressed={active}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          {presentStatuses.map((s) => (
+            <div key={s} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <span
+                aria-hidden
+                style={{
+                  display: "inline-block",
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: STATUS_COLOR[s],
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 9,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: "#1A1614",
+                }}
+              >
+                {STATUS_LABEL[s]}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div
+        style={{
+          fontFamily: FONT_MONO,
+          fontSize: 8,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "#9A8F84",
+        }}
+      >
+        Bar length = relative {currency} value (√-scaled). Tap a row for details.
+      </div>
+      {ordered.map((c, i) => {
         const color = c.color ?? STATUS_COLOR[c.status];
         const w = widthFor(c.value);
         return (
