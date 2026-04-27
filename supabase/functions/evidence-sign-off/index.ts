@@ -13,6 +13,7 @@ interface Body {
   mappingId?: string;
   currentStatus?: "Watching" | "Awaiting sign-off" | "Reconciled";
   hasReviewerSignature?: boolean;
+  notes?: string;
 }
 
 const json = (status: number, body: unknown) =>
@@ -44,14 +45,6 @@ Deno.serve(async (req) => {
     return json(400, { error: "mappingId is required" });
   }
 
-  // Approver action requires an existing reviewer signature on the mapping.
-  if (role === "Approver" && !body.hasReviewerSignature) {
-    return json(409, {
-      error: "needs_reviewer",
-      message: "Approver counter-sign requires a Reviewer signature first.",
-    });
-  }
-
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return json(401, {
@@ -75,35 +68,52 @@ Deno.serve(async (req) => {
   }
   const userId = claimsData.claims.sub as string;
 
-  // Server-side role check — UI role switcher cannot bypass this.
-  const requiredRole =
-    role === "Reviewer" ? "evidence_reviewer" : "evidence_approver";
+  // Server-side authorisation is enforced by the RLS policy on
+  // public.evidence_sign_offs. The policy reads profiles.signer_role for the
+  // caller and only allows the insert if it matches the requested role.
+  // A viewer (or anonymous user, or a missing profile) is rejected by
+  // PostgREST regardless of what the UI sends.
+  const dbRole = role === "Reviewer" ? "reviewer" : "approver";
 
-  const { data: roleRows, error: roleError } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", [requiredRole, "admin"]);
+  const { data: inserted, error: insertError } = await supabase
+    .from("evidence_sign_offs")
+    .insert({
+      mapping_id: body.mappingId,
+      signer_user_id: userId,
+      signer_role: dbRole,
+      notes: body.notes ?? null,
+    })
+    .select("id, signed_at, signer_role")
+    .single();
 
-  if (roleError) {
-    return json(500, { error: "Role lookup failed", detail: roleError.message });
+  if (insertError) {
+    // 23505 = unique_violation (already signed for this role on this mapping)
+    if (insertError.code === "23505") {
+      return json(409, {
+        error: "already_signed",
+        message: `This mapping already has a ${dbRole} signature.`,
+      });
+    }
+    // 42501 = RLS / insufficient privilege — the role check failed server-side.
+    if (insertError.code === "42501" || /row-level security/i.test(insertError.message)) {
+      return json(403, {
+        error: "forbidden",
+        message:
+          role === "Approver"
+            ? "Server denied: your profile is not approver, or a Reviewer signature is missing for this mapping."
+            : "Server denied: your profile signer_role is not reviewer or approver. The UI role switcher cannot grant permissions.",
+      });
+    }
+    return json(500, { error: "Insert failed", detail: insertError.message });
   }
 
-  if (!roleRows || roleRows.length === 0) {
-    return json(403, {
-      error: "forbidden",
-      message: `This action requires the '${requiredRole}' role. A Viewer cannot sign off, regardless of the UI role switcher.`,
-      requiredRole,
-    });
-  }
-
-  const now = new Date().toISOString();
   return json(200, {
     ok: true,
     role,
     mappingId: body.mappingId,
     actorId: userId,
-    signedAt: now,
+    signedAt: inserted.signed_at,
+    signOffId: inserted.id,
     nextStatus: role === "Reviewer" ? "Awaiting sign-off" : "Reconciled",
   });
 });
