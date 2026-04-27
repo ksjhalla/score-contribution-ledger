@@ -27,8 +27,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
     milestones, bio, badges, valueStreams, evidenceMappings, phase2Tracker, siteUptime, exampleCards,
   } = profile;
   const isPpp = key === "ppp";
-  const visibleValueStreams = isPpp && valueStreams ? valueStreams.slice(0, 3) : valueStreams;
-  const hiddenValueStreams = isPpp && valueStreams ? valueStreams.slice(3) : [];
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
@@ -130,7 +128,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         ))}
       </div>
 
-      {!isPpp && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28 }}>
         <div style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4", padding: "14px 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -147,7 +144,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           <ContractSparkBars contracts={bars} currency={valueMix.currency} />
         </div>
       </div>
-      )}
 
       <h3
         style={{
@@ -159,7 +155,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         What changed
       </h3>
-      <div className={isPpp ? "grid grid-cols-1 gap-3.5" : "grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-3.5"} style={{ marginBottom: 28 }}>
+      <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-3.5" style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {whatChanged.map((c, i) => (
             <div key={`${c.headline}-${i}`}>
@@ -223,7 +219,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             </div>
           ))}
         </div>
-        {!isPpp && <QuickReadPanel rows={quickRead} />}
+        <QuickReadPanel rows={quickRead} />
       </div>
 
       <h3
@@ -236,7 +232,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         {valueStreams ? "Value streams" : "Contracts"}
       </h3>
-      <div className={isPpp ? "grid grid-cols-1 gap-3.5" : "grid grid-cols-1 md:grid-cols-2 gap-3.5"} style={{ marginBottom: 28, alignItems: "start" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28, alignItems: "start" }}>
       {valueStreams ? (
         <div
           style={{
@@ -249,7 +245,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             gap: 14,
           }}
         >
-          {(visibleValueStreams ?? valueStreams).map((s) => {
+          {valueStreams.map((s) => {
             const Icon =
               s.icon === "droplets" ? Droplets :
               s.icon === "leaf" ? Leaf :
