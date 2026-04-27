@@ -38,12 +38,6 @@ const statusChip: Record<ValueEventStatus, { bg: string; fg: string }> = {
   Watching: { bg: "rgba(42,92,138,0.10)", fg: "#2A5C8A" },
 };
 
-const confidenceColor: Record<ValueEventConfidence, string> = {
-  High: "#2A6A45",
-  Medium: "#C4892A",
-  Low: "#9A8F84",
-};
-
 const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
 
 const formatAmount = (amount: number | null, currency: string) => {
@@ -54,35 +48,21 @@ const formatAmount = (amount: number | null, currency: string) => {
 
 export const ValueEventCard = (props: ValueEventCardProps) => {
   const {
-    amount, currency, headline, subheadline, status, confidence,
-    trigger, resolver, evidence_count, expected_resolution,
+    amount, currency, headline, subheadline, status,
+    resolver, evidence_count,
     attestationEnabled, onAddEvidence, onRequestConfirmation, onViewDetails,
   } = props;
   const [open, setOpen] = useState(false);
   const formatted = formatAmount(amount, currency);
   const chip = statusChip[status];
 
-  const detailRows: { label: string; value: React.ReactNode }[] = [];
-  if (trigger) detailRows.push({ label: "TRIGGER", value: trigger });
-  if (resolver) detailRows.push({ label: "CONFIRMS IT", value: resolver });
-  if (typeof evidence_count === "number") {
-    detailRows.push({
-      label: "EVIDENCE",
-      value: evidence_count > 0 ? `${evidence_count} record${evidence_count === 1 ? "" : "s"} attached` : "None yet",
-    });
-  }
-  if (expected_resolution) detailRows.push({ label: "EXPECTED", value: expected_resolution });
-  if (confidence) {
-    detailRows.push({
-      label: "CONFIDENCE",
-      value: (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span aria-hidden style={{ width: 8, height: 8, borderRadius: "50%", background: confidenceColor[confidence], display: "inline-block" }} />
-          {confidence}
-        </span>
-      ),
-    });
-  }
+  // Proof: 1–2 plain-language lines per event. No timestamps, no technical fields.
+  const verifiedLine = resolver ? `Verified by ${resolver}` : null;
+  const supportingLine =
+    typeof evidence_count === "number" && evidence_count > 0
+      ? `${evidence_count} supporting record${evidence_count === 1 ? "" : "s"} attached`
+      : null;
+  const hasProof = Boolean(verifiedLine || supportingLine);
 
   return (
     <article style={{
@@ -114,7 +94,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
         {subheadline}
       </p>
 
-      {detailRows.length > 0 && (
+      {hasProof && (
         <div style={{ marginTop: 12 }}>
           <button
             type="button"
@@ -124,21 +104,31 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
               fontFamily: FONT_MONO, fontSize: 9, color: "#C4892A",
             }}
           >
-            {open ? "Hide ↑" : "Show details ↓"}
+            {open ? "Hide proof ↑" : "How this is verified ↓"}
           </button>
           {open && (
-            <div style={{ marginTop: 8, borderTop: "1px solid rgba(26,22,14,0.07)" }}>
-              {detailRows.map((r) => (
-                <div key={r.label} style={{
-                  display: "grid", gridTemplateColumns: "120px 1fr", gap: 12,
-                  padding: "8px 0", borderBottom: "1px solid rgba(26,22,14,0.07)",
-                }}>
-                  <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {r.label}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#1A1614" }}>{r.value}</div>
+            <div
+              style={{
+                marginTop: 8,
+                padding: "10px 12px",
+                background: "rgba(42,106,69,0.05)",
+                border: "1px solid rgba(42,106,69,0.15)",
+                borderRadius: 4,
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
+            >
+              {verifiedLine && (
+                <div style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>
+                  {verifiedLine}
                 </div>
-              ))}
+              )}
+              {supportingLine && (
+                <div style={{ fontSize: 11, color: "#5C5248", lineHeight: 1.5 }}>
+                  {supportingLine}
+                </div>
+              )}
             </div>
           )}
         </div>

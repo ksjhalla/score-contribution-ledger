@@ -349,10 +349,10 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           >
             <div>
               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>
-                Audit & evidence details
+                Proof & verification
               </div>
               <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
-                Audit trail, evidence → ledger, reconciliation, attached evidence, export report
+                The full backing — sources, sign-offs, and the audit trail behind every value event.
               </div>
             </div>
             <span
