@@ -70,7 +70,7 @@ const StatSkeleton = () => (
 );
 
 const Dashboard = () => {
-  const { profile } = useDemo();
+  const { profile, setActiveDemo } = useDemo();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -294,6 +294,225 @@ const Dashboard = () => {
         >
           Complete profile →
         </Link>
+      </div>
+    );
+  }
+
+  const isEmpty =
+    stats !== null &&
+    stats.executions === 0 &&
+    stats.contracts === 0 &&
+    cards.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div className="px-4 sm:px-6 py-8 sm:py-12" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 24 }}>
+          <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 600, margin: 0, color: "#1A1614" }}>
+            Your Passport
+          </h2>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid rgba(26,22,14,0.10)",
+            borderRadius: 8,
+            background: "#FDFAF4",
+            padding: "32px 24px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'DM Mono',ui-monospace,monospace",
+              fontSize: 9,
+              color: "#C4892A",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: 10,
+            }}
+          >
+            Get started
+          </div>
+          <h3
+            style={{
+              fontFamily: "'Playfair Display',Georgia,serif",
+              fontSize: 26,
+              fontWeight: 600,
+              color: "#1A1614",
+              margin: "0 0 8px",
+              lineHeight: 1.25,
+            }}
+          >
+            Start your contribution passport
+          </h3>
+          <p
+            style={{
+              fontFamily: "'DM Sans',system-ui,sans-serif",
+              fontSize: 14,
+              color: "#5C5248",
+              lineHeight: 1.6,
+              margin: "0 auto 28px",
+              maxWidth: 440,
+            }}
+          >
+            A living record of the work you do, the value it creates, and what you're owed.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gap: 12,
+              maxWidth: 460,
+              margin: "0 auto 28px",
+              textAlign: "left",
+            }}
+          >
+            {[
+              { n: "1", title: "Log your work", desc: "Capture what you did, when, and for whom." },
+              { n: "2", title: "Link it to value", desc: "Connect it to a contract or value stream." },
+              { n: "3", title: "Track what happens", desc: "See what's pending, settled, or attributed." },
+            ].map((s) => (
+              <div
+                key={s.n}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "flex-start",
+                  border: "1px solid rgba(26,22,14,0.08)",
+                  background: "#FFFEFA",
+                  borderRadius: 6,
+                  padding: "12px 14px",
+                }}
+              >
+                <div
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    background: "rgba(196,137,42,0.12)",
+                    color: "#C4892A",
+                    fontFamily: "'DM Mono',ui-monospace,monospace",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {s.n}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 13, fontWeight: 600, color: "#1A1614" }}>
+                    {s.title}
+                  </div>
+                  <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, color: "#5C5248", marginTop: 2, lineHeight: 1.5 }}>
+                    {s.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link
+              to="/log-work"
+              style={{
+                display: "inline-block",
+                background: "#1A1614",
+                color: "#F5F1E8",
+                fontFamily: "'DM Sans',system-ui,sans-serif",
+                fontSize: 14,
+                fontWeight: 500,
+                padding: "11px 22px",
+                borderRadius: 4,
+                textDecoration: "none",
+              }}
+            >
+              Log your first contribution →
+            </Link>
+            <button
+              type="button"
+              onClick={() => setActiveDemo("ppp")}
+              style={{
+                background: "transparent",
+                color: "#1A1614",
+                fontFamily: "'DM Sans',system-ui,sans-serif",
+                fontSize: 14,
+                fontWeight: 500,
+                padding: "11px 22px",
+                borderRadius: 4,
+                border: "1px solid rgba(26,22,14,0.20)",
+                cursor: "pointer",
+              }}
+            >
+              View a sample profile
+            </button>
+          </div>
+        </div>
+
+        <div
+          aria-hidden
+          style={{
+            marginTop: 20,
+            border: "1px dashed rgba(26,22,14,0.12)",
+            borderRadius: 6,
+            background: "rgba(253,250,244,0.5)",
+            padding: "16px 18px",
+            opacity: 0.75,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'DM Mono',ui-monospace,monospace",
+              fontSize: 9,
+              color: "#9A8F84",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: 10,
+            }}
+          >
+            Preview · what your dashboard will show
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 14 }}>
+            {[
+              { label: "Contracts", value: "3" },
+              { label: "Executions", value: "5" },
+              { label: "Settled", value: "$2,840" },
+              { label: "Pending", value: "$720" },
+            ].map((s) => (
+              <div key={s.label} style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FFFEFA", padding: "10px 12px" }}>
+                <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  {s.label}
+                </div>
+                <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 14, color: "#1A1614", marginTop: 4 }}>
+                  {s.value}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[
+              { label: "Contract A", w: "78%", color: "#2A6A45" },
+              { label: "Contract B", w: "52%", color: "#C4892A" },
+              { label: "Contract C", w: "30%", color: "#2A5C8A" },
+            ].map((b) => (
+              <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#5C5248", width: 80, flexShrink: 0 }}>
+                  {b.label}
+                </div>
+                <div style={{ flex: 1, height: 8, background: "rgba(26,22,14,0.06)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: b.w, height: "100%", background: b.color, opacity: 0.6 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 11, color: "#9A8F84", marginTop: 10, fontStyle: "italic", textAlign: "center" }}>
+            Example values — yours appear once you log work.
+          </div>
+        </div>
       </div>
     );
   }
