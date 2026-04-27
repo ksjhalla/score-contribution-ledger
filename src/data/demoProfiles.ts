@@ -1,4 +1,4 @@
-export type DemoKey = "pharma" | "ncaa" | "supplyChain" | "ai";
+export type DemoKey = "pharma" | "ncaa" | "supplyChain" | "ai" | "ppp";
 
 export type DemoExecution = {
   title: string;
@@ -135,11 +135,31 @@ export const aiNotifications: DemoNotification[] = [
   },
 ];
 
+export const pppNotifications: DemoNotification[] = [
+  {
+    id: "demo-n9",
+    type: "settlement_due",
+    message:
+      "Q1 2026 toll revenue distribution ready. Audited traffic report received. Mark as settled when concession transfer confirmed.",
+    read: false,
+    created_at: hoursAgo(5),
+  },
+  {
+    id: "demo-n10",
+    type: "trigger_met",
+    message:
+      "Uptime performance bonus triggered — 99.4% lane availability for 2025. Log an execution against the Concession Performance Agreement.",
+    read: true,
+    created_at: daysAgo(6),
+  },
+];
+
 export const demoNotificationsFor = (key: DemoKey | "none"): DemoNotification[] => {
   if (key === "pharma") return pharmaNotifications;
   if (key === "ncaa") return ncaaNotifications;
   if (key === "supplyChain") return supplyChainNotifications;
   if (key === "ai") return aiNotifications;
+  if (key === "ppp") return pppNotifications;
   return [];
 };
 
