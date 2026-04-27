@@ -214,11 +214,11 @@ const Dashboard = () => {
       if (e.status === "Settled") {
         status = "Resolved";
         headline = amount != null ? `${formatMoney(amount, e.currency)} received` : "received";
-        subheadline = `${cName} payout was recorded and settled.`;
+        subheadline = `${cName} payment confirmed and recorded.`;
       } else if (e.status === "Pending" && e.trigger_met) {
         status = "Under review";
         headline = amount != null ? `${formatMoney(amount, e.currency)} on the way` : "on the way";
-        subheadline = `${cName} trigger confirmed. Awaiting settlement.`;
+        subheadline = `${cName} trigger confirmed. Awaiting payment confirmation.`;
       } else if (e.status === "Intent logged") {
         status = "Watching";
         headline = amount != null ? `${formatMoney(amount, e.currency)} possible` : "possible";
@@ -372,7 +372,7 @@ const Dashboard = () => {
             {[
               { n: "1", title: "Log your work", desc: "Capture what you did, when, and for whom." },
               { n: "2", title: "Link it to value", desc: "Connect it to a contract or value stream." },
-              { n: "3", title: "Track what happens", desc: "See what's pending, settled, or attributed." },
+              { n: "3", title: "Track what happens", desc: "See what's pending, received, or attributed." },
             ].map((s) => (
               <div
                 key={s.n}
@@ -480,7 +480,7 @@ const Dashboard = () => {
             {[
               { label: "Contracts", value: "3" },
               { label: "Executions", value: "5" },
-              { label: "Settled", value: "$2,840" },
+              { label: "Received", value: "$2,840" },
               { label: "Pending", value: "$720" },
             ].map((s) => (
               <div key={s.label} style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FFFEFA", padding: "10px 12px" }}>
@@ -549,7 +549,7 @@ const Dashboard = () => {
           <>
             <Stat label="Contracts" value={String(stats.contracts)} />
             <Stat label="Executions" value={String(stats.executions)} />
-            <Stat label="Settled" value={stats.settledTotal ? stats.settledTotal.toLocaleString() : "—"} />
+            <Stat label="Received" value={stats.settledTotal ? stats.settledTotal.toLocaleString() : "—"} />
             <Stat label="Pending" value={stats.pendingTotal ? stats.pendingTotal.toLocaleString() : "—"} />
           </>
         )}

@@ -80,11 +80,11 @@ export const MarkSettledDialog = ({
       .insert({
         contract_id: updated.contract_id,
         user_id: updated.user_id,
-        title: `Settlement confirmed — ${contractName}`,
+        title: `Payment received — ${contractName}`,
         evidence_type: "Document",
         fingerprint,
         timestamp_created: settledAt,
-        notes: `Auto-generated on settlement confirmation. Reference: ${ref}`,
+        notes: `Auto-generated when payment was confirmed. Reference: ${ref}`,
       })
       .select("id")
       .maybeSingle();
@@ -103,11 +103,11 @@ export const MarkSettledDialog = ({
       type: "system",
       contractId: updated.contract_id,
       executionId: updated.id,
-      message: `${contractName} — settlement of ${amt.toLocaleString()} ${cur} confirmed.`,
+      message: `${contractName} — ${amt.toLocaleString()} ${cur} payment confirmed and recorded.`,
     });
 
     setBusy(false);
-    toast.success("Settlement confirmed.");
+    toast.success("Payment recorded.");
     onSettled();
     ledgerEvents.emit();
     notificationEvents.emit();
@@ -118,12 +118,12 @@ export const MarkSettledDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Mark as settled</DialogTitle>
-          <DialogDescription>Confirm the settlement reference and amount.</DialogDescription>
+          <DialogTitle>Confirm payment received</DialogTitle>
+          <DialogDescription>Record the payment reference and amount you received.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Settlement channel</Label>
+            <Label>Payment channel</Label>
             <Select value={channel} onValueChange={(v) => setChannel(v as Channel)}>
               <SelectTrigger><SelectValue placeholder="Select channel" /></SelectTrigger>
               <SelectContent>
@@ -148,7 +148,7 @@ export const MarkSettledDialog = ({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Confirm settlement"}</Button>
+          <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Confirm payment received"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

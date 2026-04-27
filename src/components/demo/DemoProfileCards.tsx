@@ -30,7 +30,7 @@ const CARDS: CardSpec[] = [
     avatarBg: "rgba(42,92,138,0.12)",
     avatarBorder: "rgba(42,92,138,0.3)",
     stats: [
-      { value: "R600K", label: "settled", settled: true },
+      { value: "R600K", label: "received", settled: true },
       { value: "R340K", label: "pending", settled: false },
     ],
   },
@@ -64,7 +64,7 @@ const CARDS: CardSpec[] = [
     avatarBg: "rgba(74,120,74,0.12)",
     avatarBorder: "rgba(74,120,74,0.3)",
     stats: [
-      { value: "$420K", label: "paid", settled: true },
+      { value: "$420K", label: "received", settled: true },
       { value: "$380K", label: "pending", settled: false },
     ],
   },
@@ -81,7 +81,7 @@ const CARDS: CardSpec[] = [
     avatarBg: "rgba(91,95,191,0.12)",
     avatarBorder: "rgba(91,95,191,0.3)",
     stats: [
-      { value: "$120K", label: "paid", settled: true },
+      { value: "$120K", label: "received", settled: true },
       { value: "$280K", label: "pending", settled: false },
     ],
   },

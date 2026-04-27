@@ -230,7 +230,7 @@ const LogWork = () => {
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">Log work</h1>
             <p className="text-sm text-muted-foreground">
-              Each entry is an execution against a contract. Status flows from Intent logged → Pending → Settled.
+              Each entry is an execution against a contract. Status flows from Intent logged → Pending → Received.
             </p>
           </div>
           <button
@@ -273,11 +273,11 @@ const LogWork = () => {
             <div className="text-lg font-semibold mt-1">{totals.pending}</div>
           </div>
           <div className="rounded-md border p-3">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Settled</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Received</div>
             <div className="text-lg font-semibold mt-1">{totals.settled}</div>
           </div>
           <div className="rounded-md border p-3">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Settled value</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Received value</div>
             <div className="text-lg font-semibold mt-1">
               {totals.settledValue ? totals.settledValue.toLocaleString() : "—"}
             </div>
@@ -412,7 +412,7 @@ const LogWork = () => {
                             onClick={() => setSettleFor(e)}
                             style={{ background: "transparent", border: "none", padding: 0, color: "#C4892A", textDecoration: "underline", cursor: "pointer", fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 12, marginTop: 2 }}
                           >
-                            Mark as settled
+                            Confirm payment received
                           </button>
                         </>
                       )}
