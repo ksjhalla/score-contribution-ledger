@@ -514,7 +514,7 @@ export const LogWorkForm = ({ open, onOpenChange, onCreated, initialContractId }
                   </SelectContent>
                 </Select>
                 <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}>
-                  SCORE records the trigger and notifies you. Payment settles via your chosen channel.
+                  SCORE records the trigger and notifies you. Payment is handled by your chosen channel — SCORE only confirms when it arrives.
                 </div>
               </div>
             )}
@@ -530,7 +530,7 @@ export const LogWorkForm = ({ open, onOpenChange, onCreated, initialContractId }
                     ["Contribution", title || "—"],
                     ["Status", triggerMet ? "Pending" : "Intent logged"],
                     ["Proof", skipProof || !proofHash ? "None" : `${proofHash.slice(0, 16)}…`],
-                    ["Settlement", triggerMet ? channel : "N/A"],
+                    ["Payment channel", triggerMet ? channel : "N/A"],
                   ].map(([k, v]) => (
                     <tr key={k}>
                       <td style={{ padding: "4px 10px 4px 0", fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#9A8F84", verticalAlign: "top", width: "35%" }}>{k}</td>
