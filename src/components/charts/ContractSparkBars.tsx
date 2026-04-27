@@ -391,6 +391,14 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
                     {fullNumber(c.value, currency)}
                   </span>
                 </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
+                    Relative score
+                  </span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614" }}>
+                    {relativeScore(c.value)}% of max (√-scaled)
+                  </span>
+                </div>
                 {c.evidence_count ? (
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                     <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
