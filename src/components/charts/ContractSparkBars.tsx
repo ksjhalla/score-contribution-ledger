@@ -1,6 +1,5 @@
-import { BarChart, Bar, XAxis, Cell, Tooltip, ResponsiveContainer } from "recharts";
-
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
+const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 
 const symbolFor = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
 const fmt = (n: number, c: string) => {
@@ -17,6 +16,13 @@ const STATUS_COLOR: Record<string, string> = {
   attributed: "rgba(26,22,14,0.15)",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  settled: "Paid",
+  pending: "Pending",
+  watching: "Watching",
+  attributed: "Attributed",
+};
+
 export type SparkContract = {
   label: string;
   value: number;
@@ -27,36 +33,92 @@ export type SparkContract = {
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
   if (!contracts.length) return null;
-  const dense = contracts.length > 3;
+  // Use sqrt scaling so a single huge entry (e.g. a multi-million "Phase 2" bet)
+  // doesn't flatten the smaller paid/pending bars to invisibility.
+  const max = Math.max(...contracts.map((c) => c.value), 1);
+  const widthFor = (v: number) => {
+    const ratio = Math.sqrt(Math.max(0, v) / max);
+    // Floor so even tiny values keep a visible sliver.
+    return Math.max(4, Math.round(ratio * 100));
+  };
   return (
-    <ResponsiveContainer width="100%" height={140}>
-      <BarChart data={contracts} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
-        <XAxis
-          dataKey="label"
-          tick={{ fontFamily: "DM Mono", fontSize: 9, fill: "#9A8F84" }}
-          axisLine={false}
-          tickLine={false}
-          {...(dense ? { angle: -35, textAnchor: "end" as const, height: 48, interval: 0 } : {})}
-        />
-        <Tooltip
-          cursor={{ fill: "rgba(26,22,14,0.04)" }}
-          content={({ active, payload }) => {
-            if (!active || !payload?.length) return null;
-            const d = payload[0].payload as SparkContract;
-            return (
-              <div style={{ background: "#1A1614", color: "#F5F1E8", fontFamily: FONT_MONO, fontSize: 10, borderRadius: 4, padding: "6px 10px" }}>
-                <div>{d.label}: {fmt(d.value, currency)}</div>
-                <div style={{ opacity: 0.7 }}>{d.status}{d.evidence_count ? ` · ${d.evidence_count} evidence` : ""}</div>
-              </div>
-            );
-          }}
-        />
-        <Bar dataKey="value" radius={[3, 3, 0, 0]}>
-          {contracts.map((c, i) => (
-            <Cell key={i} fill={c.color ?? STATUS_COLOR[c.status]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {contracts.map((c, i) => {
+        const color = c.color ?? STATUS_COLOR[c.status];
+        const w = widthFor(c.value);
+        return (
+          <div key={`${c.label}-${i}`} title={`${c.label}: ${fmt(c.value, currency)} · ${STATUS_LABEL[c.status]}${c.evidence_count ? ` · ${c.evidence_count} evidence` : ""}`}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 8,
+                marginBottom: 4,
+                minWidth: 0,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: FONT_BODY,
+                  fontSize: 11,
+                  color: "#1A1614",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                {c.label}
+              </span>
+              <span
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 11,
+                  color,
+                  flexShrink: 0,
+                }}
+              >
+                {fmt(c.value, currency)}
+              </span>
+            </div>
+            <div
+              style={{
+                position: "relative",
+                height: 6,
+                borderRadius: 3,
+                background: "rgba(26,22,14,0.06)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: `${w}%`,
+                  background: color,
+                  borderRadius: 3,
+                  transition: "width .25s ease",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                fontFamily: FONT_MONO,
+                fontSize: 8,
+                color: "#9A8F84",
+                marginTop: 3,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              {STATUS_LABEL[c.status]}
+              {c.evidence_count ? ` · ${c.evidence_count} evidence` : ""}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
