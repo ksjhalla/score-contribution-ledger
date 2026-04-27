@@ -37,6 +37,27 @@ export type DemoProfile = {
   bio?: string;
   badges?: string[];
   valueStreams?: Array<{ icon: "droplets" | "leaf" | "network" | "code" | "git-fork" | "brain"; iconColor: string; name: string; description: string; value: string }>;
+  evidenceMappings?: EvidenceMapping[];
+};
+
+export type EvidenceMapping = {
+  evidence: {
+    type: "kWh audit" | "Mobile-money collection" | "Uptime audit" | "Annual financials" | "Ministry filing";
+    title: string;
+    source: string;
+    period: string;
+    fingerprint?: string;
+    metric: string;
+  };
+  ledger: {
+    bucket: "Paid" | "Pending" | "Contract";
+    entry: string;
+    amount: number | null;
+    currency: string;
+    contract: string;
+  };
+  rule: string;
+  status: "Reconciled" | "Awaiting sign-off" | "Watching";
 };
 
 export type DemoValueEvent = {
