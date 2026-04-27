@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 
@@ -29,6 +32,12 @@ export type SparkContract = {
   status: "settled" | "pending" | "watching" | "attributed";
   evidence_count?: number;
   color?: string;
+  contract_id?: string;
+};
+
+const fullNumber = (n: number, c: string) => {
+  const s = symbolFor(c);
+  return `${s}${Math.round(n).toLocaleString()}`;
 };
 
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
@@ -47,7 +56,19 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
         const color = c.color ?? STATUS_COLOR[c.status];
         const w = widthFor(c.value);
         return (
-          <div key={`${c.label}-${i}`} title={`${c.label}: ${fmt(c.value, currency)} · ${STATUS_LABEL[c.status]}${c.evidence_count ? ` · ${c.evidence_count} evidence` : ""}`}>
+          <Popover key={`${c.label}-${i}`}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  padding: 0,
+                  textAlign: "left",
+                  width: "100%",
+                  cursor: "pointer",
+                }}
+              >
             <div
               style={{
                 display: "flex",
@@ -116,7 +137,54 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
               {STATUS_LABEL[c.status]}
               {c.evidence_count ? ` · ${c.evidence_count} evidence` : ""}
             </div>
-          </div>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              align="center"
+              className="w-64 p-3"
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, color: "#1A1614" }}>
+                  {c.label}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
+                    Contract ID
+                  </span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614", wordBreak: "break-all", textAlign: "right" }}>
+                    {c.contract_id ?? "—"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
+                    Status
+                  </span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color }}>
+                    {STATUS_LABEL[c.status]}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
+                    Value
+                  </span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614" }}>
+                    {fullNumber(c.value, currency)}
+                  </span>
+                </div>
+                {c.evidence_count ? (
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9A8F84" }}>
+                      Evidence
+                    </span>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614" }}>
+                      {c.evidence_count}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            </PopoverContent>
+          </Popover>
         );
       })}
     </div>
