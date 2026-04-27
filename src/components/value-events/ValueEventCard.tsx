@@ -54,8 +54,8 @@ const formatAmount = (amount: number | null, currency: string) => {
 
 export const ValueEventCard = (props: ValueEventCardProps) => {
   const {
-    amount, currency, headline, subheadline, status, confidence,
-    trigger, resolver, evidence_count, expected_resolution,
+    amount, currency, headline, subheadline, status,
+    resolver, evidence_count,
     attestationEnabled, onAddEvidence, onRequestConfirmation, onViewDetails,
   } = props;
   const [open, setOpen] = useState(false);
