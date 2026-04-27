@@ -38,6 +38,9 @@ export type DemoProfile = {
   badges?: string[];
   valueStreams?: Array<{ icon: "droplets" | "leaf" | "network" | "code" | "git-fork" | "brain"; iconColor: string; name: string; description: string; value: string }>;
   evidenceMappings?: EvidenceMapping[];
+  phase2Tracker?: Phase2Milestone[];
+  siteUptime?: SiteUptime[];
+  exampleCards?: ExampleCard[];
 };
 
 export type EvidenceMapping = {
@@ -58,6 +61,37 @@ export type EvidenceMapping = {
   };
   rule: string;
   status: "Reconciled" | "Awaiting sign-off" | "Watching";
+};
+
+export type Phase2Milestone = {
+  label: string;
+  detail: string;
+  expected: string;
+  status: "Done" | "In progress" | "Upcoming" | "At risk";
+  owner: string;
+};
+
+export type SiteUptime = {
+  village: string;
+  households: number;
+  uptimePct: number;
+  saidiHours: number;
+  status: "On track" | "Watch" | "Bonus driver";
+  note?: string;
+};
+
+export type ExampleCard = {
+  kind: "kWh sales" | "Mobile-money collection" | "Uptime bonus";
+  title: string;
+  village: string;
+  period: string;
+  metricLabel: string;
+  metricValue: string;
+  amount: number;
+  currency: string;
+  status: "Settled" | "Pending" | "Watching";
+  evidence: string;
+  note: string;
 };
 
 export type DemoValueEvent = {
