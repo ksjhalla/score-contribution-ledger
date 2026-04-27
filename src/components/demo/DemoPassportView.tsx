@@ -94,8 +94,8 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 28 }}>
         {[
-          { label: "Settled", value: formatDemoAmount(stats.settled, stats.currency), color: "#2A6A45" },
-          { label: "Pending", value: formatDemoAmount(stats.pending, stats.currency), color: "#C4892A" },
+          { label: "Received", value: formatDemoAmount(stats.settled, stats.currency), color: "#2A6A45" },
+          { label: "Awaiting confirmation", value: formatDemoAmount(stats.pending, stats.currency), color: "#C4892A" },
           { label: "Contracts", value: String(stats.contracts), color: accent },
           { label: "Executions", value: String(stats.executions), color: "#1A1614" },
         ].map((s) => (

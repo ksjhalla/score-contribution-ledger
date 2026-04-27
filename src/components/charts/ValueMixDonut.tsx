@@ -35,8 +35,8 @@ export const ValueMixDonut = ({
   label,
 }: Props) => {
   const allRows = [
-    { name: "Settled", value: settled, color: "#2A6A45" },
-    { name: "Pending", value: pending, color: "#C4892A" },
+    { name: "Received", value: settled, color: "#2A6A45" },
+    { name: "Awaiting confirmation", value: pending, color: "#C4892A" },
     ...(esg > 0 ? [{ name: esgLabel, value: esg, color: esgColor }] : []),
     { name: "Future", value: future, color: "#2A5C8A" },
   ];

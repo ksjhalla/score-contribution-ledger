@@ -24,8 +24,8 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  settled: "Paid",
-  pending: "Pending",
+  settled: "Received",
+  pending: "Awaiting confirmation",
   watching: "Watching",
   attributed: "Attributed",
 };

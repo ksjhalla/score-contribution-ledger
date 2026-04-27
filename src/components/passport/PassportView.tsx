@@ -48,7 +48,7 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 );
 
 const statusOf = (c: PassportData["contracts"][number]) => {
-  if (c.settled_count > 0) return "Settled";
+  if (c.settled_count > 0) return "Received";
   if (c.pending_count > 0) return "Pending";
   if (c.execution_count > 0) return "Logged";
   return "Recorded";
@@ -115,7 +115,7 @@ export const PassportView = ({ data }: { data: PassportData }) => {
               margin: 0,
             }}
           >
-            Your attributed total updates automatically when you mark an execution as Settled. Start by adding a contract, logging your first contribution, and confirming the trigger was met.
+            Your attributed total updates automatically when you confirm a payment received. Start by adding a contract, logging your first contribution, and confirming the trigger was met.
           </p>
           <div
             className="mt-3 flex flex-wrap gap-x-5 gap-y-2"
@@ -139,8 +139,8 @@ export const PassportView = ({ data }: { data: PassportData }) => {
           <h2 className="text-sm font-semibold tracking-tight">Logged work</h2>
           <div className="grid grid-cols-3 gap-3">
             <Stat label="Pending" value={String(data.summary.work_pending ?? 0)} />
-            <Stat label="Settled" value={String(data.summary.work_settled ?? 0)} />
-            <Stat label="Settled value" value={workSettledValue} />
+            <Stat label="Received" value={String(data.summary.work_settled ?? 0)} />
+            <Stat label="Received value" value={workSettledValue} />
           </div>
         </section>
       )}

@@ -270,6 +270,20 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         )}
 
         <main style={{ flex: 1, minWidth: 0 }}>{children}</main>
+
+        <footer
+          style={{
+            padding: "14px 24px 18px",
+            borderTop: "1px solid rgba(26,22,14,0.06)",
+            fontFamily: "'DM Mono',ui-monospace,monospace",
+            fontSize: 10,
+            color: "#9A8F84",
+            textAlign: "center",
+            lineHeight: 1.6,
+          }}
+        >
+          SCORE tracks and verifies value. Contracts and payments remain with their respective systems.
+        </footer>
       </div>
 
       {isMobile && (

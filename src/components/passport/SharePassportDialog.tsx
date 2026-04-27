@@ -179,7 +179,7 @@ export const SharePassportDialog = ({
               {privacyRow("Passport publicly visible", "Required for the public URL to load. Off = takes the URL offline.", privacy.passport_visible, (v) => setPrivacy((p) => ({ ...p, passport_visible: v })))}
               {privacyRow("Attribution records", "Contribution names, types, and verified authorship", privacy.show_contracts, (v) => setPrivacy((p) => ({ ...p, show_contracts: v })))}
               {privacyRow("Contract counterparties", "Which organisations you have agreements with", privacy.show_counterparties, (v) => setPrivacy((p) => ({ ...p, show_counterparties: v })))}
-              {privacyRow("Financial amounts", "Settled and pending payment figures", privacy.show_amounts, (v) => setPrivacy((p) => ({ ...p, show_amounts: v })))}
+              {privacyRow("Financial amounts", "Received and pending payment figures", privacy.show_amounts, (v) => setPrivacy((p) => ({ ...p, show_amounts: v })))}
             </div>
           )}
 

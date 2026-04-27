@@ -479,7 +479,7 @@ export default function Index() {
                 display: "flex", alignItems: "center", gap: 0,
               }}>
                 {[
-                  { value: "$52,600", label: "Settled", color: "#2A6A45" },
+                  { value: "$52,600", label: "Received", color: "#2A6A45" },
                   { value: "$14,000", label: "Pending", color: COLORS.amber },
                   { value: "3", label: "Contracts", color: "#2A5C8A" },
                 ].map((s, j, arr) => (
@@ -642,7 +642,7 @@ export default function Index() {
             {[
               { n: "01", t: "Contract", b: "A real-world agreement defines what the contributor is owed and what condition must be met. SCORE records the reference — it does not hold the contract." },
               { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
-              { n: "03", t: "Trigger & payment", b: "When the condition is met — a threshold crossed, a licence executed, a distribution event — SCORE notifies and records settlement. Payment moves through existing channels." },
+              { n: "03", t: "Trigger & confirmation", b: "When the condition is met — a threshold crossed, a licence confirmed, a payment received — SCORE notifies and records the event. Contracts and payments stay in their existing systems." },
             ].map((s, i, arr) => (
               <Fragment key={s.n}>
                 <div className="score-howitworks-step" style={{
@@ -765,7 +765,7 @@ export default function Index() {
             <em style={{ fontStyle: "italic", color: COLORS.text }}>how it works?</em>
           </h2>
           <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.muted, maxWidth: 420, margin: "0 auto 32px", lineHeight: 1.7 }}>
-            Book a short demo and we'll show you the platform end-to-end — earnings, ownership, automatic distributions, and the investor and audit reports that come out the other side.
+            Book a short demo and we'll show you the platform end-to-end — contributions, value events, recorded payments, and the investor and audit reports that come out the other side.
           </p>
           <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "left" }}>
             {submitted ? (
