@@ -105,6 +105,14 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
     // Floor so even tiny values keep a visible sliver.
     return Math.max(4, Math.round(ratio * 100));
   };
+  // Raw scaled ratio (no floor) — for the popover "relative score" readout.
+  const relativeScore = (v: number) => {
+    if (max <= 0) return 0;
+    return Math.round(Math.sqrt(Math.max(0, v) / max) * 100);
+  };
+  const totalShown = ordered.reduce((sum, c) => sum + Math.max(0, c.value), 0);
+  const minShown = ordered.length ? Math.min(...ordered.map((c) => c.value)) : 0;
+  const maxShown = ordered.length ? Math.max(...ordered.map((c) => c.value)) : 0;
   const rowGap = narrow ? 14 : 10;
   const labelSize = narrow ? 12 : 11;
   const valueSize = narrow ? 12 : 11;
@@ -208,6 +216,41 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
       >
         Bar length = relative {currency} value (√-scaled). Tap a row for details.
       </div>
+      {ordered.length > 0 ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            gap: 8,
+            flexWrap: "wrap",
+            padding: "6px 8px",
+            borderRadius: 6,
+            background: "rgba(26,22,14,0.04)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: FONT_MONO,
+              fontSize: metaSize,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              color: "#1A1614",
+            }}
+          >
+            {ordered.length} of {contracts.length} contracts
+          </span>
+          <span
+            style={{
+              fontFamily: FONT_MONO,
+              fontSize: metaSize,
+              color: "#1A1614",
+            }}
+          >
+            {fmt(minShown, currency)}–{fmt(maxShown, currency)} · total {fmt(totalShown, currency)}
+          </span>
+        </div>
+      ) : null}
       {ordered.length === 0 ? (
         <div
           style={{
