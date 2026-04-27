@@ -85,6 +85,23 @@ const CARDS: CardSpec[] = [
       { value: "$280K", label: "pending", settled: false },
     ],
   },
+  {
+    key: "ppp",
+    initials: "LD",
+    name: "Lerato Dube",
+    role: "Acme Infra · N4 Toll Road",
+    tag: "PPP · Infra",
+    accent: "#7A5C2A",
+    accentSoft: "rgba(122,92,42,0.10)",
+    accentBorder: "rgba(122,92,42,0.25)",
+    accentBg: "rgba(122,92,42,0.04)",
+    avatarBg: "rgba(122,92,42,0.12)",
+    avatarBorder: "rgba(122,92,42,0.3)",
+    stats: [
+      { value: "$18.4M", label: "paid", settled: true },
+      { value: "$4.6M", label: "pending", settled: false },
+    ],
+  },
 ];
 
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
