@@ -38,12 +38,6 @@ const statusChip: Record<ValueEventStatus, { bg: string; fg: string }> = {
   Watching: { bg: "rgba(42,92,138,0.10)", fg: "#2A5C8A" },
 };
 
-const confidenceColor: Record<ValueEventConfidence, string> = {
-  High: "#2A6A45",
-  Medium: "#C4892A",
-  Low: "#9A8F84",
-};
-
 const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
 
 const formatAmount = (amount: number | null, currency: string) => {
