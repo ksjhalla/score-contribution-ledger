@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
@@ -43,12 +43,39 @@ const fullNumber = (n: number, c: string) => {
 export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkContract[]; currency: string }) => {
   if (!contracts.length) return null;
   const [sortMode, setSortMode] = useState<"original" | "value">("original");
+  const [activeStatuses, setActiveStatuses] = useState<Set<SparkContract["status"]>>(
+    () => new Set(["settled", "pending", "watching", "attributed"]),
+  );
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setNarrow(entry.contentRect.width < 380);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const toggleStatus = (s: SparkContract["status"]) => {
+    setActiveStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
+      // Don't allow empty filter — re-enable everything if user just turned the last one off.
+      if (next.size === 0) return new Set(["settled", "pending", "watching", "attributed"]);
+      return next;
+    });
+  };
   const ordered = useMemo(() => {
+    const filtered = contracts.filter((c) => activeStatuses.has(c.status));
     if (sortMode === "value") {
-      return [...contracts].sort((a, b) => b.value - a.value);
+      return [...filtered].sort((a, b) => b.value - a.value);
     }
-    return contracts;
-  }, [contracts, sortMode]);
+    return filtered;
+  }, [contracts, sortMode, activeStatuses]);
   const presentStatuses = useMemo(() => {
     const set = new Set<string>(contracts.map((c) => c.status));
     return (Object.keys(STATUS_LABEL) as Array<SparkContract["status"]>).filter((s) => set.has(s));
@@ -61,8 +88,13 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
     // Floor so even tiny values keep a visible sliver.
     return Math.max(4, Math.round(ratio * 100));
   };
+  const rowGap = narrow ? 14 : 10;
+  const labelSize = narrow ? 12 : 11;
+  const valueSize = narrow ? 12 : 11;
+  const metaSize = narrow ? 9 : 8;
+  const barHeight = narrow ? 8 : 6;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: rowGap }}>
       <div
         style={{
           display: "flex",
@@ -101,38 +133,57 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
             );
           })}
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-          {presentStatuses.map((s) => (
-            <div key={s} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <span
-                aria-hidden
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          {presentStatuses.map((s) => {
+            const active = activeStatuses.has(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => toggleStatus(s)}
+                aria-pressed={active}
                 style={{
-                  display: "inline-block",
-                  width: 8,
-                  height: 8,
-                  borderRadius: 2,
-                  background: STATUS_COLOR[s],
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: FONT_MONO,
-                  fontSize: 9,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  color: "#1A1614",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "3px 7px",
+                  borderRadius: 999,
+                  border: `1px solid ${active ? STATUS_COLOR[s] : "rgba(26,22,14,0.15)"}`,
+                  background: active ? `${STATUS_COLOR[s]}1A` : "transparent",
+                  cursor: "pointer",
+                  opacity: active ? 1 : 0.55,
                 }}
               >
-                {STATUS_LABEL[s]}
-              </span>
-            </div>
-          ))}
+                <span
+                  aria-hidden
+                  style={{
+                    display: "inline-block",
+                    width: 8,
+                    height: 8,
+                    borderRadius: 2,
+                    background: STATUS_COLOR[s],
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: FONT_MONO,
+                    fontSize: 9,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    color: "#1A1614",
+                  }}
+                >
+                  {STATUS_LABEL[s]}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
       <div
         style={{
           fontFamily: FONT_MONO,
-          fontSize: 8,
+          fontSize: metaSize,
           textTransform: "uppercase",
           letterSpacing: "0.06em",
           color: "#9A8F84",
@@ -140,6 +191,19 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
       >
         Bar length = relative {currency} value (√-scaled). Tap a row for details.
       </div>
+      {ordered.length === 0 ? (
+        <div
+          style={{
+            fontFamily: FONT_BODY,
+            fontSize: 11,
+            color: "#9A8F84",
+            padding: "12px 0",
+            textAlign: "center",
+          }}
+        >
+          No contracts match the current filters.
+        </div>
+      ) : null}
       {ordered.map((c, i) => {
         const color = c.color ?? STATUS_COLOR[c.status];
         const w = widthFor(c.value);
@@ -160,9 +224,10 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
             <div
               style={{
                 display: "flex",
+                flexDirection: narrow ? "column" : "row",
                 justifyContent: "space-between",
-                alignItems: "baseline",
-                gap: 8,
+                alignItems: narrow ? "flex-start" : "baseline",
+                gap: narrow ? 2 : 8,
                 marginBottom: 4,
                 minWidth: 0,
               }}
@@ -170,13 +235,16 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
               <span
                 style={{
                   fontFamily: FONT_BODY,
-                  fontSize: 11,
+                  fontSize: labelSize,
                   color: "#1A1614",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                  // On narrow widths, wrap rather than truncate so nothing is hidden.
+                  whiteSpace: narrow ? "normal" : "nowrap",
+                  overflow: narrow ? "visible" : "hidden",
+                  textOverflow: narrow ? "clip" : "ellipsis",
+                  wordBreak: narrow ? "break-word" : "normal",
                   flex: 1,
                   minWidth: 0,
+                  lineHeight: 1.3,
                 }}
               >
                 {c.label}
@@ -184,7 +252,7 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
               <span
                 style={{
                   fontFamily: FONT_MONO,
-                  fontSize: 11,
+                  fontSize: valueSize,
                   color,
                   flexShrink: 0,
                 }}
@@ -195,8 +263,8 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
             <div
               style={{
                 position: "relative",
-                height: 6,
-                borderRadius: 3,
+                height: barHeight,
+                borderRadius: barHeight / 2,
                 background: "rgba(26,22,14,0.06)",
                 overflow: "hidden",
               }}
@@ -207,7 +275,7 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
                   inset: 0,
                   width: `${w}%`,
                   background: color,
-                  borderRadius: 3,
+                  borderRadius: barHeight / 2,
                   transition: "width .25s ease",
                 }}
               />
@@ -215,11 +283,14 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
             <div
               style={{
                 fontFamily: FONT_MONO,
-                fontSize: 8,
+                fontSize: metaSize,
                 color: "#9A8F84",
                 marginTop: 3,
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
+                whiteSpace: narrow ? "normal" : "nowrap",
+                overflow: "visible",
+                wordBreak: "break-word",
               }}
             >
               {STATUS_LABEL[c.status]}
