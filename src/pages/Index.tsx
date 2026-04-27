@@ -412,16 +412,6 @@ export default function Index() {
               fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
               borderRadius: 4, padding: "12px 24px", textDecoration: "none",
             }}>See how it works →</a>
-            <a
-              href="/passport/SCR-KA-2026-001"
-              onClick={() => trackEvent("sample_profile_clicked", { source: "hero" })}
-              style={{
-                background: "transparent", color: COLORS.text,
-                border: `1px solid ${COLORS.borderEm}`,
-                fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500,
-                borderRadius: 4, padding: "12px 24px", textDecoration: "none",
-              }}
-            >View a sample profile</a>
           </div>
           <div style={{
             display: "block", textAlign: "center", marginTop: 10,
