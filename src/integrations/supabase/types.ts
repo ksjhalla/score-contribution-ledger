@@ -214,6 +214,33 @@ export type Database = {
           },
         ]
       }
+      evidence_sign_offs: {
+        Row: {
+          id: string
+          mapping_id: string
+          notes: string | null
+          signed_at: string
+          signer_role: Database["public"]["Enums"]["signer_role"]
+          signer_user_id: string
+        }
+        Insert: {
+          id?: string
+          mapping_id: string
+          notes?: string | null
+          signed_at?: string
+          signer_role: Database["public"]["Enums"]["signer_role"]
+          signer_user_id: string
+        }
+        Update: {
+          id?: string
+          mapping_id?: string
+          notes?: string | null
+          signed_at?: string
+          signer_role?: Database["public"]["Enums"]["signer_role"]
+          signer_user_id?: string
+        }
+        Relationships: []
+      }
       execution_attestations: {
         Row: {
           attestation_type: string
@@ -464,6 +491,7 @@ export type Database = {
           show_amounts: boolean
           show_contracts: boolean
           show_counterparties: boolean
+          signer_role: Database["public"]["Enums"]["signer_role"]
           updated_at: string
         }
         Insert: {
@@ -482,6 +510,7 @@ export type Database = {
           show_amounts?: boolean
           show_contracts?: boolean
           show_counterparties?: boolean
+          signer_role?: Database["public"]["Enums"]["signer_role"]
           updated_at?: string
         }
         Update: {
@@ -500,6 +529,7 @@ export type Database = {
           show_amounts?: boolean
           show_contracts?: boolean
           show_counterparties?: boolean
+          signer_role?: Database["public"]["Enums"]["signer_role"]
           updated_at?: string
         }
         Relationships: []
@@ -687,6 +717,10 @@ export type Database = {
         }
         Returns: Json
       }
+      current_signer_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["signer_role"]
+      }
       current_user_has_redeemed_invite: { Args: never; Returns: boolean }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_user_list: { Args: never; Returns: Json }
@@ -766,6 +800,7 @@ export type Database = {
         | "USDC"
         | "Other"
         | "Not applicable"
+      signer_role: "viewer" | "reviewer" | "approver"
       stake_type: "Financial" | "Attribution" | "Governance" | "Mixed"
       trigger_direction: "Above" | "Below"
       trigger_source: "Manual" | "Webhook" | "File import"
@@ -954,6 +989,7 @@ export const Constants = {
         "Other",
         "Not applicable",
       ],
+      signer_role: ["viewer", "reviewer", "approver"],
       stake_type: ["Financial", "Attribution", "Governance", "Mixed"],
       trigger_direction: ["Above", "Below"],
       trigger_source: ["Manual", "Webhook", "File import"],
