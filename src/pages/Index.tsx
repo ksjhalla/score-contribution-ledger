@@ -642,7 +642,7 @@ export default function Index() {
             {[
               { n: "01", t: "Contract", b: "A real-world agreement defines what the contributor is owed and what condition must be met. SCORE records the reference — it does not hold the contract." },
               { n: "02", t: "Evidence", b: "Work is logged against the contract. Each record is SHA-256 fingerprinted and RFC 3161 timestamped at creation. Immutable from that point." },
-              { n: "03", t: "Trigger & confirmation", b: "When the condition is met — a threshold crossed, a licence confirmed, a payment received — SCORE notifies and records the event. Contracts and payments stay in their existing systems." },
+              { n: "03", t: "Trigger & record", b: "When the condition is met — a threshold crossed, a licence signed, a payment received — SCORE notifies you and records it. Your contracts and payments stay where they already live." },
             ].map((s, i, arr) => (
               <Fragment key={s.n}>
                 <div className="score-howitworks-step" style={{

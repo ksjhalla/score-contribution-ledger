@@ -505,7 +505,7 @@ export const LogWorkForm = ({ open, onOpenChange, onCreated, initialContractId }
             {triggerMet && (
               <div className="space-y-2">
                 <label style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                  How will payment be received?
+                  How will you get paid?
                 </label>
                 <Select value={channel} onValueChange={(v) => setChannel(v as SettlementChannel)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -514,7 +514,7 @@ export const LogWorkForm = ({ open, onOpenChange, onCreated, initialContractId }
                   </SelectContent>
                 </Select>
                 <div style={{ fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 9, color: "#9A8F84" }}>
-                  SCORE records the trigger and notifies you. Payment is handled by your chosen channel — SCORE only confirms when it arrives.
+                  SCORE just records and notifies. The actual payment happens in your chosen channel.
                 </div>
               </div>
             )}
@@ -530,7 +530,7 @@ export const LogWorkForm = ({ open, onOpenChange, onCreated, initialContractId }
                     ["Contribution", title || "—"],
                     ["Status", triggerMet ? "Pending" : "Intent logged"],
                     ["Proof", skipProof || !proofHash ? "None" : `${proofHash.slice(0, 16)}…`],
-                    ["Payment channel", triggerMet ? channel : "N/A"],
+                    ["Paid via", triggerMet ? channel : "N/A"],
                   ].map(([k, v]) => (
                     <tr key={k}>
                       <td style={{ padding: "4px 10px 4px 0", fontFamily: "'DM Mono',ui-monospace,monospace", fontSize: 10, color: "#9A8F84", verticalAlign: "top", width: "35%" }}>{k}</td>

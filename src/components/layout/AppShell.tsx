@@ -282,7 +282,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             lineHeight: 1.6,
           }}
         >
-          SCORE tracks and verifies value. Contracts and payments remain with their respective systems.
+          SCORE tracks and verifies your value. Contracts and payments stay in their own systems.
         </footer>
       </div>
 

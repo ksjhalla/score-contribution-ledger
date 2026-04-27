@@ -153,7 +153,7 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
           <DialogDescription>
             {step === 1 && "Describe the work and whether it met the trigger."}
             {step === 2 && "Link evidence that supports this execution."}
-            {step === 3 && "Payment details (optional)."}
+            {step === 3 && "How you got paid (optional)."}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,8 +174,8 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
               </div>
               <div className="flex items-center justify-between rounded-md border p-3">
                 <div>
-                  <div className="text-sm font-medium">Trigger condition met?</div>
-                  <div className="text-xs text-muted-foreground">If no, status will be "Intent logged".</div>
+                  <div className="text-sm font-medium">Was the condition met?</div>
+                  <div className="text-xs text-muted-foreground">If no, this is just logged for now.</div>
                 </div>
                 <Switch checked={triggerMet} onCheckedChange={setTriggerMet} />
               </div>
@@ -218,11 +218,11 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
             <>
               {!triggerMet && (
                 <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
-                  Trigger was not met — payment details are not applicable. You can still add notes.
+                  Condition not met yet — no payment details needed. You can still add notes.
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="ex-ch">Payment channel</Label>
+                <Label htmlFor="ex-ch">How was it paid?</Label>
                 <Select value={channel} onValueChange={(v) => setChannel(v as Channel)} disabled={!triggerMet}>
                   <SelectTrigger id="ex-ch"><SelectValue placeholder="Select channel" /></SelectTrigger>
                   <SelectContent>
@@ -231,7 +231,7 @@ export const LogExecutionDialog = ({ open, onOpenChange, contractId, contractSta
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ex-ref">Payment reference</Label>
+                <Label htmlFor="ex-ref">Reference</Label>
                 <Input id="ex-ref" value={reference} onChange={(e) => setReference(e.target.value)}
                   placeholder="Stripe payment ID, txn hash, bank ref" disabled={!triggerMet} />
               </div>
