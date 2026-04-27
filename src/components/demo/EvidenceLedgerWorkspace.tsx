@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import type { EvidenceMapping, DemoProfile } from "@/data/demoProfiles";
 import { formatDemoAmount } from "@/data/demoProfiles";
 import { EvidenceLedgerWorkflow } from "./EvidenceLedgerWorkflow";
-import { Upload, FileText, Smartphone, CheckCircle2, Clock, Eye, AlertTriangle, User, History } from "lucide-react";
+import { Upload, FileText, Smartphone, CheckCircle2, Clock, Eye, AlertTriangle, User, History, ShieldCheck, UserCheck, Lock } from "lucide-react";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -15,6 +15,25 @@ type AuditEvent = {
   action: string;
   detail: string;
   kind: "create" | "approve" | "edit" | "watch";
+};
+
+type Role = "Viewer" | "Reviewer" | "Approver";
+
+type SignOffState = {
+  reviewer?: { actor: string; at: string };
+  approver?: { actor: string; at: string };
+};
+
+const ROLE_META: Record<Role, { color: string; icon: typeof Eye; blurb: string }> = {
+  Viewer: { color: "#5C5248", icon: Eye, blurb: "Read-only — cannot move mappings" },
+  Reviewer: { color: "#2A5C8A", icon: UserCheck, blurb: "Can sign off evidence into Awaiting sign-off" },
+  Approver: { color: "#2A6A45", icon: ShieldCheck, blurb: "Can counter-sign and reconcile to the ledger" },
+};
+
+const ROLE_ACTORS: Record<Role, string> = {
+  Viewer: "Observer · viewer",
+  Reviewer: "SGS Ghana · reviewer",
+  Approver: "Concession trustee · approver",
 };
 
 const fmtTime = (iso: string) => {
@@ -41,6 +60,23 @@ export const EvidenceLedgerWorkspace = ({
 }) => {
   const accent = profile.accent;
   const [mappings, setMappings] = useState<EvidenceMapping[]>(initialMappings);
+  const [role, setRole] = useState<Role>("Reviewer");
+  const [signOff, setSignOff] = useState<Record<number, SignOffState>>(() => {
+    const seed: Record<number, SignOffState> = {};
+    initialMappings.forEach((m, i) => {
+      if (m.status === "Reconciled") {
+        seed[i] = {
+          reviewer: { actor: ROLE_ACTORS.Reviewer, at: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString() },
+          approver: { actor: ROLE_ACTORS.Approver, at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+        };
+      } else if (m.status === "Awaiting sign-off") {
+        seed[i] = {
+          reviewer: { actor: ROLE_ACTORS.Reviewer, at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString() },
+        };
+      }
+    });
+    return seed;
+  });
   const [audit, setAudit] = useState<AuditEvent[]>(() => [
     {
       id: "a1",
@@ -118,6 +154,13 @@ export const EvidenceLedgerWorkspace = ({
       status: "Awaiting sign-off",
     };
     setMappings((prev) => [newMapping, ...prev]);
+    setSignOff((prev) => {
+      const next: Record<number, SignOffState> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        next[Number(k) + 1] = v;
+      });
+      return next;
+    });
     setAudit((prev) => [
       {
         id,
@@ -134,17 +177,41 @@ export const EvidenceLedgerWorkspace = ({
     e.target.value = "";
   };
 
-  const approve = (idx: number) => {
+  const signAs = (idx: number) => {
     const m = mappings[idx];
-    if (!m) return;
+    if (!m || role === "Viewer") return;
+    const current = signOff[idx] ?? {};
+    const now = new Date().toISOString();
+    const actor = ROLE_ACTORS[role];
+
+    if (role === "Reviewer") {
+      if (current.reviewer) return;
+      setSignOff((prev) => ({ ...prev, [idx]: { ...current, reviewer: { actor, at: now } } }));
+      setMappings((prev) => prev.map((x, i) => (i === idx ? { ...x, status: "Awaiting sign-off" } : x)));
+      setAudit((prev) => [
+        {
+          id: `rv-${Date.now()}`,
+          at: now,
+          actor,
+          action: "Reviewer signed",
+          detail: `${m.evidence.title} → moved to Awaiting sign-off (needs Approver)`,
+          kind: "edit",
+        },
+        ...prev,
+      ]);
+      return;
+    }
+
+    if (!current.reviewer || current.approver) return;
+    setSignOff((prev) => ({ ...prev, [idx]: { ...current, approver: { actor, at: now } } }));
     setMappings((prev) => prev.map((x, i) => (i === idx ? { ...x, status: "Reconciled" } : x)));
     setAudit((prev) => [
       {
         id: `ap-${Date.now()}`,
-        at: new Date().toISOString(),
-        actor: `${profile.contributor.name} · ${profile.contributor.id}`,
-        action: "Approved",
-        detail: `${m.evidence.title} → ${m.ledger.entry} (${m.ledger.bucket})`,
+        at: now,
+        actor,
+        action: "Approver counter-signed",
+        detail: `${m.evidence.title} → Reconciled to ${m.ledger.entry} (${m.ledger.bucket})`,
         kind: "approve",
       },
       ...prev,
@@ -234,6 +301,60 @@ export const EvidenceLedgerWorkspace = ({
         </div>
       </div>
 
+      {/* Role switcher */}
+      <div
+        style={{
+          border: "1px solid rgba(26,22,14,0.10)",
+          background: "#FDFAF4",
+          borderRadius: 6,
+          padding: "12px 14px",
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+          <ShieldCheck size={14} color={accent} />
+          <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Acting as
+          </span>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ROLE_META[role].color, marginLeft: "auto" }}>
+            {ROLE_META[role].blurb}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {(Object.keys(ROLE_META) as Role[]).map((r) => {
+            const active = r === role;
+            const meta = ROLE_META[r];
+            const Icon = meta.icon;
+            return (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRole(r)}
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 10,
+                  color: active ? "#FDFAF4" : meta.color,
+                  background: active ? meta.color : `${meta.color}14`,
+                  border: `1px solid ${meta.color}${active ? "" : "33"}`,
+                  padding: "6px 10px",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Icon size={12} /> {r}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 11, color: "#5C5248", marginTop: 10, lineHeight: 1.5 }}>
+          Two-step gating: <strong>Reviewer</strong> moves new evidence into <em>Awaiting sign-off</em>.{" "}
+          <strong>Approver</strong> counter-signs to reconcile. The Approver button is locked until a Reviewer signs.
+        </div>
+      </div>
+
       {/* Reconciliation panel */}
       <div
         style={{
@@ -306,7 +427,9 @@ export const EvidenceLedgerWorkspace = ({
                   evidenceTitle={m.evidence.title}
                   status={m.status}
                   amount={formatDemoAmount(m.ledger.amount, m.ledger.currency)}
-                  onApprove={() => approve(idx)}
+                  onSign={() => signAs(idx)}
+                  role={role}
+                  signOff={signOff[idx]}
                   pulse={pulseId !== null && mappings[0] === m && pulseId.startsWith("up-")}
                 />
               );
@@ -321,7 +444,9 @@ export const EvidenceLedgerWorkspace = ({
                   evidenceTitle={m.evidence.title}
                   status={m.status}
                   amount={formatDemoAmount(m.ledger.amount, m.ledger.currency)}
-                  onApprove={() => approve(idx)}
+                  onSign={() => signAs(idx)}
+                  role={role}
+                  signOff={signOff[idx]}
                   pulse={pulseId !== null && mappings[0] === m && pulseId.startsWith("up-")}
                 />
               );
@@ -433,7 +558,9 @@ const BlockerRow = ({
   evidenceTitle,
   status,
   amount,
-  onApprove,
+  onSign,
+  role,
+  signOff,
   pulse,
 }: {
   bucket: "Paid" | "Pending";
@@ -441,9 +568,45 @@ const BlockerRow = ({
   evidenceTitle: string;
   status: EvidenceMapping["status"];
   amount: string;
-  onApprove: () => void;
+  onSign: () => void;
+  role: Role;
+  signOff?: SignOffState;
   pulse: boolean;
-}) => (
+}) => {
+  const reviewerDone = !!signOff?.reviewer;
+  const approverDone = !!signOff?.approver;
+
+  let label = "Sign as Reviewer";
+  let disabled = false;
+  let actionColor = "#2A5C8A";
+  let showLock = false;
+
+  if (role === "Viewer") {
+    label = "Read-only";
+    disabled = true;
+    actionColor = "#9A8F84";
+    showLock = true;
+  } else if (role === "Reviewer") {
+    if (reviewerDone) {
+      label = "Reviewer ✓";
+      disabled = true;
+    }
+  } else {
+    actionColor = "#2A6A45";
+    if (!reviewerDone) {
+      label = "Locked · needs Reviewer";
+      disabled = true;
+      actionColor = "#9A8F84";
+      showLock = true;
+    } else if (approverDone) {
+      label = "Approved ✓";
+      disabled = true;
+    } else {
+      label = "Counter-sign · reconcile";
+    }
+  }
+
+  return (
   <div
     style={{
       display: "flex",
@@ -454,6 +617,7 @@ const BlockerRow = ({
       background: pulse ? `${bucketColor}1a` : "transparent",
       border: `1px solid ${bucketColor}22`,
       transition: "background 0.4s",
+      flexWrap: "wrap",
     }}
   >
     <span
@@ -475,25 +639,32 @@ const BlockerRow = ({
         {evidenceTitle}
       </div>
       <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84" }}>
-        Blocked by: {status} · {amount}
+        {amount} · Reviewer {reviewerDone ? "✓" : "○"} · Approver {approverDone ? "✓" : "○"}
       </div>
     </div>
     <button
       type="button"
-      onClick={onApprove}
+      onClick={onSign}
+      disabled={disabled}
       style={{
         fontFamily: FONT_MONO,
         fontSize: 9,
-        color: "#2A6A45",
-        background: "rgba(42,106,69,0.08)",
-        border: "1px solid rgba(42,106,69,0.3)",
+        color: actionColor,
+        background: `${actionColor}14`,
+        border: `1px solid ${actionColor}4d`,
         padding: "4px 8px",
         borderRadius: 3,
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.7 : 1,
         whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
       }}
     >
-      Mark reconciled
+      {showLock ? <Lock size={10} /> : null}
+      {label}
     </button>
   </div>
-);
+  );
+};
