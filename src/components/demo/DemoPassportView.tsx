@@ -6,7 +6,7 @@ import { ContractSparkBars } from "@/components/charts/ContractSparkBars";
 import { QuickReadPanel } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc } from "@/components/charts/MilestoneArc";
 import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
-import { EvidenceLedgerWorkflow } from "@/components/demo/EvidenceLedgerWorkflow";
+import { EvidenceLedgerWorkspace } from "@/components/demo/EvidenceLedgerWorkspace";
 import { Phase2Tracker } from "@/components/demo/Phase2Tracker";
 import { SiteUptimeBreakdown } from "@/components/demo/SiteUptimeBreakdown";
 import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
@@ -28,7 +28,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
   } = profile;
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
-      <div style={{ marginBottom: 20 }}>
+      <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
         <div
           style={{
             fontFamily: FONT_MONO,
@@ -318,7 +318,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       </div>
 
       {evidenceMappings && evidenceMappings.length > 0 && (
-        <EvidenceLedgerWorkflow mappings={evidenceMappings} accent={accent} />
+        <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
       )}
 
       {siteUptime && siteUptime.length > 0 && (
