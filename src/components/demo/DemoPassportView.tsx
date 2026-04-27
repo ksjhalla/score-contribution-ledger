@@ -223,7 +223,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             </div>
           ))}
         </div>
-        <QuickReadPanel rows={quickRead} />
+        {!isPpp && <QuickReadPanel rows={quickRead} />}
       </div>
 
       <h3
