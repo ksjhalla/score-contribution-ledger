@@ -57,6 +57,10 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
   // doesn't flatten the smaller paid/pending bars to invisibility.
   const max = Math.max(...ordered.map((c) => c.value), 1);
   const widthFor = (v: number) => {
+    // Zero-value contracts are intentionally rendered as an empty track so they
+    // remain visible in the list and counted in the summary, but aren't
+    // misrepresented as having relative weight.
+    if (v <= 0) return 0;
     const ratio = Math.sqrt(Math.max(0, v) / max);
     // Floor so even tiny values keep a visible sliver.
     return Math.max(4, Math.round(ratio * 100));
