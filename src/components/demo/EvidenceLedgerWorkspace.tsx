@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import type { EvidenceMapping, DemoProfile } from "@/data/demoProfiles";
 import { formatDemoAmount } from "@/data/demoProfiles";
 import { EvidenceLedgerWorkflow } from "./EvidenceLedgerWorkflow";
-import { Upload, FileText, Smartphone, CheckCircle2, Clock, Eye, AlertTriangle, User, History, ShieldCheck, UserCheck, Lock } from "lucide-react";
+import { Upload, FileText, Smartphone, CheckCircle2, Clock, Eye, AlertTriangle, User, History, ShieldCheck, UserCheck, Lock, Download, FileSpreadsheet, FileDown } from "lucide-react";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -107,6 +107,12 @@ export const EvidenceLedgerWorkspace = ({
   const [uploadKind, setUploadKind] = useState<"kWh audit" | "Mobile-money collection">("kWh audit");
   const [pulseId, setPulseId] = useState<string | null>(null);
 
+  const today = new Date().toISOString().slice(0, 10);
+  const monthAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString().slice(0, 10);
+  const [exportFrom, setExportFrom] = useState<string>(monthAgo);
+  const [exportTo, setExportTo] = useState<string>(today);
+  const [exportToast, setExportToast] = useState<string | null>(null);
+
   const counts = useMemo(() => {
     const out = { Reconciled: 0, "Awaiting sign-off": 0, Watching: 0 } as Record<EvidenceMapping["status"], number>;
     mappings.forEach((m) => (out[m.status] += 1));
@@ -118,6 +124,131 @@ export const EvidenceLedgerWorkspace = ({
     const pendingAwaiting = mappings.filter((m) => m.ledger.bucket === "Pending" && m.status !== "Reconciled");
     return { paidAwaiting, pendingAwaiting };
   }, [mappings]);
+
+  const inRangeAudit = useMemo(() => {
+    const start = new Date(exportFrom + "T00:00:00").getTime();
+    const end = new Date(exportTo + "T23:59:59").getTime();
+    return audit.filter((e) => {
+      const t = new Date(e.at).getTime();
+      return t >= start && t <= end;
+    });
+  }, [audit, exportFrom, exportTo]);
+
+  const flashToast = (msg: string) => {
+    setExportToast(msg);
+    setTimeout(() => setExportToast(null), 2400);
+  };
+
+  const downloadBlob = (filename: string, mime: string, content: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const csvEscape = (v: string | number | null | undefined) => {
+    const s = v === null || v === undefined ? "" : String(v);
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  const exportCsv = () => {
+    const lines: string[] = [];
+    lines.push(`SCORE Evidence Ledger Audit Report`);
+    lines.push(`Contributor,${csvEscape(profile.contributor.name)},${csvEscape(profile.contributor.id)}`);
+    lines.push(`Range,${exportFrom},${exportTo}`);
+    lines.push(`Generated,${new Date().toISOString()}`);
+    lines.push("");
+    lines.push("# Evidence mappings");
+    lines.push(["Status","Bucket","Evidence type","Evidence title","Period","Source","Fingerprint","Metric","Ledger entry","Amount","Currency","Contract","Reviewer","Reviewer at","Approver","Approver at","Rule"].join(","));
+    mappings.forEach((m, i) => {
+      const so = signOff[i];
+      lines.push([
+        m.status, m.ledger.bucket, m.evidence.type, m.evidence.title, m.evidence.period,
+        m.evidence.source, m.evidence.fingerprint, m.evidence.metric,
+        m.ledger.entry, m.ledger.amount ?? "", m.ledger.currency, m.ledger.contract,
+        so?.reviewer?.actor ?? "", so?.reviewer?.at ?? "",
+        so?.approver?.actor ?? "", so?.approver?.at ?? "",
+        m.rule,
+      ].map(csvEscape).join(","));
+    });
+    lines.push("");
+    lines.push(`# Audit trail (${exportFrom} -> ${exportTo})`);
+    lines.push(["Timestamp","Actor","Action","Kind","Detail"].join(","));
+    inRangeAudit.forEach((e) => {
+      lines.push([e.at, e.actor, e.action, e.kind, e.detail].map(csvEscape).join(","));
+    });
+    const fname = `SCORE-${profile.contributor.id}-evidence-${exportFrom}_${exportTo}.csv`;
+    downloadBlob(fname, "text/csv;charset=utf-8", lines.join("\n"));
+    flashToast(`CSV exported · ${mappings.length} mappings, ${inRangeAudit.length} audit events`);
+  };
+
+  const exportPdf = () => {
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const rowsM = mappings
+      .map((m, i) => {
+        const so = signOff[i];
+        return `<tr>
+          <td>${esc(m.status)}</td>
+          <td>${esc(m.ledger.bucket)}</td>
+          <td>${esc(m.evidence.title)}<br/><span class="muted">${esc(m.evidence.period)} · ${esc(m.evidence.source)}</span></td>
+          <td>${esc(m.ledger.entry)}<br/><span class="muted">${esc(m.ledger.contract)}</span></td>
+          <td>${m.ledger.amount !== null ? formatDemoAmount(m.ledger.amount, m.ledger.currency) : "—"}</td>
+          <td>${so?.reviewer ? esc(so.reviewer.actor) : "—"}<br/><span class="muted">${so?.reviewer ? new Date(so.reviewer.at).toLocaleString() : ""}</span></td>
+          <td>${so?.approver ? esc(so.approver.actor) : "—"}<br/><span class="muted">${so?.approver ? new Date(so.approver.at).toLocaleString() : ""}</span></td>
+        </tr>`;
+      })
+      .join("");
+    const rowsA = inRangeAudit
+      .map(
+        (e) => `<tr>
+          <td>${new Date(e.at).toLocaleString()}</td>
+          <td>${esc(e.actor)}</td>
+          <td><strong>${esc(e.action)}</strong></td>
+          <td>${esc(e.detail)}</td>
+        </tr>`
+      )
+      .join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>SCORE Evidence Audit Report</title>
+      <style>
+        body{font-family:'DM Sans',system-ui,sans-serif;color:#1A1614;padding:32px;}
+        h1{font-family:'Playfair Display',Georgia,serif;font-size:22px;margin:0 0 4px;}
+        h2{font-family:'Playfair Display',Georgia,serif;font-size:15px;margin:24px 0 8px;}
+        .muted{color:#5C5248;font-size:10px;}
+        .meta{font-size:11px;color:#5C5248;margin-bottom:16px;}
+        table{width:100%;border-collapse:collapse;font-size:10px;}
+        th{text-align:left;background:#F5EFE3;padding:6px;border-bottom:1px solid #ccc;font-weight:600;}
+        td{padding:6px;border-bottom:1px solid #eee;vertical-align:top;}
+        @media print {.no-print{display:none;}}
+        .btn{display:inline-block;background:#1A1614;color:#fff;padding:8px 14px;border-radius:4px;text-decoration:none;font-size:12px;}
+      </style></head><body>
+      <div class="no-print" style="margin-bottom:16px;"><a class="btn" href="javascript:window.print()">Save as PDF</a></div>
+      <h1>SCORE — Evidence Ledger Audit Report</h1>
+      <div class="meta">
+        Contributor: <strong>${esc(profile.contributor.name)}</strong> · ${esc(profile.contributor.id)}<br/>
+        Range: ${esc(exportFrom)} → ${esc(exportTo)} · Generated ${new Date().toLocaleString()}<br/>
+        ${mappings.length} mappings · ${inRangeAudit.length} audit events in range
+      </div>
+      <h2>Evidence mappings</h2>
+      <table><thead><tr><th>Status</th><th>Bucket</th><th>Evidence</th><th>Ledger entry</th><th>Amount</th><th>Reviewer</th><th>Approver</th></tr></thead><tbody>${rowsM}</tbody></table>
+      <h2>Audit trail</h2>
+      <table><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Detail</th></tr></thead><tbody>${rowsA || '<tr><td colspan="4" class="muted">No audit events in selected range.</td></tr>'}</tbody></table>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) {
+      flashToast("Pop-up blocked — allow pop-ups to export PDF");
+      return;
+    }
+    w.document.write(html);
+    w.document.close();
+    flashToast(`PDF view opened · click "Save as PDF" to download`);
+  };
 
   const triggerUpload = (kind: "kWh audit" | "Mobile-money collection") => {
     setUploadKind(kind);
@@ -490,6 +621,83 @@ export const EvidenceLedgerWorkspace = ({
 
       {/* Existing flow */}
       <EvidenceLedgerWorkflow mappings={mappings} accent={accent} />
+
+      {/* Export panel */}
+      <div
+        style={{
+          border: "1px solid rgba(26,22,14,0.10)",
+          borderRadius: 6,
+          background: "#FDFAF4",
+          padding: 14,
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+          <Download size={14} color={accent} />
+          <h4 style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, margin: 0, color: "#1A1614" }}>
+            Export audit report
+          </h4>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", marginLeft: "auto" }}>
+            {mappings.length} mappings · {inRangeAudit.length} events in range
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 10 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>From</span>
+            <input
+              type="date"
+              value={exportFrom}
+              max={exportTo}
+              onChange={(e) => setExportFrom(e.target.value)}
+              style={{ fontFamily: FONT_MONO, fontSize: 11, padding: "6px 8px", border: "1px solid rgba(26,22,14,0.18)", borderRadius: 4, background: "#fff", color: "#1A1614" }}
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>To</span>
+            <input
+              type="date"
+              value={exportTo}
+              min={exportFrom}
+              onChange={(e) => setExportTo(e.target.value)}
+              style={{ fontFamily: FONT_MONO, fontSize: 11, padding: "6px 8px", border: "1px solid rgba(26,22,14,0.18)", borderRadius: 4, background: "#fff", color: "#1A1614" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginLeft: "auto" }}>
+            <button
+              type="button"
+              onClick={exportCsv}
+              style={{
+                fontFamily: FONT_MONO, fontSize: 10, color: "#2A5C8A",
+                background: "rgba(42,92,138,0.08)", border: "1px solid rgba(42,92,138,0.25)",
+                padding: "8px 12px", borderRadius: 4, cursor: "pointer",
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <FileSpreadsheet size={12} /> Download CSV
+            </button>
+            <button
+              type="button"
+              onClick={exportPdf}
+              style={{
+                fontFamily: FONT_MONO, fontSize: 10, color: "#FDFAF4",
+                background: accent, border: `1px solid ${accent}`,
+                padding: "8px 12px", borderRadius: 4, cursor: "pointer",
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <FileDown size={12} /> Generate PDF
+            </button>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "#5C5248", lineHeight: 1.5 }}>
+          CSV includes every mapping with Reviewer/Approver signatures. PDF opens a print-ready view of mappings plus the audit trail filtered to your selected range.
+        </div>
+        {exportToast && (
+          <div style={{ marginTop: 10, fontFamily: FONT_MONO, fontSize: 10, color: "#2A6A45", background: "rgba(42,106,69,0.10)", border: "1px solid rgba(42,106,69,0.25)", padding: "6px 10px", borderRadius: 4 }}>
+            {exportToast}
+          </div>
+        )}
+      </div>
 
       {/* Audit trail */}
       <div
