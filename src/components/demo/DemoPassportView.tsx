@@ -159,7 +159,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         What changed
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-3.5" style={{ marginBottom: 28 }}>
+      <div className={isPpp ? "grid grid-cols-1 gap-3.5" : "grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-3.5"} style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {whatChanged.map((c, i) => (
             <div key={`${c.headline}-${i}`}>
