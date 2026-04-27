@@ -50,8 +50,8 @@ export const ContractSparkBars = ({ contracts, currency }: { contracts: SparkCon
     return contracts;
   }, [contracts, sortMode]);
   const presentStatuses = useMemo(() => {
-    const set = new Set(contracts.map((c) => c.status));
-    return (Object.keys(STATUS_LABEL) as Array<keyof typeof STATUS_LABEL>).filter((s) => set.has(s));
+    const set = new Set<string>(contracts.map((c) => c.status));
+    return (Object.keys(STATUS_LABEL) as Array<SparkContract["status"]>).filter((s) => set.has(s));
   }, [contracts]);
   // Use sqrt scaling so a single huge entry (e.g. a multi-million "Phase 2" bet)
   // doesn't flatten the smaller paid/pending bars to invisibility.
