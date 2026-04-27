@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogWorkForm } from "@/components/log-work/LogWorkForm";
 import { MarkSettledDialog } from "@/components/contracts/MarkSettledDialog";
 import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
+import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
 import { toast } from "sonner";
 
 type AttestRow = {
@@ -179,6 +180,15 @@ const LogWork = () => {
               Read-only demo view. Showing executions for {demoProfile.contributor.name}.
             </p>
           </header>
+          {demoProfile.exampleCards && demoProfile.exampleCards.length > 0 && (
+            <MiniGridExampleCards
+              cards={demoProfile.exampleCards}
+              accent={demoProfile.accent}
+              title="What a logged contribution looks like"
+              description="Three real Ghana mini-grid examples — what was measured, what it paid, who confirmed it."
+              compact
+            />
+          )}
           <Card>
             <CardHeader className="px-5 sm:px-6 pt-5 sm:pt-6">
               <CardTitle>Demo executions</CardTitle>
