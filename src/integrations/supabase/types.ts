@@ -708,6 +708,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_signer_roles: { Args: never; Returns: Json }
+      admin_set_signer_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["signer_role"]
+          p_user_id: string
+        }
+        Returns: Json
+      }
       complete_profile_with_contributor_id: {
         Args: {
           p_full_name: string
