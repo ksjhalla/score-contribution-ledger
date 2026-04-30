@@ -41,6 +41,7 @@ export type DemoProfile = {
   phase2Tracker?: Phase2Milestone[];
   siteUptime?: SiteUptime[];
   exampleCards?: ExampleCard[];
+  contribution?: string[];
 };
 
 export type EvidenceMapping = {
