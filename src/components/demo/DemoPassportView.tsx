@@ -25,6 +25,12 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
     key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead,
     milestones, bio, badges, valueStreams, evidenceMappings, siteUptime, exampleCards,
   } = profile;
+  const contribution = profile.contribution;
+  const hasDetails = Boolean(
+    (evidenceMappings && evidenceMappings.length > 0) ||
+    (siteUptime && siteUptime.length > 0) ||
+    (exampleCards && exampleCards.length > 0)
+  );
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
@@ -90,6 +96,32 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             )}
           </div>
         )}
+        {contribution && contribution.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <div
+              style={{
+                fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84",
+                textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8,
+              }}
+            >
+              What you did
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+              {contribution.map((b) => (
+                <li key={b} style={{ fontSize: 13, color: "#1A1614", lineHeight: 1.6 }}>{b}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
+          fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84",
+          textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8,
+        }}
+      >
+        Your value in this project
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ marginBottom: 28 }}>
@@ -228,7 +260,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           margin: "0 0 12px",
         }}
       >
-        {valueStreams ? "Value streams" : "Contracts"}
+        {valueStreams ? "Where value comes from" : "Contracts"}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28, alignItems: "start" }}>
       {valueStreams ? (
@@ -316,17 +348,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
         </div>
       </div>
 
-      {siteUptime && siteUptime.length > 0 && (
-        <div style={{ marginTop: 8, marginBottom: 20 }}>
-          <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
-        </div>
-      )}
-      {exampleCards && exampleCards.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <MiniGridExampleCards cards={exampleCards} accent={accent} />
-        </div>
-      )}
-      {evidenceMappings && evidenceMappings.length > 0 && (
+      {hasDetails && (
         <details
           style={{
             marginTop: 8,
@@ -349,10 +371,10 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
           >
             <div>
               <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>
-                Proof & verification
+                View details
               </div>
               <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
-                The full backing — sources, sign-offs, and the audit trail behind every value event.
+                Audit data, site-level breakdown, and supporting evidence.
               </div>
             </div>
             <span
@@ -370,7 +392,15 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
             </span>
           </summary>
           <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
-            <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
+            {siteUptime && siteUptime.length > 0 && (
+              <SiteUptimeBreakdown sites={siteUptime} accent={accent} />
+            )}
+            {exampleCards && exampleCards.length > 0 && (
+              <MiniGridExampleCards cards={exampleCards} accent={accent} />
+            )}
+            {evidenceMappings && evidenceMappings.length > 0 && (
+              <EvidenceLedgerWorkspace profile={profile} initialMappings={evidenceMappings} />
+            )}
           </div>
         </details>
       )}
