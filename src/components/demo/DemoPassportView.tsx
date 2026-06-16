@@ -9,6 +9,7 @@ import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
 import { EvidenceLedgerWorkspace } from "@/components/demo/EvidenceLedgerWorkspace";
 import { SiteUptimeBreakdown } from "@/components/demo/SiteUptimeBreakdown";
 import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
+import { toast } from "sonner";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -31,6 +32,15 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
     (siteUptime && siteUptime.length > 0) ||
     (exampleCards && exampleCards.length > 0)
   );
+
+  // ---- Contribution Confirmations summary (across all value events) ----
+  const allConfs = whatChanged.flatMap((e) => e.confirmations ?? []);
+  const confirmedTotal = allConfs.filter((c) => c.status === "Confirmed").length;
+  const pendingTotal = allConfs.filter((c) => c.status === "Pending").length;
+  const disputedTotal = allConfs.filter((c) => c.status === "Disputed").length;
+  const totalParties = allConfs.length;
+  const confidencePct = totalParties > 0 ? Math.round((confirmedTotal / totalParties) * 100) : 0;
+  const hasConfirmations = totalParties > 0;
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
