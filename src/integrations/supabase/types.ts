@@ -324,6 +324,7 @@ export type Database = {
           expected_resolution: string | null
           id: string
           notes: string | null
+          proof_pack: Json | null
           resolver_description: string | null
           settled_amount: number | null
           settlement_channel:
@@ -347,6 +348,7 @@ export type Database = {
           expected_resolution?: string | null
           id?: string
           notes?: string | null
+          proof_pack?: Json | null
           resolver_description?: string | null
           settled_amount?: number | null
           settlement_channel?:
@@ -370,6 +372,7 @@ export type Database = {
           expected_resolution?: string | null
           id?: string
           notes?: string | null
+          proof_pack?: Json | null
           resolver_description?: string | null
           settled_amount?: number | null
           settlement_channel?:

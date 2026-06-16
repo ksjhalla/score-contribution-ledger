@@ -1,0 +1,1 @@
+ALTER TABLE public.executions ADD COLUMN IF NOT EXISTS proof_pack jsonb;
