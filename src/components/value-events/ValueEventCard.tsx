@@ -232,6 +232,9 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
                   </DrawerDescription>
                 </DrawerHeader>
                 <div style={{ padding: "0 16px 24px", maxHeight: "70vh", overflowY: "auto" }}>
+                  <p style={{ fontSize: 12, color: "#5C5248", lineHeight: 1.6, margin: "0 0 14px" }}>
+                    Here is why this value is recorded and who confirmed it.
+                  </p>
                   <ProofPackBlock pack={proofPack} />
                 </div>
               </DrawerContent>
