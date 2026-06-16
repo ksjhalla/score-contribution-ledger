@@ -79,11 +79,17 @@ const ProofPackBlock = ({ pack }: { pack: ValueEventProofPack }) => {
         <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
           Evidence
         </div>
-        <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
-          {pack.evidence_items.map((e) => (
-            <li key={e} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{e}</li>
-          ))}
-        </ul>
+        {pack.evidence_items.length > 0 ? (
+          <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
+            {pack.evidence_items.map((e) => (
+              <li key={e} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{e}</li>
+            ))}
+          </ul>
+        ) : (
+          <div style={{ fontSize: 12, color: "#9A8F84", lineHeight: 1.5, fontStyle: "italic" }}>
+            No documents attached yet. This value is recorded based on direct confirmation.
+          </div>
+        )}
       </div>
       <Row label="Verifier" value={pack.verifier} />
       <Row label="Source" value={pack.source} />
@@ -226,6 +232,9 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
                   </DrawerDescription>
                 </DrawerHeader>
                 <div style={{ padding: "0 16px 24px", maxHeight: "70vh", overflowY: "auto" }}>
+                  <p style={{ fontSize: 12, color: "#5C5248", lineHeight: 1.6, margin: "0 0 14px" }}>
+                    Here is why this value is recorded and who confirmed it.
+                  </p>
                   <ProofPackBlock pack={proofPack} />
                 </div>
               </DrawerContent>
