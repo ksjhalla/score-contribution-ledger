@@ -7,6 +7,16 @@ const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 export type ValueEventStatus = "Resolved" | "Under review" | "Watching" | "Pending";
 export type ValueEventConfidence = "High" | "Medium" | "Low";
 
+export type ValueEventProofPack = {
+  why_recorded: string;
+  evidence_items: string[];
+  verifier: string;
+  source: string;
+  confidence_level: "High" | "Medium" | "Low";
+  last_verified_date: string;
+  status: "Verified" | "Awaiting verification";
+};
+
 export type ValueEventCardProps = {
   amount: number | null;
   currency: string;
@@ -22,6 +32,7 @@ export type ValueEventCardProps = {
   onAddEvidence?: () => void;
   onRequestConfirmation?: () => void;
   onViewDetails?: () => void;
+  proofPack?: ValueEventProofPack;
 };
 
 const amountColor: Record<ValueEventStatus, string> = {
@@ -51,6 +62,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
     amount, currency, headline, subheadline, status,
     resolver, evidence_count,
     attestationEnabled, onAddEvidence, onRequestConfirmation, onViewDetails,
+    proofPack,
   } = props;
   const [open, setOpen] = useState(false);
   const formatted = formatAmount(amount, currency);
@@ -62,7 +74,11 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
     typeof evidence_count === "number" && evidence_count > 0
       ? `${evidence_count} supporting record${evidence_count === 1 ? "" : "s"} attached`
       : null;
-  const hasProof = Boolean(verifiedLine || supportingLine);
+  const hasProof = Boolean(verifiedLine || supportingLine || proofPack);
+
+  const isVerified = proofPack?.status === "Verified";
+  const badgeBg = isVerified ? "rgba(42,106,69,0.10)" : "rgba(196,137,42,0.10)";
+  const badgeFg = isVerified ? "#2A6A45" : "#8B5E1A";
 
   return (
     <article style={{
@@ -81,13 +97,29 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
             {headline}
           </div>
         </div>
-        <span style={{
-          background: chip.bg, color: chip.fg,
-          fontFamily: FONT_MONO, fontSize: 8, padding: "2px 7px", borderRadius: 3,
-          textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
-        }}>
-          {status}
-        </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+          <span style={{
+            background: chip.bg, color: chip.fg,
+            fontFamily: FONT_MONO, fontSize: 8, padding: "2px 7px", borderRadius: 3,
+            textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
+          }}>
+            {status}
+          </span>
+          {proofPack && (
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              style={{
+                background: badgeBg, color: badgeFg, border: "none", cursor: "pointer",
+                fontFamily: FONT_MONO, fontSize: 8, padding: "2px 7px", borderRadius: 3,
+                textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
+              }}
+              title="Open Proof Pack"
+            >
+              {isVerified ? "✔ Verified" : "⚠ Awaiting verification"}
+            </button>
+          )}
+        </div>
       </header>
 
       <p style={{ fontSize: 12, color: "#5C5248", lineHeight: 1.6, margin: "8px 0 0" }}>
@@ -104,7 +136,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
               fontFamily: FONT_MONO, fontSize: 9, color: "#C4892A",
             }}
           >
-            {open ? "Hide proof ↑" : "How this is verified ↓"}
+            {open ? "Hide proof ↑" : proofPack ? "Open Proof Pack ↓" : "How this is verified ↓"}
           </button>
           {open && (
             <div
@@ -119,15 +151,21 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
                 gap: 4,
               }}
             >
-              {verifiedLine && (
+              {proofPack ? (
+                <ProofPackBlock pack={proofPack} />
+              ) : (
+                <>
+                  {verifiedLine && (
                 <div style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>
                   {verifiedLine}
                 </div>
-              )}
-              {supportingLine && (
+                  )}
+                  {supportingLine && (
                 <div style={{ fontSize: 11, color: "#5C5248", lineHeight: 1.5 }}>
                   {supportingLine}
                 </div>
+                  )}
+                </>
               )}
             </div>
           )}
