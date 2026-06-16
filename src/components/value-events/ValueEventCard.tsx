@@ -79,11 +79,17 @@ const ProofPackBlock = ({ pack }: { pack: ValueEventProofPack }) => {
         <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
           Evidence
         </div>
-        <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
-          {pack.evidence_items.map((e) => (
-            <li key={e} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{e}</li>
-          ))}
-        </ul>
+        {pack.evidence_items.length > 0 ? (
+          <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
+            {pack.evidence_items.map((e) => (
+              <li key={e} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{e}</li>
+            ))}
+          </ul>
+        ) : (
+          <div style={{ fontSize: 12, color: "#9A8F84", lineHeight: 1.5, fontStyle: "italic" }}>
+            No documents attached yet. This value is recorded based on direct confirmation.
+          </div>
+        )}
       </div>
       <Row label="Verifier" value={pack.verifier} />
       <Row label="Source" value={pack.source} />
