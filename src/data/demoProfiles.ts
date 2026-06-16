@@ -106,6 +106,13 @@ export type DemoValueEvent = {
   resolver?: string;
   expected_resolution?: string;
   evidence_count?: number;
+  confirmations?: DemoConfirmation[];
+};
+
+export type DemoConfirmation = {
+  name: string;
+  org?: string;
+  status: "Confirmed" | "Pending" | "Disputed";
 };
 
 export type DemoNotification = {
@@ -914,6 +921,11 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         trigger: "Quarterly kWh sales + collection audited",
         resolver: "audited revenue report",
         expected_resolution: "Resolved", evidence_count: 2,
+        confirmations: [
+          { name: "Sunlite Power", org: "Project sponsor", status: "Confirmed" },
+          { name: "SGS Ghana", org: "Independent auditor", status: "Confirmed" },
+          { name: "Concession Trustee", org: "Stanbic Bank", status: "Confirmed" },
+        ],
       },
       {
         amount: 720000, currency: "USD",
@@ -923,6 +935,11 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         trigger: "Annual grid uptime ≥ 99.0%",
         resolver: "independent technical auditor",
         expected_resolution: "45 days", evidence_count: 1,
+        confirmations: [
+          { name: "VoltaOps", org: "Grid operator", status: "Confirmed" },
+          { name: "Infrastructure Fund", org: "Investor", status: "Confirmed" },
+          { name: "Ministry of Energy", org: "Government", status: "Pending" },
+        ],
       },
       {
         amount: 14500000, currency: "USD",
@@ -932,6 +949,11 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
         trigger: "Ministry approves Phase 2 + GIZ finance close",
         resolver: "Ministry of Energy of Ghana",
         expected_resolution: "12–18 months", evidence_count: 0,
+        confirmations: [
+          { name: "GIZ", org: "Co-financier", status: "Confirmed" },
+          { name: "Energy Commission", org: "Ghana", status: "Pending" },
+          { name: "Ministry of Energy", org: "Cabinet review", status: "Pending" },
+        ],
       },
     ],
     banner: {

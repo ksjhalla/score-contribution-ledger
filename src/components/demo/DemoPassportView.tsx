@@ -1,4 +1,5 @@
 import type { DemoProfile } from "@/data/demoProfiles";
+import type { DemoConfirmation } from "@/data/demoProfiles";
 import { formatDemoAmount } from "@/data/demoProfiles";
 import { ValueEventCard } from "@/components/value-events/ValueEventCard";
 import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
@@ -9,6 +10,7 @@ import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
 import { EvidenceLedgerWorkspace } from "@/components/demo/EvidenceLedgerWorkspace";
 import { SiteUptimeBreakdown } from "@/components/demo/SiteUptimeBreakdown";
 import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
+import { toast } from "sonner";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -18,6 +20,73 @@ const STATUS_COLOR: Record<string, string> = {
   Settled: "#2A6A45",
   Pending: "#C4892A",
   Attributed: "#2A5C8A",
+};
+
+const CONF_COLOR: Record<DemoConfirmation["status"], string> = {
+  Confirmed: "#2A6A45",
+  Pending: "#C4892A",
+  Disputed: "#9A3020",
+};
+
+const EventConfirmations = ({ confirmations }: { confirmations: DemoConfirmation[] }) => {
+  const confirmed = confirmations.filter((c) => c.status === "Confirmed").length;
+  const pending = confirmations.filter((c) => c.status === "Pending").length;
+  const handleInvite = () => {
+    toast.success("Confirmation request sent (demo)");
+  };
+  return (
+    <div
+      style={{
+        marginTop: 8,
+        padding: "10px 12px",
+        background: "rgba(42,106,69,0.06)",
+        border: "1px solid rgba(42,106,69,0.15)",
+        borderRadius: 4,
+      }}
+    >
+      <style>{`@keyframes scoreAttPulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }`}</style>
+      <div style={{ fontFamily: FONT_MONO, fontSize: 9, marginBottom: 8 }}>
+        <span style={{ color: "#2A6A45" }}>{confirmed} of {confirmations.length} confirmed</span>
+        {pending > 0 && (
+          <>
+            <span style={{ color: "#9A8F84" }}> · </span>
+            <span style={{ color: "#C4892A" }}>{pending} pending</span>
+          </>
+        )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {confirmations.map((c) => (
+          <div key={`${c.name}-${c.org ?? ""}`} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: CONF_COLOR[c.status], flexShrink: 0,
+                animation: c.status === "Pending" ? "scoreAttPulse 1.6s ease-in-out infinite" : undefined,
+              }}
+            />
+            <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#1A1614", flex: 1 }}>
+              {c.name}{c.org ? ` · ${c.org}` : ""}
+            </span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 8, color: CONF_COLOR[c.status] }}>
+              {c.status}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
+        <button
+          type="button"
+          onClick={handleInvite}
+          style={{
+            background: "transparent", border: "none", padding: 0, cursor: "pointer",
+            fontFamily: FONT_MONO, fontSize: 9, color: "#C4892A",
+          }}
+        >
+          Invite reviewer →
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
@@ -31,6 +100,15 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
     (siteUptime && siteUptime.length > 0) ||
     (exampleCards && exampleCards.length > 0)
   );
+
+  // ---- Contribution Confirmations summary (across all value events) ----
+  const allConfs = whatChanged.flatMap((e) => e.confirmations ?? []);
+  const confirmedTotal = allConfs.filter((c) => c.status === "Confirmed").length;
+  const pendingTotal = allConfs.filter((c) => c.status === "Pending").length;
+  const disputedTotal = allConfs.filter((c) => c.status === "Disputed").length;
+  const totalParties = allConfs.length;
+  const confidencePct = totalParties > 0 ? Math.round((confirmedTotal / totalParties) * 100) : 0;
+  const hasConfirmations = totalParties > 0;
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto", fontFamily: FONT_BODY }}>
       <div id="demo-contributor-anchor" style={{ marginBottom: 20 }}>
@@ -185,6 +263,41 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
       >
         What changed
       </h3>
+
+      {hasConfirmations && (
+        <div
+          style={{
+            marginBottom: 16,
+            border: "1px solid rgba(26,22,14,0.10)",
+            borderRadius: 6,
+            background: "#FDFAF4",
+            padding: "14px 16px",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Contribution confidence
+              </div>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: "#1A1614", marginTop: 4 }}>
+                {confirmedTotal} of {totalParties} parties confirmed
+                {pendingTotal > 0 && <span style={{ color: "#9A8F84" }}> · {pendingTotal} pending</span>}
+                {disputedTotal > 0 && <span style={{ color: "#9A3020" }}> · {disputedTotal} disputed</span>}
+              </div>
+            </div>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 700, color: "#2A6A45" }}>
+              {confidencePct}%
+            </div>
+          </div>
+          <div style={{ marginTop: 10, height: 6, borderRadius: 3, background: "rgba(26,22,14,0.06)", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${confidencePct}%`, background: "#2A6A45" }} />
+          </div>
+          <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#5C5248", marginTop: 8, lineHeight: 1.5 }}>
+            Not just claimed — confirmed by people who would know.
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-3.5" style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {whatChanged.map((c, i) => (
@@ -201,50 +314,8 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
                 evidence_count={c.evidence_count}
                 expected_resolution={c.expected_resolution}
               />
-              {key === "supplyChain" && i === 0 && (
-                <div
-                  style={{
-                    marginTop: 8,
-                    padding: "10px 12px",
-                    background: "rgba(42,106,69,0.06)",
-                    border: "1px solid rgba(42,106,69,0.15)",
-                    borderRadius: 4,
-                  }}
-                >
-                  <style>{`@keyframes scoreAttPulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }`}</style>
-                  <div style={{ fontFamily: FONT_MONO, fontSize: 9, marginBottom: 8 }}>
-                    <span style={{ color: "#2A6A45" }}>1 of 2 confirmed</span>
-                    <span style={{ color: "#9A8F84" }}> · </span>
-                    <span style={{ color: "#C4892A" }}>1 pending</span>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2A6A45", flexShrink: 0 }} />
-                      <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#1A1614", flex: 1 }}>
-                        Factory Ops Director · Regional Textile Group
-                      </span>
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 8, color: "#2A6A45" }}>Confirmed</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span
-                        style={{
-                          width: 6, height: 6, borderRadius: "50%",
-                          background: "#C4892A", flexShrink: 0,
-                          animation: "scoreAttPulse 1.6s ease-in-out infinite",
-                        }}
-                      />
-                      <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: "#1A1614", flex: 1 }}>
-                        Supply Chain Lead · Global Brand Ops
-                      </span>
-                      <span
-                        title="Demo mode — nudge disabled"
-                        style={{ fontFamily: FONT_MONO, fontSize: 8, color: "#C4892A", cursor: "help" }}
-                      >
-                        Nudge →
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {c.confirmations && c.confirmations.length > 0 && (
+                <EventConfirmations confirmations={c.confirmations} />
               )}
             </div>
           ))}
