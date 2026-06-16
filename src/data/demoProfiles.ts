@@ -107,12 +107,23 @@ export type DemoValueEvent = {
   expected_resolution?: string;
   evidence_count?: number;
   confirmations?: DemoConfirmation[];
+  proofPack?: DemoProofPack;
 };
 
 export type DemoConfirmation = {
   name: string;
   org?: string;
   status: "Confirmed" | "Pending" | "Disputed";
+};
+
+export type DemoProofPack = {
+  why_recorded: string;
+  evidence_items: string[];
+  verifier: string;
+  source: string;
+  confidence_level: "High" | "Medium" | "Low";
+  last_verified_date: string;
+  status: "Verified" | "Awaiting verification";
 };
 
 export type DemoNotification = {
