@@ -937,6 +937,19 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
           { name: "SGS Ghana", org: "Independent auditor", status: "Confirmed" },
           { name: "Concession Trustee", org: "Stanbic Bank", status: "Confirmed" },
         ],
+        proofPack: {
+          why_recorded: "Q4 2025 tariff revenue from electricity sales across 12 villages was audited and distributed.",
+          evidence_items: [
+            "Audited kWh sales report (SGS Ghana)",
+            "Mobile-money collection log (MTN MoMo + Vodafone Cash)",
+            "Concession trustee distribution notice",
+          ],
+          verifier: "SGS Ghana + Stanbic Bank (Concession Trustee)",
+          source: "Energy Commission of Ghana",
+          confidence_level: "High",
+          last_verified_date: "Jan 2026",
+          status: "Verified",
+        },
       },
       {
         amount: 720000, currency: "USD",
@@ -951,6 +964,18 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
           { name: "Infrastructure Fund", org: "Investor", status: "Confirmed" },
           { name: "Ministry of Energy", org: "Government", status: "Pending" },
         ],
+        proofPack: {
+          why_recorded: "2025 grid uptime hit 99.2% across all 12 sites — above the 99.0% bonus threshold in the Service Performance Agreement.",
+          evidence_items: [
+            "Grid availability + SAIDI/SAIFI logs (full year 2025)",
+            "VoltaOps operator sign-off",
+          ],
+          verifier: "Independent technical auditor (sign-off in 45 days)",
+          source: "Service Performance Agreement",
+          confidence_level: "High",
+          last_verified_date: "Jun 2026",
+          status: "Awaiting verification",
+        },
       },
       {
         amount: 14500000, currency: "USD",
@@ -965,6 +990,19 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
           { name: "Energy Commission", org: "Ghana", status: "Pending" },
           { name: "Ministry of Energy", org: "Cabinet review", status: "Pending" },
         ],
+        proofPack: {
+          why_recorded: "Phase 2 expansion (18 villages) is under Ministry review with GIZ co-financing. First-refusal build rights documented in the original concession.",
+          evidence_items: [
+            "Feasibility study (submitted Aug 2025)",
+            "GIZ blended-finance term sheet (in review)",
+            "EPA Ghana permits (granted Nov 2025)",
+          ],
+          verifier: "Ministry of Energy + GIZ",
+          source: "Phase 2 Expansion Option · concession amendment",
+          confidence_level: "Medium",
+          last_verified_date: "May 2026",
+          status: "Awaiting verification",
+        },
       },
     ],
     banner: {
