@@ -57,6 +57,39 @@ const formatAmount = (amount: number | null, currency: string) => {
   return `${sym}${Math.round(amount).toLocaleString()}`;
 };
 
+const ProofPackBlock = ({ pack }: { pack: ValueEventProofPack }) => {
+  const Row = ({ label, value }: { label: string; value: string }) => (
+    <div style={{ display: "grid", gridTemplateColumns: "92px 1fr", gap: 8 }}>
+      <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{value}</div>
+    </div>
+  );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 14, fontWeight: 600, color: "#1A1614" }}>
+        Proof Pack
+      </div>
+      <Row label="Why" value={pack.why_recorded} />
+      <div style={{ display: "grid", gridTemplateColumns: "92px 1fr", gap: 8 }}>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
+          Evidence
+        </div>
+        <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
+          {pack.evidence_items.map((e) => (
+            <li key={e} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{e}</li>
+          ))}
+        </ul>
+      </div>
+      <Row label="Verifier" value={pack.verifier} />
+      <Row label="Source" value={pack.source} />
+      <Row label="Confidence" value={pack.confidence_level} />
+      <Row label="Updated" value={pack.last_verified_date} />
+    </div>
+  );
+};
+
 export const ValueEventCard = (props: ValueEventCardProps) => {
   const {
     amount, currency, headline, subheadline, status,
