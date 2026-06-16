@@ -106,6 +106,13 @@ export type DemoValueEvent = {
   resolver?: string;
   expected_resolution?: string;
   evidence_count?: number;
+  confirmations?: DemoConfirmation[];
+};
+
+export type DemoConfirmation = {
+  name: string;
+  org?: string;
+  status: "Confirmed" | "Pending" | "Disputed";
 };
 
 export type DemoNotification = {
