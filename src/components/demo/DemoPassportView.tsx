@@ -313,6 +313,7 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
                 resolver={c.resolver}
                 evidence_count={c.evidence_count}
                 expected_resolution={c.expected_resolution}
+                proofPack={c.proofPack}
               />
               {c.confirmations && c.confirmations.length > 0 && (
                 <EventConfirmations confirmations={c.confirmations} />
