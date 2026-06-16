@@ -5,7 +5,7 @@ import { DemoPassportView } from "@/components/demo/DemoPassportView";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SharePassportDialog } from "@/components/passport/SharePassportDialog";
-import { ValueEventCard, type ValueEventCardProps } from "@/components/value-events/ValueEventCard";
+import { ValueEventCard, type ValueEventCardProps, type ValueEventProofPack } from "@/components/value-events/ValueEventCard";
 import { AttachEvidenceDialog } from "@/components/contracts/AttachEvidenceDialog";
 import { RequestAttestationDialog } from "@/components/contracts/RequestAttestationDialog";
 import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
@@ -50,6 +50,7 @@ type RecentExecution = {
   contract_name: string | null;
   trigger_description: string | null;
   attestation_required: boolean;
+  proof_pack: ValueEventProofPack | null;
 };
 
 const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
@@ -176,7 +177,7 @@ const Dashboard = () => {
     (async () => {
       const { data } = await supabase
         .from("executions")
-        .select("id, contract_id, title, status, trigger_met, settled_amount, currency, updated_at, confidence, resolver_description, expected_resolution, evidence_ids, contracts:contract_id ( name, trigger_description, attestation_required )")
+        .select("id, contract_id, title, status, trigger_met, settled_amount, currency, updated_at, confidence, resolver_description, expected_resolution, evidence_ids, proof_pack, contracts:contract_id ( name, trigger_description, attestation_required )")
         .eq("user_id", user.id)
         .order("updated_at", { ascending: false })
         .limit(5);
@@ -198,6 +199,7 @@ const Dashboard = () => {
           contract_name: c?.name ?? null,
           trigger_description: c?.trigger_description ?? null,
           attestation_required: c?.attestation_required ?? false,
+          proof_pack: ((r as { proof_pack: ValueEventProofPack | null }).proof_pack) ?? null,
         } as RecentExecution;
       });
       setRecent(rows);
@@ -244,6 +246,7 @@ const Dashboard = () => {
         evidence_count: e.evidence_ids.length,
         expected_resolution: e.expected_resolution ?? undefined,
         attestationEnabled: e.attestation_required,
+        proofPack: e.proof_pack ?? undefined,
       };
     });
   }, [recent]);
