@@ -199,7 +199,7 @@ const Dashboard = () => {
           contract_name: c?.name ?? null,
           trigger_description: c?.trigger_description ?? null,
           attestation_required: c?.attestation_required ?? false,
-          proof_pack: ((r as { proof_pack: ValueEventProofPack | null }).proof_pack) ?? null,
+          proof_pack: ((r as unknown as { proof_pack: ValueEventProofPack | null }).proof_pack) ?? null,
         } as RecentExecution;
       });
       setRecent(rows);
