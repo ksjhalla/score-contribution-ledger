@@ -35,6 +35,7 @@ export type ValueEventCardProps = {
   onRequestConfirmation?: () => void;
   onViewDetails?: () => void;
   proofPack?: ValueEventProofPack;
+  confirmations?: { name: string; role?: string; date?: string }[];
 };
 
 const amountColor: Record<ValueEventStatus, string> = {
