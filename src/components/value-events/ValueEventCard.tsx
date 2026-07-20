@@ -225,7 +225,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
               }}
             >
               {proofPack ? (
-                <ProofPackBlock pack={proofPack} />
+                <ProofPackBlock pack={proofPack} confirmations={confirmations} />
               ) : (
                 <>
                   {verifiedLine && (
