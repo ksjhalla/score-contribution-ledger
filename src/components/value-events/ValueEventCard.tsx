@@ -257,7 +257,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
                   <p style={{ fontSize: 12, color: "#5C5248", lineHeight: 1.6, margin: "0 0 14px" }}>
                     Here is why this value is recorded and who confirmed it.
                   </p>
-                  <ProofPackBlock pack={proofPack} />
+                  <ProofPackBlock pack={proofPack} confirmations={confirmations} />
                 </div>
               </DrawerContent>
             </Drawer>
