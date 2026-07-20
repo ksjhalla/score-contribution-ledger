@@ -35,6 +35,7 @@ export type ValueEventCardProps = {
   onRequestConfirmation?: () => void;
   onViewDetails?: () => void;
   proofPack?: ValueEventProofPack;
+  confirmations?: { name: string; role?: string; date?: string }[];
 };
 
 const amountColor: Record<ValueEventStatus, string> = {
@@ -59,7 +60,7 @@ const formatAmount = (amount: number | null, currency: string) => {
   return `${sym}${Math.round(amount).toLocaleString()}`;
 };
 
-const ProofPackBlock = ({ pack }: { pack: ValueEventProofPack }) => {
+const ProofPackBlock = ({ pack, confirmations = [] }: { pack: ValueEventProofPack; confirmations?: { name: string; role?: string; date?: string }[] }) => {
   const Row = ({ label, value }: { label: string; value: string }) => (
     <div className="proof-row" style={{ display: "grid", gridTemplateColumns: "92px 1fr", gap: 8 }}>
       <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
@@ -68,6 +69,8 @@ const ProofPackBlock = ({ pack }: { pack: ValueEventProofPack }) => {
       <div style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{value}</div>
     </div>
   );
+  const hasEvidence = pack.evidence_items.length > 0;
+  const hasConfirmations = confirmations.length > 0;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, wordBreak: "break-word" }}>
       <style>{`@media (max-width: 640px){.proof-row{grid-template-columns:1fr !important;gap:2px !important;}}`}</style>
@@ -79,18 +82,36 @@ const ProofPackBlock = ({ pack }: { pack: ValueEventProofPack }) => {
         <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
           Evidence
         </div>
-        {pack.evidence_items.length > 0 ? (
+        {hasEvidence ? (
           <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
             {pack.evidence_items.map((e) => (
               <li key={e} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>{e}</li>
             ))}
           </ul>
+        ) : hasConfirmations ? (
+          <div style={{ fontSize: 12, color: "#5C5248", lineHeight: 1.5, fontStyle: "italic" }}>
+            Confirmed by {confirmations.map((c) => c.name).join(", ")}. No documents attached yet.
+          </div>
         ) : (
           <div style={{ fontSize: 12, color: "#9A8F84", lineHeight: 1.5, fontStyle: "italic" }}>
-            No documents attached yet. This value is recorded based on direct confirmation.
+            No documents or confirmations yet. This value is recorded based on direct confirmation.
           </div>
         )}
       </div>
+      {hasConfirmations && (
+        <div className="proof-row" style={{ display: "grid", gridTemplateColumns: "92px 1fr", gap: 8 }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2 }}>
+            Confirmed by
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
+            {confirmations.map((c) => (
+              <li key={c.name} style={{ fontSize: 12, color: "#1A1614", lineHeight: 1.5 }}>
+                {c.name}{c.role ? ` — ${c.role}` : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <Row label="Verifier" value={pack.verifier} />
       <Row label="Source" value={pack.source} />
       <Row label="Confidence" value={pack.confidence_level} />
@@ -105,6 +126,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
     resolver, evidence_count,
     attestationEnabled, onAddEvidence, onRequestConfirmation, onViewDetails,
     proofPack,
+    confirmations = [],
   } = props;
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -203,7 +225,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
               }}
             >
               {proofPack ? (
-                <ProofPackBlock pack={proofPack} />
+                <ProofPackBlock pack={proofPack} confirmations={confirmations} />
               ) : (
                 <>
                   {verifiedLine && (
@@ -235,7 +257,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
                   <p style={{ fontSize: 12, color: "#5C5248", lineHeight: 1.6, margin: "0 0 14px" }}>
                     Here is why this value is recorded and who confirmed it.
                   </p>
-                  <ProofPackBlock pack={proofPack} />
+                  <ProofPackBlock pack={proofPack} confirmations={confirmations} />
                 </div>
               </DrawerContent>
             </Drawer>
