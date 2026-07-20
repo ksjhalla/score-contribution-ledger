@@ -106,6 +106,7 @@ export const ValueEventCard = (props: ValueEventCardProps) => {
     resolver, evidence_count,
     attestationEnabled, onAddEvidence, onRequestConfirmation, onViewDetails,
     proofPack,
+    confirmations = [],
   } = props;
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
