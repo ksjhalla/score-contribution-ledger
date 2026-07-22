@@ -61,6 +61,9 @@ Deno.serve(async (req) => {
   const cutoff30d = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
   const cutoff7d = new Date(Date.now() - 7 * 86400_000).toISOString();
 
+  // Unique id for this run so all audit entries can be correlated together.
+  const runId = crypto.randomUUID();
+
   // 1. Pull overdue Pending executions.
   const { data: execs, error: exErr } = await supabase
     .from("executions")
@@ -70,10 +73,15 @@ Deno.serve(async (req) => {
     .lt("execution_date", cutoff30d);
 
   if (exErr) return json({ error: exErr.message }, 500);
-  if (!execs || execs.length === 0) return json({ ok: true, processed: 0 });
+  if (!execs || execs.length === 0) return json({ ok: true, run_id: runId, processed: 0 });
 
   let inserted = 0;
   const skipped: string[] = [];
+  let errored = 0;
+
+  const auditRows: Array<Record<string, unknown>> = [];
+  const pushAudit = (row: Record<string, unknown>) =>
+    auditRows.push({ run_id: runId, reminder_type: "settlement_due", ...row });
 
   for (const ex of execs) {
     // 2. Skip if a settlement_due notification was created in the last 7 days.
@@ -84,7 +92,20 @@ Deno.serve(async (req) => {
       .eq("type", "settlement_due")
       .gte("created_at", cutoff7d)
       .limit(1);
-    if (recent && recent.length > 0) { skipped.push(ex.id); continue; }
+    if (recent && recent.length > 0) {
+      skipped.push(ex.id);
+      pushAudit({
+        execution_id: ex.id,
+        contract_id: ex.contract_id,
+        user_id: ex.user_id,
+        execution_date: ex.execution_date,
+        settled_amount: ex.settled_amount,
+        currency: ex.currency,
+        outcome: "skipped_dedupe",
+        reason: "settlement_due notification within last 7 days",
+      });
+      continue;
+    }
 
     // 3. Look up contract name.
     const { data: c } = await supabase
@@ -96,17 +117,59 @@ Deno.serve(async (req) => {
 
     const message = `${name} — settlement overdue. Mark as settled or update status.`;
 
-    const { error: insErr } = await supabase.from("notifications").insert({
-      user_id: ex.user_id,
-      type: "settlement_due",
-      contract_id: ex.contract_id,
-      execution_id: ex.id,
-      message,
-      read: false,
-      email_sent: false,
-    });
-    if (!insErr) inserted++;
+    const { data: notif, error: insErr } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: ex.user_id,
+        type: "settlement_due",
+        contract_id: ex.contract_id,
+        execution_id: ex.id,
+        message,
+        read: false,
+        email_sent: false,
+      })
+      .select("id")
+      .maybeSingle();
+    if (!insErr) {
+      inserted++;
+      pushAudit({
+        execution_id: ex.id,
+        contract_id: ex.contract_id,
+        user_id: ex.user_id,
+        execution_date: ex.execution_date,
+        settled_amount: ex.settled_amount,
+        currency: ex.currency,
+        outcome: "sent",
+        notification_id: notif?.id ?? null,
+      });
+    } else {
+      errored++;
+      pushAudit({
+        execution_id: ex.id,
+        contract_id: ex.contract_id,
+        user_id: ex.user_id,
+        execution_date: ex.execution_date,
+        settled_amount: ex.settled_amount,
+        currency: ex.currency,
+        outcome: "error",
+        reason: insErr.message,
+      });
+    }
   }
 
-  return json({ ok: true, processed: execs.length, inserted, skipped: skipped.length });
+  // Persist audit trail in a single batched insert. Failures here are logged
+  // but never break the reminder run itself.
+  if (auditRows.length > 0) {
+    const { error: auditErr } = await supabase.from("reminder_audit_log").insert(auditRows);
+    if (auditErr) console.error("[reminder-audit] insert failed:", auditErr.message);
+  }
+
+  return json({
+    ok: true,
+    run_id: runId,
+    processed: execs.length,
+    inserted,
+    skipped: skipped.length,
+    errored,
+  });
 });
