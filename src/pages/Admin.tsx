@@ -58,6 +58,11 @@ const Admin = () => {
   const [reminderJob, setReminderJob] = useState<ReminderJobInfo>(null);
   const [reminderRuns, setReminderRuns] = useState<ReminderRun[]>([]);
   const [reminderRefreshing, setReminderRefreshing] = useState(false);
+  const [runningNow, setRunningNow] = useState(false);
+  const [lastRunResult, setLastRunResult] = useState<
+    | { processed: number; inserted: number; skipped: number; errored?: number; at: string }
+    | null
+  >(null);
 
   const loadReminderRuns = async () => {
     setReminderRefreshing(true);
@@ -67,6 +72,27 @@ const Admin = () => {
     const payload = (data as { job: ReminderJobInfo; runs: ReminderRun[] } | null) ?? null;
     setReminderJob(payload?.job ?? null);
     setReminderRuns(payload?.runs ?? []);
+  };
+
+  const runRemindersNow = async () => {
+    setRunningNow(true);
+    const { data, error } = await supabase.functions.invoke("admin-run-overdue-reminders");
+    setRunningNow(false);
+    if (error) { toast.error(error.message); return; }
+    const result = (data as { result?: { processed?: number; inserted?: number; skipped?: number; errored?: number } } | null)?.result;
+    if (result) {
+      setLastRunResult({
+        processed: result.processed ?? 0,
+        inserted: result.inserted ?? 0,
+        skipped: result.skipped ?? 0,
+        errored: result.errored,
+        at: new Date().toISOString(),
+      });
+      toast.success(`Run complete — processed ${result.processed ?? 0}, sent ${result.inserted ?? 0}.`);
+    } else {
+      toast.success("Reminder job triggered.");
+    }
+    await loadReminderRuns();
   };
 
   const loadSignerRoles = async () => {
@@ -418,10 +444,27 @@ const Admin = () => {
                   <>No overdue-settlement-reminders cron job found.</>
                 )}
               </div>
-              <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={loadReminderRuns} disabled={reminderRefreshing}>
-                {reminderRefreshing ? "Refreshing…" : "Refresh"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" className="h-7 text-[11px]" onClick={runRemindersNow} disabled={runningNow}>
+                  {runningNow ? "Running…" : "Run now"}
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={loadReminderRuns} disabled={reminderRefreshing}>
+                  {reminderRefreshing ? "Refreshing…" : "Refresh"}
+                </Button>
+              </div>
             </div>
+            {lastRunResult && (
+              <div
+                className="text-[11px] font-mono px-3 py-2 rounded"
+                style={{ border: "1px solid rgba(26,22,14,0.10)", background: "#FDFAF4", color: "#1A1614" }}
+              >
+                Manual run at {new Date(lastRunResult.at).toLocaleTimeString()} — processed {lastRunResult.processed} ·{" "}
+                <span style={{ color: "#2A6A45" }}>sent {lastRunResult.inserted}</span> · skipped {lastRunResult.skipped}
+                {typeof lastRunResult.errored === "number" && (
+                  <> · <span style={{ color: lastRunResult.errored > 0 ? "#9A3020" : "#1A1614" }}>errored {lastRunResult.errored}</span></>
+                )}
+              </div>
+            )}
             {reminderRuns[0] && (
               <div
                 className="grid grid-cols-2 md:grid-cols-5 gap-3"
