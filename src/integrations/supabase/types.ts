@@ -947,6 +947,7 @@ export type Database = {
       get_admin_user_list: { Args: never; Returns: Json }
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_passport: { Args: { p_contributor_id: string }; Returns: Json }
+      get_reminder_job_runs: { Args: { p_limit?: number }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

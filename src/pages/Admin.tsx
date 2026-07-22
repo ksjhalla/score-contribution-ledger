@@ -13,6 +13,19 @@ type UserRow = { id: string; contributor_id: string | null; full_name: string | 
 type InviteRow = { id: string; code: string; email: string | null; note: string | null; max_uses: number; use_count: number; expires_at: string | null; used_at: string | null; created_at: string };
 type SignerRoleValue = "viewer" | "reviewer" | "approver";
 type SignerRoleRow = { id: string; full_name: string | null; contributor_id: string | null; signer_role: SignerRoleValue; organisation: string | null; professional_role: string | null; created_at: string };
+type ReminderRun = {
+  runid: number;
+  status: string;
+  return_message: string | null;
+  start_time: string;
+  end_time: string | null;
+  duration_seconds: number | null;
+  processed: number;
+  sent: number;
+  skipped: number;
+  errored: number;
+};
+type ReminderJobInfo = { jobid: number; jobname: string | null; schedule: string | null; active: boolean } | null;
 
 const randomSegment = (len = 4) => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -42,6 +55,19 @@ const Admin = () => {
   const [signerRoles, setSignerRoles] = useState<SignerRoleRow[]>([]);
   const [signerSearch, setSignerSearch] = useState("");
   const [signerSaving, setSignerSaving] = useState<string | null>(null);
+  const [reminderJob, setReminderJob] = useState<ReminderJobInfo>(null);
+  const [reminderRuns, setReminderRuns] = useState<ReminderRun[]>([]);
+  const [reminderRefreshing, setReminderRefreshing] = useState(false);
+
+  const loadReminderRuns = async () => {
+    setReminderRefreshing(true);
+    const { data, error } = await supabase.rpc("get_reminder_job_runs", { p_limit: 20 });
+    setReminderRefreshing(false);
+    if (error) { toast.error(error.message); return; }
+    const payload = (data as { job: ReminderJobInfo; runs: ReminderRun[] } | null) ?? null;
+    setReminderJob(payload?.job ?? null);
+    setReminderRuns(payload?.runs ?? []);
+  };
 
   const loadSignerRoles = async () => {
     const { data, error } = await supabase.rpc("admin_list_signer_roles");
@@ -67,6 +93,7 @@ const Admin = () => {
         supabase.rpc("get_admin_user_list"),
         loadInvites(),
         loadSignerRoles(),
+        loadReminderRuns(),
       ]);
       setStats(s.data as unknown as Stats);
       setUsers((u.data as unknown as UserRow[]) ?? []);
@@ -372,6 +399,89 @@ const Admin = () => {
                       <td className="text-right">{u.contract_count}</td>
                       <td className="text-right">{u.execution_count}</td>
                       <td className="text-right">{u.last_active ? new Date(u.last_active).toLocaleDateString() : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Overdue-reminder job</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[11px] text-muted-foreground">
+                {reminderJob ? (
+                  <>Job <span className="font-mono">{reminderJob.jobname ?? `#${reminderJob.jobid}`}</span> · schedule <span className="font-mono">{reminderJob.schedule ?? "—"}</span> · {reminderJob.active ? "active" : "paused"}</>
+                ) : (
+                  <>No overdue-settlement-reminders cron job found.</>
+                )}
+              </div>
+              <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={loadReminderRuns} disabled={reminderRefreshing}>
+                {reminderRefreshing ? "Refreshing…" : "Refresh"}
+              </Button>
+            </div>
+            {reminderRuns[0] && (
+              <div
+                className="grid grid-cols-2 md:grid-cols-5 gap-3"
+                style={{ border: "1px solid rgba(26,22,14,0.10)", borderRadius: 5, background: "#FDFAF4", padding: 14 }}
+              >
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Last run</div>
+                  <div className="font-mono text-[11px] mt-1" style={{ color: "#1A1614" }}>{new Date(reminderRuns[0].start_time).toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Status</div>
+                  <div
+                    className="font-mono text-[11px] mt-1 capitalize"
+                    style={{ color: reminderRuns[0].status === "succeeded" ? "#2A6A45" : reminderRuns[0].status === "failed" ? "#9A3020" : "#1A1614" }}
+                  >
+                    {reminderRuns[0].status}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Processed</div>
+                  <div className="font-mono text-[14px] mt-1" style={{ color: "#1A1614" }}>{reminderRuns[0].processed}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Sent</div>
+                  <div className="font-mono text-[14px] mt-1" style={{ color: "#2A6A45" }}>{reminderRuns[0].sent}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "#9A8F84" }}>Skipped / errored</div>
+                  <div className="font-mono text-[11px] mt-1" style={{ color: "#1A1614" }}>
+                    {reminderRuns[0].skipped} skipped · <span style={{ color: reminderRuns[0].errored > 0 ? "#9A3020" : "#1A1614" }}>{reminderRuns[0].errored} errored</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="text-left py-2">Started</th>
+                    <th className="text-left">Status</th>
+                    <th className="text-right">Duration</th>
+                    <th className="text-right">Processed</th>
+                    <th className="text-right">Sent</th>
+                    <th className="text-right">Skipped</th>
+                    <th className="text-right">Errored</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reminderRuns.length === 0 && (
+                    <tr><td colSpan={7} className="py-3 text-muted-foreground text-center">No runs recorded yet.</td></tr>
+                  )}
+                  {reminderRuns.map((r) => (
+                    <tr key={r.runid} className="border-b">
+                      <td className="py-2 font-mono text-[11px]">{new Date(r.start_time).toLocaleString()}</td>
+                      <td className={`font-mono text-[11px] capitalize ${r.status === "failed" ? "text-destructive" : r.status === "succeeded" ? "text-emerald-700 dark:text-emerald-400" : ""}`}>{r.status}</td>
+                      <td className="text-right font-mono text-[11px]">{r.duration_seconds != null ? `${r.duration_seconds.toFixed(2)}s` : "—"}</td>
+                      <td className="text-right font-mono text-[11px]">{r.processed}</td>
+                      <td className="text-right font-mono text-[11px]">{r.sent}</td>
+                      <td className="text-right font-mono text-[11px]">{r.skipped}</td>
+                      <td className={`text-right font-mono text-[11px] ${r.errored > 0 ? "text-destructive" : ""}`}>{r.errored}</td>
                     </tr>
                   ))}
                 </tbody>
