@@ -35,3 +35,13 @@ if (typeof Element !== "undefined") {
     (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView = () => {};
   }
 }
+
+// ResizeObserver polyfill for Recharts' ResponsiveContainer.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class RO {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  (globalThis as unknown as { ResizeObserver: typeof RO }).ResizeObserver = RO;
+}
