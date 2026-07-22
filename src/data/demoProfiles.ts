@@ -236,6 +236,25 @@ export const pppNotifications: DemoNotification[] = [
   },
 ];
 
+export const agriNotifications: DemoNotification[] = [
+  {
+    id: "demo-n11",
+    type: "settlement_due",
+    message:
+      "NCE Week 18 confirmed KES 142.40/kg for Kaptumo AA lot. Premium trigger fired — mark it paid once the M-PESA transfer lands.",
+    read: false,
+    created_at: hoursAgo(3),
+  },
+  {
+    id: "demo-n12",
+    type: "trigger_met",
+    message:
+      "Cheptebo Cooperative licence settlement due within 90 days of their season settlement. Attach updated evidence to strengthen the claim.",
+    read: true,
+    created_at: daysAgo(4),
+  },
+];
+
 export const demoNotificationsFor = (key: DemoKey | "none"): DemoNotification[] => {
   if (key === "pharma") return pharmaNotifications;
   if (key === "ncaa") return ncaaNotifications;
