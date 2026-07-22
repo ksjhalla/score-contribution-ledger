@@ -1283,7 +1283,7 @@ export const demoProfiles: Record<DemoKey, DemoProfile> = {
   },
 };
 
-const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : "");
+const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "KES" ? "KSh" : "");
 
 export const formatDemoAmount = (amount: number | null, currency: string) => {
   if (amount == null) return "—";
