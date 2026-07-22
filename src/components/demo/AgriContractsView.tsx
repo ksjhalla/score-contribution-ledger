@@ -1,3 +1,4 @@
+import * as React from "react";
 import { demoProfiles } from "@/data/demoProfiles";
 import { AgriDecayTimeline } from "@/components/demo/AgriDecayTimeline";
 
@@ -123,6 +124,127 @@ const DecayBar = ({ pct, max, accent }: { pct: number; max: number; accent: stri
   </div>
 );
 
+const ScheduleTable = () => {
+  const years = [2022, 2023, 2024, 2025, 2026, 2027];
+
+  const getPrimary = (year: number) => {
+    const row = kaptumoSchedule.find((r) => r.year === year);
+    return row
+      ? { rate: row.ratePct, amount: row.amount }
+      : { rate: kaptumoRate(year - 2022), amount: null };
+  };
+
+  const getDerivative = (licence: Licence, year: number) => {
+    const season = licence.seasons.find((s) => s.year === year);
+    const rate = derivativeRate(year - licence.execYear);
+    return { rate, amount: season?.amount ?? null };
+  };
+
+  const th = {
+    textAlign: "left" as const,
+    padding: "8px 10px",
+    fontFamily: FONT_MONO,
+    fontSize: 10,
+    color: MUTED,
+    fontWeight: 500,
+  };
+
+  const thRight = { ...th, textAlign: "right" as const };
+
+  return (
+    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4", padding: 16 }}>
+      <div
+        style={{
+          fontFamily: FONT_MONO,
+          fontSize: 9,
+          color: MUTED,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          marginBottom: 12,
+        }}
+      >
+        Schedule data · yearly percentages and vesting values
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_BODY, fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <th style={th}>Year</th>
+              <th style={thRight}>Primary rate</th>
+              <th style={thRight}>Primary value</th>
+              {licences.map((l) => {
+                const short = l.name.replace(" Cooperative Society", "");
+                return (
+                  <React.Fragment key={`${l.name}-header`}>
+                    <th style={thRight}>{short} rate</th>
+                    <th style={thRight}>{short} value</th>
+                  </React.Fragment>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {years.map((year) => {
+              const primary = getPrimary(year);
+              return (
+                <tr key={year} style={{ borderBottom: `1px solid ${BORDER}` }}>
+                  <td style={{ padding: "8px 10px", fontFamily: FONT_MONO, fontSize: 11, color: INK }}>{year}</td>
+                  <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: FONT_MONO, fontSize: 11, color: INK }}>
+                    {primary.rate.toFixed(2)}%
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 10px",
+                      textAlign: "right",
+                      fontFamily: FONT_MONO,
+                      fontSize: 11,
+                      color: primary.amount ? GREEN : MUTED,
+                    }}
+                  >
+                    {fmtKES(primary.amount)}
+                  </td>
+                  {licences.map((l) => {
+                    const d = getDerivative(l, year);
+                    return (
+                      <React.Fragment key={`${l.name}-${year}`}>
+                        <td
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: "right",
+                            fontFamily: FONT_MONO,
+                            fontSize: 11,
+                            color: INK,
+                          }}
+                        >
+                          {d.rate.toFixed(2)}%
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: "right",
+                            fontFamily: FONT_MONO,
+                            fontSize: 11,
+                            color: d.amount ? AMBER : MUTED,
+                          }}
+                        >
+                          {fmtKES(d.amount)}
+                        </td>
+                      </React.Fragment>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ marginTop: 10, fontFamily: FONT_MONO, fontSize: 9, color: MUTED }}>
+        Primary: 8% start, −15%/yr, 3% floor · Derivatives: 3% start, −20%/yr, KES 5,000/season cap.
+      </div>
+    </div>
+  );
+};
+
 const ContractHeader = ({ title, counterparty, chipBg, chipFg, chipText }: {
   title: string;
   counterparty: string;
@@ -160,6 +282,8 @@ export const AgriContractsView = () => {
       </div>
 
       <AgriDecayTimeline />
+
+      <ScheduleTable />
 
       {/* Primary contract — Kaptumo premium pool with vesting/decay table */}
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4", padding: 16 }}>
