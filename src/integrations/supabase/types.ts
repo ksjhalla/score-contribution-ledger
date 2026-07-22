@@ -76,50 +76,126 @@ export type Database = {
           },
         ]
       }
+      contract_beneficiaries: {
+        Row: {
+          beneficiary_contact: string | null
+          beneficiary_name: string
+          contract_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          share_pct: number
+          user_id: string | null
+        }
+        Insert: {
+          beneficiary_contact?: string | null
+          beneficiary_name: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          share_pct: number
+          user_id?: string | null
+        }
+        Update: {
+          beneficiary_contact?: string | null
+          beneficiary_name?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          share_pct?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_beneficiaries_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           attestation_required: boolean
+          buyout_multiple: number | null
           contract_type: Database["public"]["Enums"]["contract_type"]
           counterparty_name: string
           counterparty_type: Database["public"]["Enums"]["counterparty_type"]
           created_at: string
+          decay_cliff_date: string | null
+          decay_floor_pct: number | null
+          decay_model: Database["public"]["Enums"]["decay_model"]
+          decay_rate_pct_per_year: number | null
+          decay_started_at: string | null
           entitlement_description: string
           id: string
           name: string
+          origin_contract_id: string | null
           reference: string | null
+          revenue_cap_amount: number | null
+          revenue_cap_currency: string | null
           stake_type: Database["public"]["Enums"]["stake_type"]
           trigger_description: string
           user_id: string
         }
         Insert: {
           attestation_required?: boolean
+          buyout_multiple?: number | null
           contract_type: Database["public"]["Enums"]["contract_type"]
           counterparty_name: string
           counterparty_type: Database["public"]["Enums"]["counterparty_type"]
           created_at?: string
+          decay_cliff_date?: string | null
+          decay_floor_pct?: number | null
+          decay_model?: Database["public"]["Enums"]["decay_model"]
+          decay_rate_pct_per_year?: number | null
+          decay_started_at?: string | null
           entitlement_description: string
           id?: string
           name: string
+          origin_contract_id?: string | null
           reference?: string | null
+          revenue_cap_amount?: number | null
+          revenue_cap_currency?: string | null
           stake_type: Database["public"]["Enums"]["stake_type"]
           trigger_description: string
           user_id: string
         }
         Update: {
           attestation_required?: boolean
+          buyout_multiple?: number | null
           contract_type?: Database["public"]["Enums"]["contract_type"]
           counterparty_name?: string
           counterparty_type?: Database["public"]["Enums"]["counterparty_type"]
           created_at?: string
+          decay_cliff_date?: string | null
+          decay_floor_pct?: number | null
+          decay_model?: Database["public"]["Enums"]["decay_model"]
+          decay_rate_pct_per_year?: number | null
+          decay_started_at?: string | null
           entitlement_description?: string
           id?: string
           name?: string
+          origin_contract_id?: string | null
           reference?: string | null
+          revenue_cap_amount?: number | null
+          revenue_cap_currency?: string | null
           stake_type?: Database["public"]["Enums"]["stake_type"]
           trigger_description?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_origin_contract_id_fkey"
+            columns: ["origin_contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_requests: {
         Row: {
@@ -156,6 +232,7 @@ export type Database = {
       }
       evidence: {
         Row: {
+          anchor_id: string | null
           contract_id: string
           created_at: string
           description: string | null
@@ -170,6 +247,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          anchor_id?: string | null
           contract_id: string
           created_at?: string
           description?: string | null
@@ -184,6 +262,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          anchor_id?: string | null
           contract_id?: string
           created_at?: string
           description?: string | null
@@ -199,6 +278,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "evidence_anchor_id_fkey"
+            columns: ["anchor_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_anchors"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "evidence_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -213,6 +299,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      evidence_anchors: {
+        Row: {
+          anchor_reference: string
+          anchored_at: string
+          batch_root_hash: string
+          chain: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          anchor_reference: string
+          anchored_at?: string
+          batch_root_hash: string
+          chain?: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          anchor_reference?: string
+          anchored_at?: string
+          batch_root_hash?: string
+          chain?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
       }
       evidence_sign_offs: {
         Row: {
@@ -708,7 +821,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contributor_credit_signal: {
+        Row: {
+          distinct_contracts: number | null
+          first_settlement_date: string | null
+          most_recent_settlement_date: string | null
+          settlements_count: number | null
+          total_pending: number | null
+          total_settled: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_list_signer_roles: { Args: never; Returns: Json }
@@ -733,6 +857,18 @@ export type Database = {
         Returns: Database["public"]["Enums"]["signer_role"]
       }
       current_user_has_redeemed_invite: { Args: never; Returns: boolean }
+      effective_stake_pct: {
+        Args: {
+          p_as_of?: string
+          p_base_stake_pct: number
+          p_decay_cliff_date: string
+          p_decay_floor_pct: number
+          p_decay_model: Database["public"]["Enums"]["decay_model"]
+          p_decay_rate_pct_per_year: number
+          p_decay_started_at: string
+        }
+        Returns: number
+      }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_user_list: { Args: never; Returns: Json }
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
@@ -769,6 +905,7 @@ export type Database = {
         | "Platform"
         | "Individual"
         | "Government"
+      decay_model: "None" | "Linear" | "Usage-based" | "Cliff"
       evidence_type:
         | "Document"
         | "Dataset"
@@ -779,6 +916,9 @@ export type Database = {
         | "Batch record"
         | "Session file"
         | "Other"
+        | "Auction result"
+        | "Delivery record"
+        | "Licence execution"
       execution_status:
         | "Pending"
         | "Attested"
@@ -811,10 +951,11 @@ export type Database = {
         | "USDC"
         | "Other"
         | "Not applicable"
+        | "Mobile money"
       signer_role: "viewer" | "reviewer" | "approver"
       stake_type: "Financial" | "Attribution" | "Governance" | "Mixed"
       trigger_direction: "Above" | "Below"
-      trigger_source: "Manual" | "Webhook" | "File import"
+      trigger_source: "Manual" | "Webhook" | "File import" | "Public index"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -953,6 +1094,7 @@ export const Constants = {
         "Individual",
         "Government",
       ],
+      decay_model: ["None", "Linear", "Usage-based", "Cliff"],
       evidence_type: [
         "Document",
         "Dataset",
@@ -963,6 +1105,9 @@ export const Constants = {
         "Batch record",
         "Session file",
         "Other",
+        "Auction result",
+        "Delivery record",
+        "Licence execution",
       ],
       execution_status: [
         "Pending",
@@ -999,11 +1144,12 @@ export const Constants = {
         "USDC",
         "Other",
         "Not applicable",
+        "Mobile money",
       ],
       signer_role: ["viewer", "reviewer", "approver"],
       stake_type: ["Financial", "Attribution", "Governance", "Mixed"],
       trigger_direction: ["Above", "Below"],
-      trigger_source: ["Manual", "Webhook", "File import"],
+      trigger_source: ["Manual", "Webhook", "File import", "Public index"],
     },
   },
 } as const

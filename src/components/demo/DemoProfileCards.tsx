@@ -102,6 +102,23 @@ const CARDS: CardSpec[] = [
       { value: "$720K", label: "pending", settled: false },
     ],
   },
+  {
+    key: "agri",
+    initials: "AN",
+    name: "Aisha Ng'etich",
+    role: "Kaptumo Coop. · Nandi County",
+    tag: "IFC · Agriculture",
+    accent: "#5C7A3A",
+    accentSoft: "rgba(92,122,58,0.10)",
+    accentBorder: "rgba(92,122,58,0.25)",
+    accentBg: "rgba(92,122,58,0.04)",
+    avatarBg: "rgba(92,122,58,0.12)",
+    avatarBorder: "rgba(92,122,58,0.3)",
+    stats: [
+      { value: "KSh186K", label: "received", settled: true },
+      { value: "KSh76K", label: "pending", settled: false },
+    ],
+  },
 ];
 
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
