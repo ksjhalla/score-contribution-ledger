@@ -1,4 +1,5 @@
 import { demoProfiles } from "@/data/demoProfiles";
+import { AgriDecayTimeline } from "@/components/demo/AgriDecayTimeline";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -157,6 +158,8 @@ export const AgriContractsView = () => {
           Two active contracts for Aisha, each with a linear decay schedule and — for the derivative licence — an on-chain link back to the origin IP asset.
         </p>
       </div>
+
+      <AgriDecayTimeline />
 
       {/* Primary contract — Kaptumo premium pool with vesting/decay table */}
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4", padding: 16 }}>
