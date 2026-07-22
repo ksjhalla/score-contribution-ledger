@@ -206,9 +206,8 @@ const ScheduleTable = () => {
                   {licences.map((l) => {
                     const d = getDerivative(l, year);
                     return (
-                      <>
+                      <React.Fragment key={`${l.name}-${year}`}>
                         <td
-                          key={`${l.name}-${year}-rate`}
                           style={{
                             padding: "8px 10px",
                             textAlign: "right",
@@ -220,7 +219,6 @@ const ScheduleTable = () => {
                           {d.rate.toFixed(2)}%
                         </td>
                         <td
-                          key={`${l.name}-${year}-value`}
                           style={{
                             padding: "8px 10px",
                             textAlign: "right",
@@ -231,7 +229,7 @@ const ScheduleTable = () => {
                         >
                           {fmtKES(d.amount)}
                         </td>
-                      </>
+                      </React.Fragment>
                     );
                   })}
                 </tr>
