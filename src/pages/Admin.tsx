@@ -409,11 +409,6 @@ const Admin = () => {
 
         <Card>
           <CardHeader><CardTitle className="text-sm">Signer roles</CardTitle></CardHeader>
-          <CardContent className="space-y-3" style={{ display: "none" }} />
-        </Card>
-        {/* placeholder to satisfy patch parser */}
-        <Card style={{ display: "none" }}>
-          <CardHeader><CardTitle className="text-sm">_</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="text-[11px] text-muted-foreground">
               Set each contributor's evidence sign-off level. Server-enforced — viewers cannot sign off even if they switch the UI role.
