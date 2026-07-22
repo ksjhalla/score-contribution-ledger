@@ -79,47 +79,82 @@ export type Database = {
       contracts: {
         Row: {
           attestation_required: boolean
+          buyout_multiple: number | null
           contract_type: Database["public"]["Enums"]["contract_type"]
           counterparty_name: string
           counterparty_type: Database["public"]["Enums"]["counterparty_type"]
           created_at: string
+          decay_cliff_date: string | null
+          decay_floor_pct: number | null
+          decay_model: Database["public"]["Enums"]["decay_model"]
+          decay_rate_pct_per_year: number | null
+          decay_started_at: string | null
           entitlement_description: string
           id: string
           name: string
+          origin_contract_id: string | null
           reference: string | null
+          revenue_cap_amount: number | null
+          revenue_cap_currency: string | null
           stake_type: Database["public"]["Enums"]["stake_type"]
           trigger_description: string
           user_id: string
         }
         Insert: {
           attestation_required?: boolean
+          buyout_multiple?: number | null
           contract_type: Database["public"]["Enums"]["contract_type"]
           counterparty_name: string
           counterparty_type: Database["public"]["Enums"]["counterparty_type"]
           created_at?: string
+          decay_cliff_date?: string | null
+          decay_floor_pct?: number | null
+          decay_model?: Database["public"]["Enums"]["decay_model"]
+          decay_rate_pct_per_year?: number | null
+          decay_started_at?: string | null
           entitlement_description: string
           id?: string
           name: string
+          origin_contract_id?: string | null
           reference?: string | null
+          revenue_cap_amount?: number | null
+          revenue_cap_currency?: string | null
           stake_type: Database["public"]["Enums"]["stake_type"]
           trigger_description: string
           user_id: string
         }
         Update: {
           attestation_required?: boolean
+          buyout_multiple?: number | null
           contract_type?: Database["public"]["Enums"]["contract_type"]
           counterparty_name?: string
           counterparty_type?: Database["public"]["Enums"]["counterparty_type"]
           created_at?: string
+          decay_cliff_date?: string | null
+          decay_floor_pct?: number | null
+          decay_model?: Database["public"]["Enums"]["decay_model"]
+          decay_rate_pct_per_year?: number | null
+          decay_started_at?: string | null
           entitlement_description?: string
           id?: string
           name?: string
+          origin_contract_id?: string | null
           reference?: string | null
+          revenue_cap_amount?: number | null
+          revenue_cap_currency?: string | null
           stake_type?: Database["public"]["Enums"]["stake_type"]
           trigger_description?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_origin_contract_id_fkey"
+            columns: ["origin_contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_requests: {
         Row: {
@@ -733,6 +768,18 @@ export type Database = {
         Returns: Database["public"]["Enums"]["signer_role"]
       }
       current_user_has_redeemed_invite: { Args: never; Returns: boolean }
+      effective_stake_pct: {
+        Args: {
+          p_as_of?: string
+          p_base_stake_pct: number
+          p_decay_cliff_date: string
+          p_decay_floor_pct: number
+          p_decay_model: Database["public"]["Enums"]["decay_model"]
+          p_decay_rate_pct_per_year: number
+          p_decay_started_at: string
+        }
+        Returns: number
+      }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_user_list: { Args: never; Returns: Json }
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
@@ -769,6 +816,7 @@ export type Database = {
         | "Platform"
         | "Individual"
         | "Government"
+      decay_model: "None" | "Linear" | "Usage-based" | "Cliff"
       evidence_type:
         | "Document"
         | "Dataset"
@@ -957,6 +1005,7 @@ export const Constants = {
         "Individual",
         "Government",
       ],
+      decay_model: ["None", "Linear", "Usage-based", "Cliff"],
       evidence_type: [
         "Document",
         "Dataset",
