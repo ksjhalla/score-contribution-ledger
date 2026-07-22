@@ -91,9 +91,21 @@ const EventConfirmations = ({ confirmations }: { confirmations: DemoConfirmation
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
   const {
-    key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead,
+    key, contributor, stats: rawStats, contracts, whatChanged, accent, valueMix: rawValueMix, bars, quickRead,
     milestones, bio, badges, valueStreams, evidenceMappings, siteUptime, exampleCards,
   } = profile;
+  // Agri stats/valueMix are computed dynamically from the shared decay schedule
+  // so Received/Waiting reflect today's date instead of hardcoded values.
+  // (Lazy-required to avoid a top-level import cycle risk for other personas.)
+  let stats = rawStats;
+  let valueMix = rawValueMix;
+  if (key === "agri") {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { computeAgriTotals } = require("@/data/agriSchedule") as typeof import("@/data/agriSchedule");
+    const t = computeAgriTotals();
+    stats = { ...rawStats, settled: t.received, pending: t.pending, future: t.projected };
+    valueMix = { ...rawValueMix, settled: t.received, pending: t.pending, future: t.projected };
+  }
   const contribution = profile.contribution;
   const hasDetails = Boolean(
     (evidenceMappings && evidenceMappings.length > 0) ||
