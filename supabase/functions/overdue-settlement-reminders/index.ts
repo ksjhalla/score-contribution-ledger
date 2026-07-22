@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-cron-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -13,6 +13,15 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Constant-time string comparison so a mismatched secret can't be inferred
+// from response timing.
+const timingSafeEqual = (a: string, b: string) => {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+};
+
 /**
  * Daily cron — finds executions that are:
  *   - status = 'Pending'
@@ -20,9 +29,29 @@ const json = (body: unknown, status = 200) =>
  *   - execution_date older than 30 days
  *   - have NOT received a 'settlement_due' notification in the last 7 days
  * For each match, inserts a settlement_due reminder notification.
+ *
+ * This runs with the service-role key (bypasses RLS by design, since it has
+ * to scan across every user's executions). That means it must never be
+ * reachable without proof the caller is the legitimate scheduler -- hence
+ * the shared-secret check below, not just "this is only meant to be called
+ * by cron." Store CRON_SECRET as an edge function secret (not a client-side
+ * env var) and have your scheduler (pg_cron via pg_net, or an external
+ * scheduler) send it as the `x-cron-secret` header.
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const expectedSecret = Deno.env.get("CRON_SECRET");
+  if (!expectedSecret) {
+    // Fail closed: if the secret isn't configured, refuse to run rather than
+    // silently operating with no gate at all.
+    return json({ error: "server_misconfigured", message: "CRON_SECRET is not set." }, 500);
+  }
+
+  const providedSecret = req.headers.get("x-cron-secret") ?? "";
+  if (!providedSecret || !timingSafeEqual(providedSecret, expectedSecret)) {
+    return json({ error: "unauthorized" }, 401);
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

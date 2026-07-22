@@ -11,6 +11,7 @@ type SignRole = "Reviewer" | "Approver";
 interface Body {
   role?: SignRole;
   mappingId?: string;
+  contractId?: string;
   currentStatus?: "Watching" | "Awaiting sign-off" | "Reconciled";
   hasReviewerSignature?: boolean;
   notes?: string;
@@ -44,6 +45,13 @@ Deno.serve(async (req) => {
   if (!body.mappingId || typeof body.mappingId !== "string") {
     return json(400, { error: "mappingId is required" });
   }
+  if (!body.contractId || typeof body.contractId !== "string") {
+    return json(400, {
+      error: "contractId is required",
+      message:
+        "Sign-offs must now be scoped to the contract they belong to, so reviewers/approvers only ever see sign-offs for contracts they own or are attested on.",
+    });
+  }
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -70,15 +78,18 @@ Deno.serve(async (req) => {
 
   // Server-side authorisation is enforced by the RLS policy on
   // public.evidence_sign_offs. The policy reads profiles.signer_role for the
-  // caller and only allows the insert if it matches the requested role.
-  // A viewer (or anonymous user, or a missing profile) is rejected by
-  // PostgREST regardless of what the UI sends.
+  // caller, AND now also requires the caller to own or be a listed attestor
+  // on `contractId` — mapping_id alone is no longer sufficient to prove
+  // which contract (and therefore which org's data) a signature applies to.
+  // A viewer, an unrelated org's reviewer, or a missing profile is rejected
+  // by PostgREST regardless of what the UI sends.
   const dbRole = role === "Reviewer" ? "reviewer" : "approver";
 
   const { data: inserted, error: insertError } = await supabase
     .from("evidence_sign_offs")
     .insert({
       mapping_id: body.mappingId,
+      contract_id: body.contractId,
       signer_user_id: userId,
       signer_role: dbRole,
       notes: body.notes ?? null,
@@ -100,8 +111,8 @@ Deno.serve(async (req) => {
         error: "forbidden",
         message:
           role === "Approver"
-            ? "Server denied: your profile is not approver, or a Reviewer signature is missing for this mapping."
-            : "Server denied: your profile signer_role is not reviewer or approver. The UI role switcher cannot grant permissions.",
+            ? "Server denied: your profile is not approver, a Reviewer signature is missing for this mapping, or you don't own/aren't attested on this contract."
+            : "Server denied: your profile signer_role is not reviewer or approver, or you don't own/aren't attested on this contract. The UI role switcher cannot grant permissions.",
       });
     }
     return json(500, { error: "Insert failed", detail: insertError.message });
