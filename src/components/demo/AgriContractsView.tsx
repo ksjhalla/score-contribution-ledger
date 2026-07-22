@@ -175,10 +175,10 @@ const ScheduleTable = () => {
               {licences.map((l) => {
                 const short = l.name.replace(" Cooperative Society", "");
                 return (
-                  <>
-                    <th key={`${l.name}-rate`n style={thRight}>{short} rate</th>
-                    <th key={`${l.name}-value`} style={thRight}>{short} value</th>
-                  </>
+                  <React.Fragment key={`${l.name}-header`}>
+                    <th style={thRight}>{short} rate</th>
+                    <th style={thRight}>{short} value</th>
+                  </React.Fragment>
                 );
               })}
             </tr>
