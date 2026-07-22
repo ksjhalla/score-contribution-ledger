@@ -3,7 +3,6 @@ import type { EvidenceMapping, DemoProfile } from "@/data/demoProfiles";
 import { formatDemoAmount } from "@/data/demoProfiles";
 import { EvidenceLedgerWorkflow } from "./EvidenceLedgerWorkflow";
 import { Upload, FileText, Smartphone, CheckCircle2, Clock, Eye, AlertTriangle, User, History, ShieldCheck, UserCheck, Lock, Download, FileSpreadsheet, FileDown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -107,7 +106,6 @@ export const EvidenceLedgerWorkspace = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadKind, setUploadKind] = useState<"kWh audit" | "Mobile-money collection">("kWh audit");
   const [pulseId, setPulseId] = useState<string | null>(null);
-  const [signError, setSignError] = useState<string | null>(null);
   const [signingIdx, setSigningIdx] = useState<number | null>(null);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -318,102 +316,49 @@ export const EvidenceLedgerWorkspace = ({
     if (role === "Reviewer" && current.reviewer) return;
     if (role === "Approver" && (!current.reviewer || current.approver)) return;
 
-    setSignError(null);
     setSigningIdx(idx);
-    try {
-      const { data, error } = await supabase.functions.invoke("evidence-sign-off", {
-        body: {
-          role,
-          mappingId: `mapping-${idx}`,
-          currentStatus: m.status,
-          hasReviewerSignature: !!current.reviewer,
+
+    // Simulated, client-side only — this demo workspace has no real contract
+    // row behind mapping-${idx}, so there is nothing legitimate to write to
+    // public.evidence_sign_offs (which is correctly scoped to real contracts
+    // the caller owns or is attested on). A short artificial delay keeps the
+    // same "signing…" affordance the real network call used to produce.
+    await new Promise((resolve) => setTimeout(resolve, 450));
+
+    const now = new Date().toISOString();
+    const actor = ROLE_ACTORS[role];
+
+    if (role === "Reviewer") {
+      setSignOff((prev) => ({ ...prev, [idx]: { ...current, reviewer: { actor, at: now } } }));
+      setMappings((prev) => prev.map((x, i) => (i === idx ? { ...x, status: "Awaiting sign-off" } : x)));
+      setAudit((prev) => [
+        {
+          id: `rv-${Date.now()}`,
+          at: now,
+          actor,
+          action: "Reviewer signed (demo — simulated, not written to the real ledger)",
+          detail: `${m.evidence.title} → moved to Awaiting sign-off (needs Approver)`,
+          kind: "edit",
         },
-      });
-
-      // Edge function returns 401/403 with a JSON body. supabase-js surfaces
-      // these as `error` but still hands back the parsed body in some cases —
-      // we normalise both shapes.
-      const payload = (data ?? null) as
-        | { ok?: boolean; error?: string; message?: string; signedAt?: string; actorId?: string }
-        | null;
-      const ctx = (error as unknown as { context?: { status?: number; body?: unknown } } | null)?.context;
-      const status = ctx?.status;
-      const errBody = (() => {
-        try {
-          return typeof ctx?.body === "string"
-            ? (JSON.parse(ctx.body) as { error?: string; message?: string })
-            : (ctx?.body as { error?: string; message?: string } | undefined);
-        } catch {
-          return undefined;
-        }
-      })();
-
-      if (error || !payload?.ok) {
-        const msg =
-          errBody?.message ||
-          payload?.message ||
-          errBody?.error ||
-          payload?.error ||
-          (status === 401
-            ? "Sign in with a Reviewer or Approver role to sign off."
-            : status === 403
-            ? "Server denied: your account does not hold the required role. The UI role switcher cannot grant permissions."
-            : "Server-side sign-off check failed.");
-        setSignError(msg);
-        setAudit((prev) => [
-          {
-            id: `denied-${Date.now()}`,
-            at: new Date().toISOString(),
-            actor: `Caller · ${ROLE_ACTORS[role]} (claimed)`,
-            action: "Denied by server",
-            detail: `${role} sign-off on "${m.evidence.title}" rejected — ${msg}`,
-            kind: "watch",
-          },
-          ...prev,
-        ]);
-        return;
-      }
-
-      const now = payload.signedAt || new Date().toISOString();
-      const actor = payload.actorId
-        ? `${ROLE_ACTORS[role]} · uid ${payload.actorId.slice(0, 8)}`
-        : ROLE_ACTORS[role];
-
-      if (role === "Reviewer") {
-        setSignOff((prev) => ({ ...prev, [idx]: { ...current, reviewer: { actor, at: now } } }));
-        setMappings((prev) => prev.map((x, i) => (i === idx ? { ...x, status: "Awaiting sign-off" } : x)));
-        setAudit((prev) => [
-          {
-            id: `rv-${Date.now()}`,
-            at: now,
-            actor,
-            action: "Reviewer signed (server-verified)",
-            detail: `${m.evidence.title} → moved to Awaiting sign-off (needs Approver)`,
-            kind: "edit",
-          },
-          ...prev,
-        ]);
-      } else {
-        setSignOff((prev) => ({ ...prev, [idx]: { ...current, approver: { actor, at: now } } }));
-        setMappings((prev) => prev.map((x, i) => (i === idx ? { ...x, status: "Reconciled" } : x)));
-        setAudit((prev) => [
-          {
-            id: `ap-${Date.now()}`,
-            at: now,
-            actor,
-            action: "Approver counter-signed (server-verified)",
-            detail: `${m.evidence.title} → Reconciled to ${m.ledger.entry} (${m.ledger.bucket})`,
-            kind: "approve",
-          },
-          ...prev,
-        ]);
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Network error contacting sign-off service";
-      setSignError(msg);
-    } finally {
-      setSigningIdx(null);
+        ...prev,
+      ]);
+    } else {
+      setSignOff((prev) => ({ ...prev, [idx]: { ...current, approver: { actor, at: now } } }));
+      setMappings((prev) => prev.map((x, i) => (i === idx ? { ...x, status: "Reconciled" } : x)));
+      setAudit((prev) => [
+        {
+          id: `ap-${Date.now()}`,
+          at: now,
+          actor,
+          action: "Approver counter-signed (demo — simulated, not written to the real ledger)",
+          detail: `${m.evidence.title} → Reconciled to ${m.ledger.entry} (${m.ledger.bucket})`,
+          kind: "approve",
+        },
+        ...prev,
+      ]);
     }
+
+    setSigningIdx(null);
   };
 
   const jumpToContributor = () => {
@@ -565,28 +510,12 @@ export const EvidenceLedgerWorkspace = ({
           }}
         >
           <Lock size={10} style={{ verticalAlign: "-1px", marginRight: 4 }} />
-          Server-enforced via Lovable Cloud: every sign-off calls{" "}
-          <strong>evidence-sign-off</strong>, which checks the caller's JWT and
-          requires <code>evidence_reviewer</code> or <code>evidence_approver</code> on the{" "}
-          <code>user_roles</code> table. A Viewer (or anonymous visitor) is rejected
-          even if they flip the UI switcher.
+          Simulated for this demo: role switching is trusted client-side, since{" "}
+          these demo mappings aren't real contract rows and nothing here writes{" "}
+          to <strong>evidence_sign_offs</strong>. On a real account, sign-off is{" "}
+          server-enforced by RLS — the caller must hold a matching{" "}
+          <code>signer_role</code> and own or be attested on the actual contract.
         </div>
-        {signError && (
-          <div
-            style={{
-              marginTop: 8,
-              fontFamily: FONT_MONO,
-              fontSize: 10,
-              color: "#8A2A2A",
-              background: "rgba(138,42,42,0.08)",
-              border: "1px solid rgba(138,42,42,0.30)",
-              borderRadius: 4,
-              padding: "6px 8px",
-            }}
-          >
-            ⚠ Server denied sign-off · {signError}
-          </div>
-        )}
       </div>
 
       {/* Reconciliation panel */}
