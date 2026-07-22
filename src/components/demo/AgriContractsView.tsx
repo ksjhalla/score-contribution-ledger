@@ -1,3 +1,4 @@
+import * as React from "react";
 import { demoProfiles } from "@/data/demoProfiles";
 import { AgriDecayTimeline } from "@/components/demo/AgriDecayTimeline";
 
