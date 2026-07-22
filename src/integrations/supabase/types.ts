@@ -821,7 +821,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contributor_credit_signal: {
+        Row: {
+          distinct_contracts: number | null
+          first_settlement_date: string | null
+          most_recent_settlement_date: string | null
+          settlements_count: number | null
+          total_pending: number | null
+          total_settled: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_list_signer_roles: { Args: never; Returns: Json }
