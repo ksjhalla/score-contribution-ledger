@@ -10,6 +10,7 @@ import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
 import { EvidenceLedgerWorkspace } from "@/components/demo/EvidenceLedgerWorkspace";
 import { SiteUptimeBreakdown } from "@/components/demo/SiteUptimeBreakdown";
 import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
+import { computeAgriTotals } from "@/data/agriSchedule";
 import { toast } from "sonner";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
@@ -100,8 +101,6 @@ export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
   let stats = rawStats;
   let valueMix = rawValueMix;
   if (key === "agri") {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { computeAgriTotals } = require("@/data/agriSchedule") as typeof import("@/data/agriSchedule");
     const t = computeAgriTotals();
     stats = { ...rawStats, settled: t.received, pending: t.pending, future: t.projected };
     valueMix = { ...rawValueMix, settled: t.received, pending: t.pending, future: t.projected };
