@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { ContractCard, type ContractRow } from "@/components/contracts/ContractCard";
 import { NewContractDialog } from "@/components/contracts/NewContractDialog";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { useDemo } from "@/contexts/DemoContext";
+import { AgriContractsView } from "@/components/demo/AgriContractsView";
 
 type ContractWithRef = ContractRow & { reference: string | null };
 
@@ -20,6 +22,7 @@ const stakeChip: Record<ContractRow["stake_type"], { bg: string; fg: string }> =
 
 const Contracts = () => {
   const { user } = useAuth();
+  const { activeDemo } = useDemo();
   const [rows, setRows] = useState<ContractWithRef[]>([]);
   const [loading, setLoading] = useState(true);
   const [sector, setSector] = useState<string | null>(null);
@@ -74,6 +77,10 @@ const Contracts = () => {
 
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto" }}>
+      {activeDemo === "agri" ? (
+        <AgriContractsView />
+      ) : (
+      <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 20 }}>
         <div>
           <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 600, margin: "0 0 12px" }}>
@@ -205,6 +212,8 @@ const Contracts = () => {
         onCreated={handleCreated}
         sector={sector}
       />
+      </>
+      )}
     </div>
   );
 };
