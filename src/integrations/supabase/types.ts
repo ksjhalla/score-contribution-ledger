@@ -76,6 +76,47 @@ export type Database = {
           },
         ]
       }
+      contract_beneficiaries: {
+        Row: {
+          beneficiary_contact: string | null
+          beneficiary_name: string
+          contract_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          share_pct: number
+          user_id: string | null
+        }
+        Insert: {
+          beneficiary_contact?: string | null
+          beneficiary_name: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          share_pct: number
+          user_id?: string | null
+        }
+        Update: {
+          beneficiary_contact?: string | null
+          beneficiary_name?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          share_pct?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_beneficiaries_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           attestation_required: boolean
