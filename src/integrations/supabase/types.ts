@@ -779,6 +779,9 @@ export type Database = {
         | "Batch record"
         | "Session file"
         | "Other"
+        | "Auction result"
+        | "Delivery record"
+        | "Licence execution"
       execution_status:
         | "Pending"
         | "Attested"
@@ -811,10 +814,11 @@ export type Database = {
         | "USDC"
         | "Other"
         | "Not applicable"
+        | "Mobile money"
       signer_role: "viewer" | "reviewer" | "approver"
       stake_type: "Financial" | "Attribution" | "Governance" | "Mixed"
       trigger_direction: "Above" | "Below"
-      trigger_source: "Manual" | "Webhook" | "File import"
+      trigger_source: "Manual" | "Webhook" | "File import" | "Public index"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -963,6 +967,9 @@ export const Constants = {
         "Batch record",
         "Session file",
         "Other",
+        "Auction result",
+        "Delivery record",
+        "Licence execution",
       ],
       execution_status: [
         "Pending",
@@ -999,11 +1006,12 @@ export const Constants = {
         "USDC",
         "Other",
         "Not applicable",
+        "Mobile money",
       ],
       signer_role: ["viewer", "reviewer", "approver"],
       stake_type: ["Financial", "Attribution", "Governance", "Mixed"],
       trigger_direction: ["Above", "Below"],
-      trigger_source: ["Manual", "Webhook", "File import"],
+      trigger_source: ["Manual", "Webhook", "File import", "Public index"],
     },
   },
 } as const
