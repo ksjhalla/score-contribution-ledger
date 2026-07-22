@@ -10,6 +10,7 @@ import { Droplets, Leaf, Network, Code2, GitFork, Brain } from "lucide-react";
 import { EvidenceLedgerWorkspace } from "@/components/demo/EvidenceLedgerWorkspace";
 import { SiteUptimeBreakdown } from "@/components/demo/SiteUptimeBreakdown";
 import { MiniGridExampleCards } from "@/components/demo/MiniGridExampleCards";
+import { computeAgriTotals } from "@/data/agriSchedule";
 import { toast } from "sonner";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
@@ -91,9 +92,19 @@ const EventConfirmations = ({ confirmations }: { confirmations: DemoConfirmation
 
 export const DemoPassportView = ({ profile }: { profile: DemoProfile }) => {
   const {
-    key, contributor, stats, contracts, whatChanged, accent, valueMix, bars, quickRead,
+    key, contributor, stats: rawStats, contracts, whatChanged, accent, valueMix: rawValueMix, bars, quickRead,
     milestones, bio, badges, valueStreams, evidenceMappings, siteUptime, exampleCards,
   } = profile;
+  // Agri stats/valueMix are computed dynamically from the shared decay schedule
+  // so Received/Waiting reflect today's date instead of hardcoded values.
+  // (Lazy-required to avoid a top-level import cycle risk for other personas.)
+  let stats = rawStats;
+  let valueMix = rawValueMix;
+  if (key === "agri") {
+    const t = computeAgriTotals();
+    stats = { ...rawStats, settled: t.received, pending: t.pending, future: t.projected };
+    valueMix = { ...rawValueMix, settled: t.received, pending: t.pending, future: t.projected };
+  }
   const contribution = profile.contribution;
   const hasDetails = Boolean(
     (evidenceMappings && evidenceMappings.length > 0) ||

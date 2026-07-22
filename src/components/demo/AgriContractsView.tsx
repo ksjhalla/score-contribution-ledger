@@ -1,6 +1,19 @@
 import * as React from "react";
 import { demoProfiles } from "@/data/demoProfiles";
 import { AgriDecayTimeline } from "@/components/demo/AgriDecayTimeline";
+import {
+  AGRI_SERIES,
+  AGRI_TODAY_YEAR,
+  ALL_SERIES_KEYS,
+  computeAgriTotals,
+  derivedAmount,
+  effectiveStatus,
+  getSeries,
+  rateAt,
+  type AgriSeries,
+  type PointStatus,
+  type SeriesKey,
+} from "@/data/agriSchedule";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -12,71 +25,27 @@ const INK = "#1A1614";
 const MUTED = "#9A8F84";
 const BORDER = "rgba(26,22,14,0.10)";
 
-type Row = {
-  year: number;
-  label: string;
-  ratePct: number;
-  status: "Received" | "Pending" | "Projected";
-  amount: number | null;
-  proof?: string;
+// Per-season labels & proof strings that aren't part of the shared schedule
+// (kept UI-side so the schedule module stays presentation-agnostic).
+const KAPTUMO_META: Record<number, { label: string; proof?: string }> = {
+  2022: { label: "Season 2022 · Lot KMT-2022-011", proof: "M-PESA · sha256: 2c8b5f…" },
+  2023: { label: "Season 2023 · Lot KMT-2023-019", proof: "M-PESA · sha256: 7d1e4a…" },
+  2024: { label: "Season 2024 · Lot KMT-2024-007", proof: "NCE Week 18 · awaiting M-PESA" },
+  2025: { label: "Season 2025 (projected)" },
+  2026: { label: "Season 2026 (projected)" },
+  2027: { label: "Season 2027 (projected · at floor)" },
 };
 
-// Kaptumo premium pool — 8% starting, 15%/yr linear decay, 3% floor,
-// first delivery 2022. rate(n) = max(8 - 15%*8*(n-0), 3) = max(8*(1 - 0.15*n), 3).
-const kaptumoRate = (yearsSinceStart: number) =>
-  Math.max(8 * (1 - 0.15 * yearsSinceStart), 3);
-
-const kaptumoSchedule: Row[] = [
-  { year: 2022, label: "Season 2022 · Lot KMT-2022-011", ratePct: kaptumoRate(0), status: "Received", amount: 58000, proof: "M-PESA · sha256: 2c8b5f…" },
-  { year: 2023, label: "Season 2023 · Lot KMT-2023-019", ratePct: kaptumoRate(1), status: "Received", amount: 68000, proof: "M-PESA · sha256: 7d1e4a…" },
-  { year: 2024, label: "Season 2024 · Lot KMT-2024-007", ratePct: kaptumoRate(2), status: "Pending", amount: 62000, proof: "NCE Week 18 · awaiting M-PESA" },
-  { year: 2025, label: "Season 2025 (projected)", ratePct: kaptumoRate(3), status: "Projected", amount: null },
-  { year: 2026, label: "Season 2026 (projected)", ratePct: kaptumoRate(4), status: "Projected", amount: null },
-  { year: 2027, label: "Season 2027 (projected · at floor)", ratePct: kaptumoRate(5), status: "Projected", amount: null },
-];
-
-// Derivative rate — 3% starting, 20%/yr linear decay from licence execution.
-// Capped at KES 5,000 per derivative per season.
-const derivativeRate = (yearsSinceExec: number) =>
-  Math.max(3 * (1 - 0.2 * yearsSinceExec), 0);
-
-type Licence = {
-  name: string;
-  fingerprint: string;
-  executed: string;
-  execYear: number;
-  seasons: Array<{ year: number; status: Row["status"]; amount: number | null; note?: string }>;
+const LICENCE_META: Record<SeriesKey, { fingerprint: string; executed: string }> = {
+  kaptumo: { fingerprint: "", executed: "" },
+  kabitet: { fingerprint: "sha256: 4f7a1c… → 9b4e2a1c…", executed: "14 Apr 2023" },
+  cheptebo: { fingerprint: "sha256: 8c2e5b… → 9b4e2a1c…", executed: "22 Feb 2024" },
 };
-
-const licences: Licence[] = [
-  {
-    name: "Kabitet Cooperative Society",
-    fingerprint: "sha256: 4f7a1c… → 9b4e2a1c…",
-    executed: "14 Apr 2023",
-    execYear: 2023,
-    seasons: [
-      { year: 2023, status: "Received", amount: 14200, note: "M-PESA settled" },
-      { year: 2024, status: "Pending", amount: 11400, note: "awaiting Kabitet NCE settlement" },
-      { year: 2025, status: "Projected", amount: null },
-    ],
-  },
-  {
-    name: "Cheptebo Cooperative Society",
-    fingerprint: "sha256: 8c2e5b… → 9b4e2a1c…",
-    executed: "22 Feb 2024",
-    execYear: 2024,
-    seasons: [
-      { year: 2024, status: "Pending", amount: 13800, note: "awaiting Cheptebo NCE settlement" },
-      { year: 2025, status: "Projected", amount: null },
-      { year: 2026, status: "Projected", amount: null },
-    ],
-  },
-];
 
 const fmtKES = (v: number | null) =>
   v == null ? "—" : v >= 1000 ? `KSh${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}K` : `KSh${v.toLocaleString()}`;
 
-const statusPill = (status: Row["status"]) => {
+const statusPill = (status: PointStatus) => {
   const map = {
     Received: { bg: "rgba(42,106,69,0.10)", fg: GREEN },
     Pending: { bg: "rgba(196,137,42,0.10)", fg: AMBER },
@@ -124,20 +93,17 @@ const DecayBar = ({ pct, max, accent }: { pct: number; max: number; accent: stri
   </div>
 );
 
-const ScheduleTable = () => {
+const ScheduleTable = ({ visible }: { visible: Set<SeriesKey> }) => {
   const years = [2022, 2023, 2024, 2025, 2026, 2027];
+  const primaryShown = visible.has("kaptumo");
+  const derivatives = AGRI_SERIES.filter((s) => s.kind === "derivative" && visible.has(s.key));
 
-  const getPrimary = (year: number) => {
-    const row = kaptumoSchedule.find((r) => r.year === year);
-    return row
-      ? { rate: row.ratePct, amount: row.amount }
-      : { rate: kaptumoRate(year - 2022), amount: null };
-  };
-
-  const getDerivative = (licence: Licence, year: number) => {
-    const season = licence.seasons.find((s) => s.year === year);
-    const rate = derivativeRate(year - licence.execYear);
-    return { rate, amount: season?.amount ?? null };
+  const cellFor = (s: AgriSeries, year: number) => {
+    const point = s.points.find((p) => p.year === year);
+    const rate = rateAt(s, year);
+    if (rate == null) return { rate: null as number | null, amount: null as number | null };
+    const amount = point ? derivedAmount(s, point) : null;
+    return { rate, amount };
   };
 
   const th = {
@@ -170,63 +136,44 @@ const ScheduleTable = () => {
           <thead>
             <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
               <th style={th}>Year</th>
-              <th style={thRight}>Primary rate</th>
-              <th style={thRight}>Primary value</th>
-              {licences.map((l) => {
-                const short = l.name.replace(" Cooperative Society", "");
-                return (
-                  <React.Fragment key={`${l.name}-header`}>
-                    <th style={thRight}>{short} rate</th>
-                    <th style={thRight}>{short} value</th>
-                  </React.Fragment>
-                );
-              })}
+              {primaryShown && (
+                <>
+                  <th style={thRight}>Primary rate</th>
+                  <th style={thRight}>Primary value</th>
+                </>
+              )}
+              {derivatives.map((s) => (
+                <React.Fragment key={`${s.key}-header`}>
+                  <th style={thRight}>{s.shortLabel} rate</th>
+                  <th style={thRight}>{s.shortLabel} value</th>
+                </React.Fragment>
+              ))}
             </tr>
           </thead>
           <tbody>
             {years.map((year) => {
-              const primary = getPrimary(year);
+              const primary = primaryShown ? cellFor(getSeries("kaptumo"), year) : null;
               return (
                 <tr key={year} style={{ borderBottom: `1px solid ${BORDER}` }}>
                   <td style={{ padding: "8px 10px", fontFamily: FONT_MONO, fontSize: 11, color: INK }}>{year}</td>
-                  <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: FONT_MONO, fontSize: 11, color: INK }}>
-                    {primary.rate.toFixed(2)}%
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px 10px",
-                      textAlign: "right",
-                      fontFamily: FONT_MONO,
-                      fontSize: 11,
-                      color: primary.amount ? GREEN : MUTED,
-                    }}
-                  >
-                    {fmtKES(primary.amount)}
-                  </td>
-                  {licences.map((l) => {
-                    const d = getDerivative(l, year);
+                  {primary && (
+                    <>
+                      <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: FONT_MONO, fontSize: 11, color: INK }}>
+                        {primary.rate != null ? `${primary.rate.toFixed(2)}%` : "—"}
+                      </td>
+                      <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: FONT_MONO, fontSize: 11, color: primary.amount ? GREEN : MUTED }}>
+                        {fmtKES(primary.amount)}
+                      </td>
+                    </>
+                  )}
+                  {derivatives.map((s) => {
+                    const d = cellFor(s, year);
                     return (
-                      <React.Fragment key={`${l.name}-${year}`}>
-                        <td
-                          style={{
-                            padding: "8px 10px",
-                            textAlign: "right",
-                            fontFamily: FONT_MONO,
-                            fontSize: 11,
-                            color: INK,
-                          }}
-                        >
-                          {d.rate.toFixed(2)}%
+                      <React.Fragment key={`${s.key}-${year}`}>
+                        <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: FONT_MONO, fontSize: 11, color: INK }}>
+                          {d.rate != null ? `${d.rate.toFixed(2)}%` : "—"}
                         </td>
-                        <td
-                          style={{
-                            padding: "8px 10px",
-                            textAlign: "right",
-                            fontFamily: FONT_MONO,
-                            fontSize: 11,
-                            color: d.amount ? AMBER : MUTED,
-                          }}
-                        >
+                        <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: FONT_MONO, fontSize: 11, color: d.amount ? AMBER : MUTED }}>
                           {fmtKES(d.amount)}
                         </td>
                       </React.Fragment>
@@ -270,6 +217,34 @@ export const AgriContractsView = () => {
   const kaptumoMax = 8;
   const derivMax = 3;
 
+  // Contract selector state (multi-select). Defaults to all three.
+  const [selected, setSelected] = React.useState<Set<SeriesKey>>(
+    () => new Set<SeriesKey>(ALL_SERIES_KEYS),
+  );
+  const toggle = (k: SeriesKey) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) {
+        if (next.size === 1) return prev; // keep at least one
+        next.delete(k);
+      } else {
+        next.add(k);
+      }
+      return next;
+    });
+  };
+  const setAll = () => setSelected(new Set(ALL_SERIES_KEYS));
+  const isAll = selected.size === ALL_SERIES_KEYS.length;
+
+  const totals = React.useMemo(
+    () => computeAgriTotals(Array.from(selected)),
+    [selected],
+  );
+
+  const showKaptumo = selected.has("kaptumo");
+  const shownDerivatives = AGRI_SERIES.filter((s) => s.kind === "derivative" && selected.has(s.key));
+  const visibleKeys = Array.from(selected);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div>
@@ -281,11 +256,93 @@ export const AgriContractsView = () => {
         </p>
       </div>
 
-      <AgriDecayTimeline />
+      {/* Contract selector */}
+      <div style={{
+        display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8,
+        padding: "10px 12px", border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4",
+      }}>
+        <span style={{
+          fontFamily: FONT_MONO, fontSize: 9, color: MUTED,
+          textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4,
+        }}>
+          Show contract
+        </span>
+        <button
+          type="button"
+          onClick={setAll}
+          style={{
+            fontFamily: FONT_MONO, fontSize: 10, padding: "4px 9px", borderRadius: 3, cursor: "pointer",
+            border: `1px solid ${isAll ? INK : BORDER}`,
+            background: isAll ? INK : "transparent",
+            color: isAll ? "#F5F1E8" : INK,
+          }}
+        >
+          All
+        </button>
+        {AGRI_SERIES.map((s) => {
+          const active = selected.has(s.key);
+          return (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => toggle(s.key)}
+              aria-pressed={active}
+              style={{
+                fontFamily: FONT_MONO, fontSize: 10, padding: "4px 9px", borderRadius: 3, cursor: "pointer",
+                border: `1px solid ${active ? s.color : BORDER}`,
+                background: active ? `${s.color}18` : "transparent",
+                color: active ? s.color : MUTED,
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <span style={{ width: 8, height: 8, borderRadius: 8, background: s.color, opacity: active ? 1 : 0.4 }} />
+              {s.shortLabel}
+              <span style={{ opacity: 0.6 }}>· {s.kind === "primary" ? "primary" : "derivative"}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      <ScheduleTable />
+      {/* Live totals — computed from today ({AGRI_TODAY_YEAR}) and the decay schedule */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0,1fr))",
+        gap: 10,
+      }}>
+        {[
+          { k: "Received to date", v: totals.received, tone: GREEN, sub: "settled amounts" },
+          { k: "Pending", v: totals.pending, tone: AMBER, sub: "awaiting settlement" },
+          { k: "Projected", v: totals.projected, tone: MUTED, sub: "future seasons at current decay" },
+        ].map((s) => (
+          <div key={s.k} style={{
+            border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4",
+            padding: "12px 14px",
+          }}>
+            <div style={{
+              fontFamily: FONT_MONO, fontSize: 9, color: MUTED,
+              textTransform: "uppercase", letterSpacing: "0.06em",
+            }}>
+              {s.k}
+            </div>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 18, color: s.tone, marginTop: 4 }}>
+              {fmtKES(s.v)}
+            </div>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: MUTED, marginTop: 2 }}>
+              {s.sub}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: MUTED, marginTop: -8 }}>
+        Totals reflect today ({AGRI_TODAY_YEAR}) across the {isAll ? "3 selected contracts" : `${selected.size} selected contract${selected.size === 1 ? "" : "s"}`}.
+      </div>
+
+      <AgriDecayTimeline visibleKeys={visibleKeys} />
+
+      <ScheduleTable visible={selected} />
 
       {/* Primary contract — Kaptumo premium pool with vesting/decay table */}
+      {showKaptumo && (
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4", padding: 16 }}>
         <ContractHeader
           title={primary.name}
@@ -324,51 +381,59 @@ export const AgriContractsView = () => {
           Decay schedule · seasons since first delivery (2022)
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {kaptumoSchedule.map((r) => (
+          {getSeries("kaptumo").points.map((p) => {
+            const status = effectiveStatus(p);
+            const meta = KAPTUMO_META[p.year] ?? { label: `Season ${p.year}` };
+            const amount = derivedAmount(getSeries("kaptumo"), p);
+            const ratePct = rateAt(getSeries("kaptumo"), p.year) ?? 0;
+            return (
             <div
-              key={r.year}
+              key={p.year}
               style={{
                 display: "grid",
                 gridTemplateColumns: "48px 1fr 90px 84px 90px",
                 alignItems: "center",
                 gap: 10,
                 padding: "8px 10px",
-                background: r.status === "Projected" ? "transparent" : "rgba(92,122,58,0.04)",
-                border: `1px solid ${r.status === "Projected" ? "rgba(26,22,14,0.06)" : "rgba(92,122,58,0.15)"}`,
+                background: status === "Projected" ? "transparent" : "rgba(92,122,58,0.04)",
+                border: `1px solid ${status === "Projected" ? "rgba(26,22,14,0.06)" : "rgba(92,122,58,0.15)"}`,
                 borderRadius: 4,
               }}
             >
-              <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: INK }}>{r.year}</div>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: INK }}>{p.year}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {r.label}
+                  {meta.label}
                 </div>
-                {r.proof && (
+                {meta.proof && (
                   <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: MUTED, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {r.proof}
+                    {meta.proof}
                   </div>
                 )}
               </div>
               <div>
                 <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, marginBottom: 3 }}>
-                  {r.ratePct.toFixed(2)}% pool
+                  {ratePct.toFixed(2)}% pool
                 </div>
-                <DecayBar pct={r.ratePct} max={kaptumoMax} accent={ACCENT} />
+                <DecayBar pct={ratePct} max={kaptumoMax} accent={ACCENT} />
               </div>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: r.status === "Received" ? GREEN : r.status === "Pending" ? AMBER : MUTED, textAlign: "right" }}>
-                {fmtKES(r.amount)}
+              <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: status === "Received" ? GREEN : status === "Pending" ? AMBER : MUTED, textAlign: "right" }}>
+                {fmtKES(amount)}
               </div>
-              <div style={{ textAlign: "right" }}>{statusPill(r.status)}</div>
+              <div style={{ textAlign: "right" }}>{statusPill(status)}</div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <div style={{ marginTop: 10, fontFamily: FONT_MONO, fontSize: 9, color: MUTED }}>
           Buyout available at 4× cumulative earnings · rate floor engages Season 2027.
         </div>
       </div>
+      )}
 
       {/* Derivative licence contract with linkage diagram */}
+      {shownDerivatives.length > 0 && (
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4", padding: 16 }}>
         <ContractHeader
           title={derivative.name}
@@ -439,9 +504,9 @@ export const AgriContractsView = () => {
             </div>
             <div style={{ fontFamily: FONT_MONO, fontSize: 14, color: MUTED, alignSelf: "center" }}>→</div>
             <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 6 }}>
-              {licences.map((l) => (
+              {shownDerivatives.map((l) => (
                 <div
-                  key={l.name}
+                  key={l.key}
                   style={{
                     padding: "8px 10px",
                     background: "#FDFAF4",
@@ -451,11 +516,11 @@ export const AgriContractsView = () => {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, color: INK }}>{l.name}</div>
-                    <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: MUTED }}>Exec {l.executed}</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, color: INK }}>{l.label}</div>
+                    <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: MUTED }}>Exec {LICENCE_META[l.key].executed}</div>
                   </div>
                   <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, marginTop: 2 }}>
-                    {l.fingerprint}
+                    {LICENCE_META[l.key].fingerprint}
                   </div>
                 </div>
               ))}
@@ -465,19 +530,21 @@ export const AgriContractsView = () => {
 
         {/* Per-licence decay & vesting */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {licences.map((l) => (
-            <div key={l.name}>
+          {shownDerivatives.map((l) => (
+            <div key={l.key}>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, color: INK }}>
-                  {l.name} · vesting
+                  {l.label} · vesting
                 </div>
                 <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: MUTED }}>
-                  T₀ = {l.executed}
+                  T₀ = {LICENCE_META[l.key].executed}
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {l.seasons.map((s) => {
-                  const rate = derivativeRate(s.year - l.execYear);
+                {l.points.map((s) => {
+                  const rate = rateAt(l, s.year) ?? 0;
+                  const status = effectiveStatus(s);
+                  const amount = derivedAmount(l, s);
                   return (
                     <div
                       key={s.year}
@@ -487,14 +554,14 @@ export const AgriContractsView = () => {
                         alignItems: "center",
                         gap: 10,
                         padding: "6px 10px",
-                        background: s.status === "Projected" ? "transparent" : "rgba(122,92,42,0.04)",
-                        border: `1px solid ${s.status === "Projected" ? "rgba(26,22,14,0.06)" : "rgba(122,92,42,0.15)"}`,
+                        background: status === "Projected" ? "transparent" : "rgba(122,92,42,0.04)",
+                        border: `1px solid ${status === "Projected" ? "rgba(26,22,14,0.06)" : "rgba(122,92,42,0.15)"}`,
                         borderRadius: 4,
                       }}
                     >
                       <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: INK }}>{s.year}</div>
                       <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        Season {s.year - l.execYear + 1}
+                        Season {s.year - l.startYear + 1}
                         {s.note ? ` · ${s.note}` : ""}
                       </div>
                       <div>
@@ -503,10 +570,10 @@ export const AgriContractsView = () => {
                         </div>
                         <DecayBar pct={rate} max={derivMax} accent={AMBER} />
                       </div>
-                      <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: s.status === "Received" ? GREEN : s.status === "Pending" ? AMBER : MUTED, textAlign: "right" }}>
-                        {fmtKES(s.amount)}
+                      <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: status === "Received" ? GREEN : status === "Pending" ? AMBER : MUTED, textAlign: "right" }}>
+                        {fmtKES(amount)}
                       </div>
-                      <div style={{ textAlign: "right" }}>{statusPill(s.status)}</div>
+                      <div style={{ textAlign: "right" }}>{statusPill(status)}</div>
                     </div>
                   );
                 })}
@@ -519,6 +586,7 @@ export const AgriContractsView = () => {
           Each licence decays independently from its own execution date · KES 5,000/season cap applies before decay.
         </div>
       </div>
+      )}
     </div>
   );
 };
