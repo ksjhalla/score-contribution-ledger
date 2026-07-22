@@ -242,6 +242,7 @@ export const demoNotificationsFor = (key: DemoKey | "none"): DemoNotification[] 
   if (key === "supplyChain") return supplyChainNotifications;
   if (key === "ai") return aiNotifications;
   if (key === "ppp") return pppNotifications;
+  if (key === "agri") return agriNotifications;
   return [];
 };
 
