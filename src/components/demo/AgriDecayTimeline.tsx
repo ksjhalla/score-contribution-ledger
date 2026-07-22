@@ -1,75 +1,11 @@
+import { AGRI_SERIES, AGRI_TODAY_YEAR, rateAt, type SeriesKey } from "@/data/agriSchedule";
+
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 const MUTED = "#9A8F84";
 const INK = "#1A1614";
 
-type Series = {
-  key: string;
-  label: string;
-  color: string;
-  dashed?: boolean;
-  startYear: number; // T0
-  startRate: number; // %
-  decayPerYr: number; // fraction, e.g. 0.15
-  floor: number;
-  points: { year: number; status: "Received" | "Pending" | "Projected"; amount?: number }[];
-};
-
-const rateAt = (s: Series, year: number) => {
-  if (year < s.startYear) return null;
-  const n = year - s.startYear;
-  return Math.max(s.startRate * (1 - s.decayPerYr * n), s.floor);
-};
-
-const SERIES: Series[] = [
-  {
-    key: "kaptumo",
-    label: "Kaptumo premium pool",
-    color: "#5C7A3A",
-    startYear: 2022,
-    startRate: 8,
-    decayPerYr: 0.15,
-    floor: 3,
-    points: [
-      { year: 2022, status: "Received", amount: 58000 },
-      { year: 2023, status: "Received", amount: 68000 },
-      { year: 2024, status: "Pending", amount: 62000 },
-      { year: 2025, status: "Projected" },
-      { year: 2026, status: "Projected" },
-      { year: 2027, status: "Projected" },
-    ],
-  },
-  {
-    key: "kabitet",
-    label: "Kabitet derivative licence",
-    color: "#C4892A",
-    dashed: true,
-    startYear: 2023,
-    startRate: 3,
-    decayPerYr: 0.2,
-    floor: 0,
-    points: [
-      { year: 2023, status: "Received", amount: 14200 },
-      { year: 2024, status: "Pending", amount: 11400 },
-      { year: 2025, status: "Projected" },
-    ],
-  },
-  {
-    key: "cheptebo",
-    label: "Cheptebo derivative licence",
-    color: "#2A5C8A",
-    dashed: true,
-    startYear: 2024,
-    startRate: 3,
-    decayPerYr: 0.2,
-    floor: 0,
-    points: [
-      { year: 2024, status: "Pending", amount: 13800 },
-      { year: 2025, status: "Projected" },
-      { year: 2026, status: "Projected" },
-    ],
-  },
-];
+const SERIES = AGRI_SERIES;
 
 const YEARS = [2022, 2023, 2024, 2025, 2026, 2027];
 const Y_MAX = 8;
@@ -88,8 +24,10 @@ const xFor = (year: number) =>
   PAD_L + ((year - YEARS[0]) / (YEARS[YEARS.length - 1] - YEARS[0])) * IW;
 const yFor = (rate: number) => PAD_T + IH - (rate / Y_MAX) * IH;
 
-export const AgriDecayTimeline = () => {
-  const today = 2024;
+export const AgriDecayTimeline = ({ visibleKeys }: { visibleKeys?: SeriesKey[] } = {}) => {
+  const today = AGRI_TODAY_YEAR;
+  const keep = visibleKeys ? new Set(visibleKeys) : null;
+  const seriesShown = SERIES.filter((s) => !keep || keep.has(s.key));
   return (
     <div
       style={{
@@ -207,7 +145,7 @@ export const AgriDecayTimeline = () => {
           </text>
 
           {/* Series */}
-          {SERIES.map((s) => {
+          {seriesShown.map((s) => {
             const pts = s.points
               .map((p) => ({ ...p, rate: rateAt(s, p.year) }))
               .filter((p) => p.rate != null) as Array<{ year: number; status: string; amount?: number; rate: number }>;
@@ -249,7 +187,7 @@ export const AgriDecayTimeline = () => {
 
       {/* Legend */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 10 }}>
-        {SERIES.map((s) => (
+        {seriesShown.map((s) => (
           <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <svg width={22} height={8}>
               <line
