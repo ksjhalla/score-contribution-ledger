@@ -161,6 +161,8 @@ export const AgriContractsView = () => {
 
       <AgriDecayTimeline />
 
+      <ScheduleTable />
+
       {/* Primary contract — Kaptumo premium pool with vesting/decay table */}
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, background: "#FDFAF4", padding: 16 }}>
         <ContractHeader
