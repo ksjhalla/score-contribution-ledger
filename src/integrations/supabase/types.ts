@@ -661,6 +661,69 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_audit_log: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          currency: string | null
+          execution_date: string | null
+          execution_id: string | null
+          id: string
+          notification_id: string | null
+          outcome: string
+          reason: string | null
+          reminder_type: string
+          run_id: string
+          settled_amount: number | null
+          user_id: string | null
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          currency?: string | null
+          execution_date?: string | null
+          execution_id?: string | null
+          id?: string
+          notification_id?: string | null
+          outcome: string
+          reason?: string | null
+          reminder_type?: string
+          run_id: string
+          settled_amount?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          currency?: string | null
+          execution_date?: string | null
+          execution_id?: string | null
+          id?: string
+          notification_id?: string | null
+          outcome?: string
+          reason?: string | null
+          reminder_type?: string
+          run_id?: string
+          settled_amount?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_audit_log_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_audit_log_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trigger_events: {
         Row: {
           auth_failed: boolean
