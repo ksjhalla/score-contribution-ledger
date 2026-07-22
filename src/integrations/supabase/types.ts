@@ -329,6 +329,7 @@ export type Database = {
       }
       evidence_sign_offs: {
         Row: {
+          contract_id: string | null
           id: string
           mapping_id: string
           notes: string | null
@@ -337,6 +338,7 @@ export type Database = {
           signer_user_id: string
         }
         Insert: {
+          contract_id?: string | null
           id?: string
           mapping_id: string
           notes?: string | null
@@ -345,6 +347,7 @@ export type Database = {
           signer_user_id: string
         }
         Update: {
+          contract_id?: string | null
           id?: string
           mapping_id?: string
           notes?: string | null
@@ -352,7 +355,15 @@ export type Database = {
           signer_role?: Database["public"]["Enums"]["signer_role"]
           signer_user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "evidence_sign_offs_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       execution_attestations: {
         Row: {
