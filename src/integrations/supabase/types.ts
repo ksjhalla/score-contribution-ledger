@@ -191,6 +191,7 @@ export type Database = {
       }
       evidence: {
         Row: {
+          anchor_id: string | null
           contract_id: string
           created_at: string
           description: string | null
@@ -205,6 +206,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          anchor_id?: string | null
           contract_id: string
           created_at?: string
           description?: string | null
@@ -219,6 +221,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          anchor_id?: string | null
           contract_id?: string
           created_at?: string
           description?: string | null
@@ -234,6 +237,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "evidence_anchor_id_fkey"
+            columns: ["anchor_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_anchors"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "evidence_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -248,6 +258,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      evidence_anchors: {
+        Row: {
+          anchor_reference: string
+          anchored_at: string
+          batch_root_hash: string
+          chain: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          anchor_reference: string
+          anchored_at?: string
+          batch_root_hash: string
+          chain?: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          anchor_reference?: string
+          anchored_at?: string
+          batch_root_hash?: string
+          chain?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
       }
       evidence_sign_offs: {
         Row: {
