@@ -13,6 +13,19 @@ type UserRow = { id: string; contributor_id: string | null; full_name: string | 
 type InviteRow = { id: string; code: string; email: string | null; note: string | null; max_uses: number; use_count: number; expires_at: string | null; used_at: string | null; created_at: string };
 type SignerRoleValue = "viewer" | "reviewer" | "approver";
 type SignerRoleRow = { id: string; full_name: string | null; contributor_id: string | null; signer_role: SignerRoleValue; organisation: string | null; professional_role: string | null; created_at: string };
+type ReminderRun = {
+  runid: number;
+  status: string;
+  return_message: string | null;
+  start_time: string;
+  end_time: string | null;
+  duration_seconds: number | null;
+  processed: number;
+  sent: number;
+  skipped: number;
+  errored: number;
+};
+type ReminderJobInfo = { jobid: number; jobname: string | null; schedule: string | null; active: boolean } | null;
 
 const randomSegment = (len = 4) => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -42,6 +55,19 @@ const Admin = () => {
   const [signerRoles, setSignerRoles] = useState<SignerRoleRow[]>([]);
   const [signerSearch, setSignerSearch] = useState("");
   const [signerSaving, setSignerSaving] = useState<string | null>(null);
+  const [reminderJob, setReminderJob] = useState<ReminderJobInfo>(null);
+  const [reminderRuns, setReminderRuns] = useState<ReminderRun[]>([]);
+  const [reminderRefreshing, setReminderRefreshing] = useState(false);
+
+  const loadReminderRuns = async () => {
+    setReminderRefreshing(true);
+    const { data, error } = await supabase.rpc("get_reminder_job_runs", { p_limit: 20 });
+    setReminderRefreshing(false);
+    if (error) { toast.error(error.message); return; }
+    const payload = (data as { job: ReminderJobInfo; runs: ReminderRun[] } | null) ?? null;
+    setReminderJob(payload?.job ?? null);
+    setReminderRuns(payload?.runs ?? []);
+  };
 
   const loadSignerRoles = async () => {
     const { data, error } = await supabase.rpc("admin_list_signer_roles");
@@ -67,6 +93,7 @@ const Admin = () => {
         supabase.rpc("get_admin_user_list"),
         loadInvites(),
         loadSignerRoles(),
+        loadReminderRuns(),
       ]);
       setStats(s.data as unknown as Stats);
       setUsers((u.data as unknown as UserRow[]) ?? []);
