@@ -1,4 +1,4 @@
-export type DemoKey = "pharma" | "ncaa" | "supplyChain" | "ai" | "ppp";
+export type DemoKey = "pharma" | "ncaa" | "supplyChain" | "ai" | "ppp" | "agri";
 
 export type DemoExecution = {
   title: string;
@@ -46,7 +46,15 @@ export type DemoProfile = {
 
 export type EvidenceMapping = {
   evidence: {
-    type: "kWh audit" | "Mobile-money collection" | "Uptime audit" | "Annual financials" | "Ministry filing";
+    type:
+      | "kWh audit"
+      | "Mobile-money collection"
+      | "Uptime audit"
+      | "Annual financials"
+      | "Ministry filing"
+      | "Auction result"
+      | "Delivery record"
+      | "Licence execution";
     title: string;
     source: string;
     period: string;
