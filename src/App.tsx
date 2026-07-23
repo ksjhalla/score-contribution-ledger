@@ -19,6 +19,7 @@ import Account from "./pages/Account.tsx";
 import Pricing from "./pages/Pricing.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import EnvHelp from "./pages/EnvHelp.tsx";
+import EvidenceTriggers from "./pages/EvidenceTriggers.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { DemoProvider } from "./contexts/DemoContext";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/contracts" element={<AppShell><Contracts /></AppShell>} />
             <Route path="/account" element={<AppShell><Account /></AppShell>} />
             <Route path="/help/env" element={<AppShell><EnvHelp /></AppShell>} />
+            <Route path="/evidence-triggers" element={<AppShell><EvidenceTriggers /></AppShell>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
