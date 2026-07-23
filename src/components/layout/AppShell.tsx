@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { FileText, PenLine, FileStack, User } from "lucide-react";
+import { FileText, PenLine, FileStack, User, ShieldCheck } from "lucide-react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -8,15 +8,17 @@ import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
 import { useDemo } from "@/contexts/DemoContext";
 import { Helmet } from "react-helmet-async";
 
-const NAV = [
+const BASE_NAV = [
   { to: "/dashboard", label: "Passport", icon: FileText },
   { to: "/log-work", label: "Log Work", icon: PenLine },
   { to: "/contracts", label: "Contracts", icon: FileStack },
   { to: "/account", label: "Account", icon: User },
 ];
 
-const titleFor = (path: string) => {
-  const m = NAV.find((n) => path === n.to || path.startsWith(n.to + "/"));
+const AGRI_NAV_ITEM = { to: "/evidence-triggers", label: "Evidence", icon: ShieldCheck };
+
+const titleFor = (path: string, nav: typeof BASE_NAV) => {
+  const m = nav.find((n) => path === n.to || path.startsWith(n.to + "/"));
   return m?.label ?? "SCORE";
 };
 
@@ -35,6 +37,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
+  const NAV = activeDemo === "agri" ? [...BASE_NAV.slice(0, 3), AGRI_NAV_ITEM, BASE_NAV[3]] : BASE_NAV;
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
   );
@@ -66,7 +69,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
     navigate("/", { replace: true });
   };
 
-  const pageTitle = titleFor(location.pathname);
+  const pageTitle = titleFor(location.pathname, NAV);
   const initials = initialsFrom(profile?.full_name);
 
   // Auth guard — three outcomes only
