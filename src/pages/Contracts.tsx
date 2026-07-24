@@ -6,7 +6,8 @@ import { ContractCard, type ContractRow } from "@/components/contracts/ContractC
 import { NewContractDialog } from "@/components/contracts/NewContractDialog";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useDemo } from "@/contexts/DemoContext";
-import { AgriContractsView } from "@/components/demo/AgriContractsView";
+import { DecayContractsView } from "@/components/demo/DecayContractsView";
+import { hasSchedule } from "@/data/decaySchedule";
 
 type ContractWithRef = ContractRow & { reference: string | null };
 
@@ -77,8 +78,8 @@ const Contracts = () => {
 
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto" }}>
-      {activeDemo === "agri" ? (
-        <AgriContractsView />
+      {activeDemo && hasSchedule(activeDemo) ? (
+        <DecayContractsView profileKey={activeDemo} />
       ) : (
       <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 20 }}>
