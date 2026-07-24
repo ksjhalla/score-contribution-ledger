@@ -241,6 +241,27 @@ export const DemoIdCard = ({ profileKey }: { profileKey: DemoKey }) => {
             >
               Scan to view public passport.
             </div>
+            <a
+              href={passportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                marginTop: 4,
+                display: "inline-block",
+                background: accent,
+                color: "#FDFAF4",
+                textDecoration: "none",
+                fontFamily: FONT_BODY,
+                fontSize: 11,
+                fontWeight: 600,
+                padding: "8px 12px",
+                borderRadius: 6,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+              }}
+            >
+              View Public Passport →
+            </a>
           </div>
         </div>
 
