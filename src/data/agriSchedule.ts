@@ -1,5 +1,9 @@
 // Shared decay/vesting schedule for the "agri" (Aisha Ng'etich) demo.
-// Used by AgriContractsView, AgriDecayTimeline, and DemoPassportView so the
+// Back-compat shim. The generic schedule module now lives in
+// @/data/decaySchedule. This file only re-exports so existing imports of
+// AGRI_SCHEDULE / AGRI_SERIES / computeAgriTotals / hasSchedule / scheduleFor
+// keep working until every call site is migrated.
+export * from "@/data/decaySchedule";
 // primary + derivative contracts render one canonical set of numbers.
 
 export type SeriesKey = "kaptumo" | "kabitet" | "cheptebo";
