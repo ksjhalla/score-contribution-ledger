@@ -184,13 +184,13 @@ export const DemoWallet = ({ profileKey }: { profileKey: DemoKey }) => {
                       {e.title}
                     </div>
                     <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", marginTop: 2 }}>
-                      {e.date} \u00b7 <span style={{ color }}>{e.status}</span>
+                      {e.date} · <span style={{ color }}>{e.status}</span>
                     </div>
                   </div>
                   <div
                     style={{ fontFamily: FONT_MONO, fontSize: 13, color: "#1A1614", whiteSpace: "nowrap" }}
                   >
-                    {e.amount != null ? formatDemoAmount(e.amount, e.currency) : "\u2014"}
+                    {e.amount != null ? formatDemoAmount(e.amount, e.currency) : "—"}
                   </div>
                 </div>
               );
@@ -205,7 +205,7 @@ export const DemoWallet = ({ profileKey }: { profileKey: DemoKey }) => {
           textAlign: "center", lineHeight: 1.6, padding: "0 12px",
         }}
       >
-        Demo wallet \u00b7 not a real mobile-money account.
+        Demo wallet · not a real mobile-money account.
       </div>
     </div>
   );
