@@ -1,11 +1,12 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { FileText, PenLine, FileStack, User, ShieldCheck, IdCard } from "lucide-react";
+import { FileText, PenLine, FileStack, User, ShieldCheck, IdCard, Wallet } from "lucide-react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
 import { useDemo } from "@/contexts/DemoContext";
+import { hasSchedule } from "@/data/agriSchedule";
 import { Helmet } from "react-helmet-async";
 
 const BASE_NAV = [
@@ -17,6 +18,7 @@ const BASE_NAV = [
 
 const AGRI_NAV_ITEM = { to: "/evidence-triggers", label: "Evidence", icon: ShieldCheck };
 const ID_CARD_NAV_ITEM = { to: "/id-card", label: "ID Card", icon: IdCard };
+const WALLET_NAV_ITEM = { to: "/wallet", label: "Wallet", icon: Wallet };
 
 const titleFor = (path: string, nav: typeof BASE_NAV) => {
   const m = nav.find((n) => path === n.to || path.startsWith(n.to + "/"));
@@ -40,10 +42,14 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
   const baseWithAgri =
     activeDemo === "agri" ? [...BASE_NAV.slice(0, 3), AGRI_NAV_ITEM, BASE_NAV[3]] : BASE_NAV;
-  const NAV =
+  const withIdCard =
     activeDemo !== "none"
       ? [...baseWithAgri.slice(0, -1), ID_CARD_NAV_ITEM, baseWithAgri[baseWithAgri.length - 1]]
       : baseWithAgri;
+  const NAV =
+    activeDemo !== "none" && hasSchedule(activeDemo)
+      ? [...withIdCard.slice(0, -1), WALLET_NAV_ITEM, withIdCard[withIdCard.length - 1]]
+      : withIdCard;
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
   );
