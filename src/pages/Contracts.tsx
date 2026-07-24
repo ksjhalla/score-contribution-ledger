@@ -78,7 +78,7 @@ const Contracts = () => {
 
   return (
     <div className="px-4 sm:px-6 py-6 sm:py-8" style={{ maxWidth: 920, margin: "0 auto" }}>
-      {activeDemo && hasSchedule(activeDemo) ? (
+      {activeDemo && activeDemo !== "none" && hasSchedule(activeDemo) ? (
         <DecayContractsView profileKey={activeDemo} />
       ) : (
       <>

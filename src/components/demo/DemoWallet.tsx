@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { demoProfiles, formatDemoAmount, type DemoKey } from "@/data/demoProfiles";
-import { scheduleFor } from "@/data/agriSchedule";
+import { scheduleFor, computeTotals } from "@/data/decaySchedule";
 import { CARDS } from "@/components/demo/DemoProfileCards";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
@@ -20,7 +20,7 @@ export const DemoWallet = ({ profileKey }: { profileKey: DemoKey }) => {
 
   const profile = demoProfiles[profileKey];
   const card = CARDS.find((c) => c.key === profileKey)!;
-  const totals = schedule.totals();
+  const totals = computeTotals(schedule);
   const currency = schedule.currency;
   const recent = [...profile.executions]
     .sort((a, b) => (a.date < b.date ? 1 : -1))
