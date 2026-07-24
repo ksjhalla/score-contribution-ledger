@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { FileText, PenLine, FileStack, User, ShieldCheck } from "lucide-react";
+import { FileText, PenLine, FileStack, User, ShieldCheck, IdCard } from "lucide-react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -16,6 +16,7 @@ const BASE_NAV = [
 ];
 
 const AGRI_NAV_ITEM = { to: "/evidence-triggers", label: "Evidence", icon: ShieldCheck };
+const ID_CARD_NAV_ITEM = { to: "/id-card", label: "ID Card", icon: IdCard };
 
 const titleFor = (path: string, nav: typeof BASE_NAV) => {
   const m = nav.find((n) => path === n.to || path.startsWith(n.to + "/"));
@@ -37,7 +38,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const { activeDemo, profile: demoProfile, setActiveDemo } = useDemo();
-  const NAV = activeDemo === "agri" ? [...BASE_NAV.slice(0, 3), AGRI_NAV_ITEM, BASE_NAV[3]] : BASE_NAV;
+  const baseWithAgri =
+    activeDemo === "agri" ? [...BASE_NAV.slice(0, 3), AGRI_NAV_ITEM, BASE_NAV[3]] : BASE_NAV;
+  const NAV =
+    activeDemo !== "none"
+      ? [...baseWithAgri.slice(0, -1), ID_CARD_NAV_ITEM, baseWithAgri[baseWithAgri.length - 1]]
+      : baseWithAgri;
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
   );
