@@ -18,6 +18,11 @@ export const DemoIdCard = ({ profileKey }: { profileKey: DemoKey }) => {
   const accent = card.accent;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const passportUrl = `${origin}/passport/${contributor.id}`;
+  // Demo profiles are client-side fixtures, not real rows in `profiles`, so
+  // /passport/{contributor.id} resolves to "Passport unavailable" when
+  // scanned. Keep the QR as a visual element but encode the app's landing
+  // page instead of a dead passport URL, and label it honestly.
+  const qrValue = origin || "https://score.app";
   const verifiedSince = yearFromId(contributor.id);
 
   return (
@@ -222,7 +227,7 @@ export const DemoIdCard = ({ profileKey }: { profileKey: DemoKey }) => {
               }}
             >
               <QRCodeSVG
-                value={passportUrl}
+                value={qrValue}
                 size={112}
                 bgColor="#FFFFFF"
                 fgColor="#1A1614"
@@ -239,7 +244,7 @@ export const DemoIdCard = ({ profileKey }: { profileKey: DemoKey }) => {
                 lineHeight: 1.4,
               }}
             >
-              Scan to view public passport.
+              Demo profile — not a real scannable record.
             </div>
             <a
               href={passportUrl}
