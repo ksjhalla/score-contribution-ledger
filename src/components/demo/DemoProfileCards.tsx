@@ -16,7 +16,7 @@ type CardSpec = {
   stats: { value: string; label: string; settled: boolean }[];
 };
 
-const CARDS: CardSpec[] = [
+export const CARDS: CardSpec[] = [
   {
     key: "pharma",
     initials: "TM",
