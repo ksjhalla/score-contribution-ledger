@@ -154,3 +154,25 @@ export const getSeries = (key: SeriesKey) =>
   AGRI_SERIES.find((s) => s.key === key)!;
 
 export const ALL_SERIES_KEYS: SeriesKey[] = AGRI_SERIES.map((s) => s.key);
+
+// ---- Cross-profile schedule registry ---------------------------------------
+// Keeps the door open for future demo profiles to register their own decay
+// schedules without the Wallet / other consumers needing to know about agri
+// specifically. Today only the agri profile has one.
+
+import type { DemoKey } from "./demoProfiles";
+
+export type DemoSchedule = {
+  currency: string;
+  totals: (today?: number) => AgriTotals;
+};
+
+const SCHEDULES: Partial<Record<DemoKey, DemoSchedule>> = {
+  agri: {
+    currency: "KES",
+    totals: (today) => computeAgriTotals(undefined, today ?? AGRI_TODAY_YEAR),
+  },
+};
+
+export const scheduleFor = (key: DemoKey): DemoSchedule | undefined => SCHEDULES[key];
+export const hasSchedule = (key: DemoKey): boolean => Boolean(SCHEDULES[key]);

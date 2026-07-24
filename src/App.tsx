@@ -21,6 +21,7 @@ import AuthCallback from "./pages/AuthCallback.tsx";
 import EnvHelp from "./pages/EnvHelp.tsx";
 import EvidenceTriggers from "./pages/EvidenceTriggers.tsx";
 import DemoIdCardPage from "./pages/DemoIdCardPage.tsx";
+import DemoWalletPage from "./pages/DemoWalletPage.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { DemoProvider } from "./contexts/DemoContext";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/help/env" element={<AppShell><EnvHelp /></AppShell>} />
             <Route path="/evidence-triggers" element={<AppShell><EvidenceTriggers /></AppShell>} />
             <Route path="/id-card" element={<AppShell><DemoIdCardPage /></AppShell>} />
+            <Route path="/wallet" element={<AppShell><DemoWalletPage /></AppShell>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
