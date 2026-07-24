@@ -70,26 +70,59 @@ export const PassportView = ({ data }: { data: PassportData }) => {
     (data.summary.attributed_value == null || Number(data.summary.attributed_value) === 0) &&
     !hasWorkEntries;
 
+  const verifiedBits: string[] = [];
+  if (data.summary.contracts > 0)
+    verifiedBits.push(`${data.summary.contracts} contract${data.summary.contracts === 1 ? "" : "s"}`);
+  if (data.summary.executions > 0)
+    verifiedBits.push(`${data.summary.executions} confirmed contribution${data.summary.executions === 1 ? "" : "s"}`);
+  if (data.summary.attributed_value != null && Number(data.summary.attributed_value) > 0)
+    verifiedBits.push(`${value} attributed`);
+  const verifiedSummary = verifiedBits.length
+    ? `Independently verified: ${verifiedBits.join(" · ")}.`
+    : "No verified contributions on this passport yet.";
+
   return (
     <article id="passport-printable" className="max-w-2xl mx-auto px-4 py-6 space-y-5">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">SCORE</h1>
-          <p className="text-xs text-muted-foreground">Contribution Passport</p>
-        </div>
-        <Badge variant="outline" className="font-mono text-xs">
-          {data.contributor_id}
-        </Badge>
-      </header>
-
-      <Card>
-        <CardContent className="pt-6 space-y-1">
-          <div className="text-2xl font-semibold tracking-tight">{data.full_name}</div>
-          <div className="text-sm text-muted-foreground">
-            {[data.professional_role, data.sector].filter(Boolean).join(" · ")}
+      <header className="space-y-3">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 font-medium">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+            <span>SCORE Contribution Passport</span>
           </div>
-        </CardContent>
-      </Card>
+          {data.first_shared_at && (
+            <span className="text-muted-foreground">
+              Since {new Date(data.first_shared_at).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+        <Card>
+          <CardContent className="pt-6 space-y-3">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <h1 className="text-2xl font-semibold tracking-tight truncate">
+                  {data.full_name ?? "Anonymous contributor"}
+                </h1>
+                {[data.professional_role, data.sector].filter(Boolean).length > 0 && (
+                  <div className="text-sm text-muted-foreground mt-0.5">
+                    {[data.professional_role, data.sector].filter(Boolean).join(" · ")}
+                  </div>
+                )}
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Contributor ID
+                </div>
+                <Badge variant="outline" className="font-mono text-xs mt-1">
+                  {data.contributor_id}
+                </Badge>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed border-t pt-3">
+              {verifiedSummary}
+            </p>
+          </CardContent>
+        </Card>
+      </header>
 
       <section className="grid grid-cols-3 gap-3">
         <Stat label="Contracts" value={String(data.summary.contracts)} />
