@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SCORE Nandi Sandbox — Aisha Ng'etich, Kaptumo Cooperative</title>
+<meta name="description" content="Standalone SCORE demonstration sheet: tracked contribution value, contracts, value events and trigger-to-evidence mapping for Aisha Ng'etich, a specialty coffee producer in Nandi County, Kenya." />
+<meta property="og:title" content="SCORE Nandi Sandbox — Aisha Ng'etich" />
+<meta property="og:description" content="Tracked contribution value, contracts, value events and trigger-to-evidence mapping for a Nandi County coffee producer." />
+<meta property="og:type" content="article" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="canonical" href="/score-nandi.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FDFAF4; --ink:#1A1614; --muted:#5C5248; --faint:#9A8F84;
+    --accent:#5C7A3A; --accent-soft:rgba(92,122,58,.10); --accent-border:rgba(92,122,58,.25);
+    --green:#2A6A45; --amber:#C4892A; --red:#8A2A20; --blue:#2A5C8A;
+    --line:rgba(26,22,14,.12);
+    --display:'Playfair Display',Georgia,serif;
+    --body:'DM Sans',system-ui,sans-serif;
+    --mono:'DM Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 64px}
+  .kicker{font-family:var(--mono);font-size:9px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
+  h1{font-family:var(--display);font-size:clamp(26px,4.5vw,38px);line-height:1.15;margin:6px 0 4px}
+  h2{font-family:var(--display);font-size:20px;margin:0 0 4px}
+  h3{font-family:var(--body);font-size:14px;font-weight:700;margin:0 0 6px}
+  p{margin:0 0 10px;color:var(--muted);font-size:14px}
+  .banner{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:5px;padding:8px 12px;margin-bottom:20px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px -14px rgba(26,22,14,.25)}
+  .idrow{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+  .avatar{width:60px;height:60px;border-radius:50%;background:rgba(92,122,58,.12);border:1.5px solid rgba(92,122,58,.3);color:var(--accent);font-family:var(--mono);font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .badge{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:3px;padding:3px 8px}
+  .grid{display:grid;gap:12px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .stat{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper)}
+  .stat .v{font-family:var(--mono);font-size:22px}
+  .stat .l{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-top:2px}
+  .green{color:var(--green)} .amber{color:var(--amber)} .blue{color:var(--blue)} .red{color:var(--red)}
+  ul.bullets{margin:0;padding-left:18px}
+  ul.bullets li{font-size:14px;color:var(--muted);margin-bottom:6px}
+  .bar{height:8px;border-radius:4px;background:rgba(26,22,14,.06);overflow:hidden}
+  .bar>span{display:block;height:100%;border-radius:4px}
+  .barrow{margin-bottom:12px}
+  .barrow .top{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:4px;flex-wrap:wrap}
+  .barrow .amt{font-family:var(--mono)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid rgba(26,22,14,.07);vertical-align:top;color:var(--muted)}
+  td.mono{font-family:var(--mono);color:var(--ink)}
+  .pill{display:inline-block;font-family:var(--mono);font-size:9px;border-radius:3px;padding:2px 6px;white-space:nowrap}
+  details{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper);margin-bottom:10px}
+  summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--ink)}
+  details[open] summary{margin-bottom:10px}
+  .note{font-size:12px;color:var(--muted);background:rgba(196,137,42,.06);border:1px dashed rgba(196,137,42,.35);border-radius:6px;padding:8px 10px;margin-top:8px}
+  .note.gap{background:rgba(138,42,32,.05);border-color:rgba(138,42,32,.30)}
+  footer{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .scroll{overflow-x:auto}
+  @media print{body{background:#fff}.card{box-shadow:none;break-inside:avoid}details{}details summary{display:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="banner">Demo · Aisha Ng'etich · Kaptumo Cooperative · Nandi County, Kenya — fixture data, not a live record.</div>
+
+  <header class="card">
+    <div class="kicker">SCORE Contribution Ledger · Nandi Sandbox</div>
+    <div class="idrow" style="margin-top:10px">
+      <div class="avatar">AN</div>
+      <div style="flex:1;min-width:220px">
+        <h1>Aisha Ng'etich</h1>
+        <p style="margin:0">Smallholder Farmer · Specialty Coffee Producer<br />Kaptumo Cooperative Society Ltd. · Nandi County, Kenya</p>
+      </div>
+      <div style="text-align:right">
+        <span class="badge">SCR-AN-2021-001</span>
+        <div class="kicker" style="margin-top:6px">Verified since 2021</div>
+      </div>
+    </div>
+    <p style="margin-top:14px">Independently tracked: 2 contracts · 5 recorded contributions · 3 seasons of delivery premiums received and 1 derivative licence royalty settled. Everything below is observed and verified by SCORE — contracts and payments stay with the cooperative, the Nairobi Coffee Exchange and M-PESA.</p>
+  </header>
+
+  <section class="card">
+    <h2>Value summary</h2>
+    <p>What has been tracked across three seasons, in Kenyan shillings.</p>
+    <div class="grid g3">
+      <div class="stat"><div class="v green">KSh 186,000</div><div class="l">Received</div></div>
+      <div class="stat"><div class="v amber">KSh 76,000</div><div class="l">Pending</div></div>
+      <div class="stat"><div class="v blue">KSh 5,000</div><div class="l">Projected</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Contribution</h2>
+    <ul class="bullets">
+      <li>Delivered three consecutive AA-grade main-crop lots to the Kaptumo wet mill — 2,210 kg (2022), 2,440 kg (2023), 2,780 kg (2024).</li>
+      <li>Developed an anaerobic fermentation technique, registered as an IP asset (sha256: 9b4e2a1c…, anchored 2022).</li>
+      <li>Licensed that technique to two neighbouring cooperatives — Kabitet (2023, settled) and Cheptebo (2024, pending).</li>
+      <li>Sustained 97–100% ripe-cherry quality across every delivery, holding grade factor 1.0 in the apportionment formula.</li>
+      <li>Triggered the Season 2024 premium at NCE Week 18 · KES 142.40/kg, KES 22.40/kg above the cooperative floor.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>What changed</h2>
+    <div class="grid g2">
+      <div class="stat">
+        <div class="kicker">Under review · High confidence</div>
+        <h3 style="margin-top:6px">Season 2024 premium pending settlement <span class="amber" style="font-family:var(--mono)">KSh 62,000</span></h3>
+        <p style="font-size:13px;margin:0">NCE auction Week 18 confirmed an AA-grade premium of KES 22.40/kg above floor. Awaiting the cooperative's M-PESA transfer. 2 of 3 confirmations in.</p>
+      </div>
+      <div class="stat">
+        <div class="kicker">Resolved · High confidence</div>
+        <h3 style="margin-top:6px">Kabitet licence royalty received <span class="green" style="font-family:var(--mono)">KSh 14,200</span></h3>
+        <p style="font-size:13px;margin:0">Kabitet Cooperative adopted the fermentation technique under licence. First derivative settlement confirmed on-chain and by M-PESA.</p>
+      </div>
+      <div class="stat">
+        <div class="kicker">Watching · Medium confidence</div>
+        <h3 style="margin-top:6px">Cheptebo licence royalty pending <span class="amber" style="font-family:var(--mono)">KSh 13,800</span></h3>
+        <p style="font-size:13px;margin:0">Cheptebo Cooperative adopted the technique in Feb 2024. Royalty is due within 90 days of their own season settlement.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Value streams</h2>
+    <div class="grid g2" style="margin-top:8px">
+      <div class="stat">
+        <h3>Kaptumo premium pool · Season 2024</h3>
+        <p style="font-size:13px;margin:0">8% of the cooperative premium pool above the NCE floor (KES 120/kg), proportional to delivery weight × quality grade. Linear decay 15%/yr, 3% floor.</p>
+        <div class="kicker" style="margin-top:8px">Trigger · NCE AA-grade auction price ≥ KES 120.00/kg</div>
+      </div>
+      <div class="stat">
+        <h3>Anaerobic fermentation technique · derivative licences</h3>
+        <p style="font-size:13px;margin:0">3% of each adopting cooperative's premium pool above the NCE floor, per licence. Linear decay 20%/yr from execution, capped at KES 5,000 per derivative per season.</p>
+        <div class="kicker" style="margin-top:8px">Trigger · Licence execution + adopter's NCE settlement</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>By contract</h2>
+    <p>Each recorded amount, largest first. Green is received, amber is pending.</p>
+    <div class="barrow"><div class="top"><span>2023 delivery</span><span class="amt green">KSh 68,000</span></div><div class="bar"><span style="width:100%;background:var(--green)"></span></div></div>
+    <div class="barrow"><div class="top"><span>2024 delivery</span><span class="amt amber">KSh 62,000</span></div><div class="bar"><span style="width:91%;background:var(--amber)"></span></div></div>
+    <div class="barrow"><div class="top"><span>2022 delivery</span><span class="amt green">KSh 58,000</span></div><div class="bar"><span style="width:85%;background:var(--green)"></span></div></div>
+    <div class="barrow"><div class="top"><span>Kabitet licence</span><span class="amt green">KSh 14,200</span></div><div class="bar"><span style="width:21%;background:var(--green)"></span></div></div>
+    <div class="barrow"><div class="top"><span>Cheptebo licence</span><span class="amt amber">KSh 13,800</span></div><div class="bar"><span style="width:20%;background:var(--amber)"></span></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Evidence &amp; triggers</h2>
+    <p>Every trigger event in the Nandi workflow, mapped to the evidence behind it, who published that evidence, and how anyone can check it.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Trigger</th><th>Status</th><th>Evidence</th><th>Source</th><th>How it is checked</th><th>Strength</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">NCE auction price &gt; floor</td><td><span class="pill" style="color:var(--green);background:rgba(42,106,69,.10)">FIRED · Wk 18 2024</span></td><td>NCE public auction result</td><td>nce.co.ke · weekly publication</td><td>Any party · no login required</td><td class="green">Very strong</td></tr>
+          <tr><td class="mono">CRE grade AA assigned</td><td><span class="pill" style="color:var(--green);background:rgba(42,106,69,.10)">CONFIRMED</span></td><td>CRE grade certificate · Lot KMT-2024-007</td><td>Kenya Coffee Research and Extension Directorate</td><td>CRE lot register · third-party issuer</td><td class="green">Strong</td></tr>
+          <tr><td class="mono">Delivery logged at wet mill</td><td><span class="pill" style="color:var(--green);background:rgba(42,106,69,.10)">CONFIRMED</span></td><td>QR scan · SHA-256 fingerprint</td><td>Kaptumo wet mill operator</td><td>Hash immutable · RFC 3161 timestamp · Polygon anchor</td><td class="green">Strong</td></tr>
+          <tr><td class="mono">Ripe cherry assessment</td><td><span class="pill" style="color:var(--amber);background:rgba(196,137,42,.10)">ASSERTED</span></td><td>Mill operator visual assessment at delivery</td><td>Kaptumo mill operator</td><td>Single attestor only · not independently confirmed</td><td class="amber">Moderate</td></tr>
+          <tr><td class="mono">Licence execution · Kabitet</td><td><span class="pill" style="color:var(--green);background:rgba(42,106,69,.10)">CONFIRMED · settled</span></td><td>Licence signed + derivative record sha256: 4f7a1c… → origin 9b4e2a1c…</td><td>Bilateral agreement · on-chain record</td><td>On-chain link · independently verifiable</td><td class="green">Strong</td></tr>
+          <tr><td class="mono">Licence execution · Cheptebo</td><td><span class="pill" style="color:var(--amber);background:rgba(196,137,42,.10)">CONFIRMED · pending</span></td><td>Licence signed + derivative record sha256: 8c2e5b… → origin 9b4e2a1c…</td><td>Bilateral agreement · on-chain record</td><td>On-chain link · independently verifiable</td><td class="green">Strong</td></tr>
+          <tr><td class="mono">M-PESA settlement confirmed</td><td><span class="pill" style="color:var(--green);background:rgba(42,106,69,.10)">CONFIRMED · 2022, 2023</span></td><td>M-PESA transaction IDs</td><td>Safaricom · independent payment confirmation</td><td>Safaricom transaction registry · verifiable with the transaction ID</td><td class="green">Very strong</td></tr>
+          <tr><td class="mono">Informal technique adoption</td><td><span class="pill" style="color:var(--red);background:rgba(138,42,32,.08)">NOT DETECTED</span></td><td>None — no licence executed</td><td>Would require attestation or downstream quality signal</td><td>Cannot be automated without a digital touchpoint</td><td class="red">Gap</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note gap"><strong>Known gap:</strong> SCORE detects reuse of the fermentation technique only when a licence is executed or an attestation is filed. Informal adoption by a neighbouring farm stays invisible.</div>
+    <div class="note"><strong>Weakest link:</strong> ripe-cherry quality rests on a single attestor. The CRE AA grade implicitly confirms it — that linkage should be made explicit, or the CRE grader added as a second attestor.</div>
+  </section>
+
+  <section class="card">
+    <h2>View details</h2>
+
+    <details>
+      <summary>Recorded contributions (5)</summary>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Contribution</th><th>Date</th><th>Amount</th><th>Status</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>Main crop delivery · Lot KMT-2024-007</td><td class="mono">2024-03-14</td><td class="mono amber">KSh 62,000</td><td>Pending</td><td>QR scan · 2,780 kg · 100% ripe cherry · sha256: a3f2c9d1… · NCE Wk 18 KES 142.40/kg</td></tr>
+            <tr><td>Fermentation technique · Cheptebo licence</td><td class="mono">2024-02-22</td><td class="mono amber">KSh 13,800</td><td>Pending</td><td>Derivative record sha256: 8c2e5b… linked to origin 9b4e2a1c…</td></tr>
+            <tr><td>Fermentation technique · Kabitet licence</td><td class="mono">2023-04-14</td><td class="mono green">KSh 14,200</td><td>Received</td><td>Derivative record sha256: 4f7a1c… · M-PESA settled</td></tr>
+            <tr><td>Main crop delivery · Lot KMT-2023-019</td><td class="mono">2023-03-11</td><td class="mono green">KSh 68,000</td><td>Received</td><td>QR scan · 2,440 kg · 98% ripe cherry · sha256: 7d1e4af2… · NCE Wk 16 KES 138.20/kg</td></tr>
+            <tr><td>Main crop delivery · Lot KMT-2022-011</td><td class="mono">2022-03-08</td><td class="mono green">KSh 58,000</td><td>Received</td><td>QR scan · 2,210 kg · 97% ripe cherry · sha256: 2c8b5fe1… · NCE Wk 15 KES 132.80/kg</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>Contracts (2)</summary>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Contract</th><th>Counterparty</th><th>Entitlement</th><th>Trigger</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Kaptumo Cooperative Premium Pool · Season 2024</td><td>Kaptumo Farmers Cooperative Society Ltd.</td><td>8% of premium pool above the NCE floor (KES 120/kg), by delivery weight × quality grade. Decay 15%/yr, 3% floor, buyout at 4× cumulative earnings.</td><td>NCE AA-grade auction price ≥ KES 120.00/kg</td><td>Active</td></tr>
+            <tr><td>Anaerobic Fermentation Technique · Derivative Licence</td><td>Kabitet + Cheptebo Cooperative Societies</td><td>3% of each adopter's premium pool above the NCE floor. Decay 20%/yr from execution. Capped at KES 5,000 per derivative per season.</td><td>Licence execution + adopter's NCE settlement</td><td>Active</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>Timeline</summary>
+      <ul class="bullets" style="margin-top:8px">
+        <li><strong>Mar 2022</strong> — First delivery · Kaptumo wet mill · AA grade · 2,210 kg · <span class="green">+KSh 58,000</span></li>
+        <li><strong>2022</strong> — IP asset registered: anaerobic fermentation technique (sha256: 9b4e2a…)</li>
+        <li><strong>Apr 2023</strong> — Kabitet Cooperative derivative licence executed · <span class="green">+KSh 14,200</span></li>
+        <li><strong>2023</strong> — Season 2023 delivery received · NCE KES 138.20/kg · 2,440 kg AA · <span class="green">+KSh 68,000</span></li>
+        <li><strong>Feb 2024</strong> — Cheptebo Cooperative second derivative licence · <span class="amber">KSh 13,800 pending</span></li>
+        <li><strong>May 2024</strong> — Season 2024 NCE trigger fired · awaiting M-PESA · <span class="amber">KSh 62,000 pending</span></li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Decay schedule · how the share falls over time</summary>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Year</th><th>Kaptumo premium pool</th><th>Derivative licences</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">2022</td><td class="mono">8.0%</td><td class="mono">—</td><td>Received</td></tr>
+            <tr><td class="mono">2023</td><td class="mono">6.8%</td><td class="mono">3.0%</td><td>Received</td></tr>
+            <tr><td class="mono">2024</td><td class="mono">5.8%</td><td class="mono">2.4%</td><td>Pending</td></tr>
+            <tr><td class="mono">2025</td><td class="mono">4.9%</td><td class="mono">1.9%</td><td>Projected</td></tr>
+            <tr><td class="mono">2026</td><td class="mono">4.2%</td><td class="mono">1.6%</td><td>Projected</td></tr>
+            <tr><td class="mono">2027</td><td class="mono">3.5%</td><td class="mono">1.2%</td><td>Projected</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">Primary pool decays 15%/yr with a 3% floor. Derivative licences decay 20%/yr and are capped at KES 5,000 per derivative per season. Projected figures are indicative, not owed.</div>
+    </details>
+  </section>
+
+  <footer>
+    <span>SCORE Contribution Ledger · Nandi Sandbox · Demonstration data</span>
+    <span style="color:var(--accent)">SCORE tracks and verifies value. Contracts and payments remain with their respective systems.</span>
+  </footer>
+</main>
+</body>
+</html>
