@@ -117,7 +117,7 @@ export const ContractSparkBars = ({
                       flexShrink: 0,
                     }}
                   >
-                    {fmt(c.value, currency)}
+                    {c.displayValue ?? fmt(c.value, currency)}
                   </span>
                 </div>
                 <div
