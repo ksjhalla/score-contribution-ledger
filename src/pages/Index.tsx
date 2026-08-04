@@ -584,25 +584,25 @@ export default function Index() {
                 tag: "PHARMA / IP",
                 title: "Work that pays over time",
                 body: "A patent you co-invented today still earns when the drug ships. Royalties land where they should — for as long as they're due.",
-                example: "$420K paid · $380K pending",
+                example: "12 active royalty streams · 8 jurisdictions",
               },
               {
                 tag: "ATHLETE / CONTRACT",
                 title: "Work that follows your career",
                 body: "Endorsements, NIL deals, performance bonuses. One record, across teams and seasons, that doesn't reset when you switch jerseys.",
-                example: "$112K paid · $48K pending",
+                example: "7 seasons tracked · 4 team changes",
               },
               {
                 tag: "SUPPLY CHAIN",
                 title: "Work that scales across systems",
                 body: "A cooperative, a grower, a supplier. Your contribution to the final product is logged once and tracked everywhere it goes.",
-                example: "$86K paid · $24K pending",
+                example: "4 supply tiers traced · 98% match confidence",
               },
               {
                 tag: "OPEN / AI",
                 title: "Work that gets reused everywhere",
                 body: "Code, datasets, training contributions. When something you built is used downstream, the credit and the payment find you.",
-                example: "$31K paid · $19K pending",
+                example: "2M downstream inferences · 14 licensees",
               },
             ].map((c) => (
               <div key={c.tag} style={{
