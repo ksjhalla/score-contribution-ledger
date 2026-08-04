@@ -200,13 +200,85 @@ const NandiSandbox = () => {
             {active === "farmer" && (
               <>
                 <section className="card">
+                  <h2>Contribution</h2>
+                  <ul className="bullets">
+                    <li>Delivered three consecutive AA-grade main-crop lots to the Kaptumo wet mill — 2,210 kg (2022), 2,440 kg (2023), 2,780 kg (2024).</li>
+                    <li>Developed an anaerobic fermentation technique, registered as an IP asset (sha256: 9b4e2a1c…, anchored 2022).</li>
+                    <li>Licensed that technique to two neighbouring cooperatives — Kabitet (2023, settled) and Cheptebo (2024, pending).</li>
+                    <li>Sustained 97–100% ripe-cherry quality across every delivery, holding grade factor 1.0 in the apportionment formula.</li>
+                    <li>Triggered the Season 2024 premium at NCE Week 18 · KES 142.40/kg, KES 22.40/kg above the cooperative floor.</li>
+                  </ul>
+                </section>
+
+                <section className="card">
+                  <h2>What changed</h2>
+                  <div className="grid g2">
+                    <div className="stat">
+                      <div className="kicker">Under review · High confidence</div>
+                      <h3 style={{ marginTop: 6 }}>Season 2024 premium pending settlement <span className="amber" style={{ fontFamily: "var(--mono)" }}>KSh 62,000</span></h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>NCE auction Week 18 confirmed an AA-grade premium of KES 22.40/kg above floor. Awaiting the cooperative's M-PESA transfer. 2 of 3 confirmations in.</p>
+                    </div>
+                    <div className="stat">
+                      <div className="kicker">Resolved · High confidence</div>
+                      <h3 style={{ marginTop: 6 }}>Kabitet licence royalty received <span className="green" style={{ fontFamily: "var(--mono)" }}>KSh 14,200</span></h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>Kabitet Cooperative adopted the fermentation technique under licence. First derivative settlement confirmed on-chain and by M-PESA.</p>
+                    </div>
+                    <div className="stat">
+                      <div className="kicker">Watching · Medium confidence</div>
+                      <h3 style={{ marginTop: 6 }}>Cheptebo licence royalty pending <span className="amber" style={{ fontFamily: "var(--mono)" }}>KSh 13,800</span></h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>Cheptebo Cooperative adopted the technique in Feb 2024. Royalty is due within 90 days of their own season settlement.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Value streams</h2>
+                  <div className="grid g2" style={{ marginTop: 8 }}>
+                    <div className="stat">
+                      <h3>Kaptumo premium pool · Season 2024</h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>8% of the cooperative premium pool above the NCE floor (KES 120/kg), proportional to delivery weight × quality grade. Linear decay 15%/yr, 3% floor.</p>
+                      <div className="kicker" style={{ marginTop: 8 }}>Trigger · NCE AA-grade auction price ≥ KES 120.00/kg</div>
+                    </div>
+                    <div className="stat">
+                      <h3>Anaerobic fermentation technique · derivative licences</h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>3% of each adopting cooperative's premium pool above the NCE floor, per licence. Linear decay 20%/yr from execution, capped at KES 5,000 per derivative per season.</p>
+                      <div className="kicker" style={{ marginTop: 8 }}>Trigger · Licence execution + adopter's NCE settlement</div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="card">
                   <h2>Value summary</h2>
                   <p>What has been tracked across three seasons, in Kenyan shillings.</p>
                   <div className="grid g3">
                     <div className="stat"><div className="v green">{ksh(totals.received)}</div><div className="l">Received</div></div>
                     <div className="stat"><div className="v amber">{ksh(totals.pending)}</div><div className="l">Pending</div></div>
-                    <div className="stat"><div className="v blue">{decay.filter((d) => d.status === "Projected").length} seasons</div><div className="l">Projected (indicative)</div></div>
+                    <div className="stat"><div className="v blue">{coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length}</div><div className="l">Seasons active</div></div>
                   </div>
+                </section>
+
+                <section className="card">
+                  <h2>Evidence &amp; triggers</h2>
+                  <p>Every trigger event in the Nandi workflow, mapped to the evidence behind it, who published that evidence, and how anyone can check it.</p>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Trigger</th><th>Status</th><th>Evidence</th><th>Source</th><th>How it is checked</th><th>Strength</th></tr></thead>
+                      <tbody>
+                        {triggers.map((t) => (
+                          <tr key={t.id}>
+                            <td className="mono">{t.trigger_name}</td>
+                            <td>{statusPill(t.status)}</td>
+                            <td>{t.evidence}</td>
+                            <td>{t.source}</td>
+                            <td>{t.verification_method}</td>
+                            <td className={confClass(t.confidence)}>{t.confidence}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note gap"><strong>Known gap:</strong> SCORE detects reuse of the fermentation technique only when a licence is executed or an attestation is filed. Informal adoption by a neighbouring farm stays invisible.</div>
+                  <div className="note"><strong>Weakest link:</strong> ripe-cherry quality rests on a single attestor. The CRE AA grade implicitly confirms it — that linkage should be made explicit, or the CRE grader added as a second attestor.</div>
                 </section>
 
                 <section className="card">
