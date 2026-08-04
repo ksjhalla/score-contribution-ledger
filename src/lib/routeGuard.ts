@@ -12,6 +12,7 @@ export const PUBLIC_ROUTES = [
   "/attest", // prefix match (/attest/:token)
   "/passport", // prefix match (/passport/:contributorId)
   "/report",
+  "/sandbox", // prefix match (/sandbox/nandi/:audience) — code-gated, no account
 ] as const;
 
 export const isPublicRoute = (pathname: string): boolean => {
