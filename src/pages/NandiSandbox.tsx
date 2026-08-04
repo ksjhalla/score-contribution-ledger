@@ -359,6 +359,46 @@ const NandiSandbox = () => {
                   <div className="note">Derivative licence royalties are distributed per adopting cooperative — Kabitet (settled) and Cheptebo (pending) — and shared back into the Kaptumo premium pool allocation for the season.</div>
                 </section>
 
+                <section className="card">
+                  <h2>Derivative licence roll-up</h2>
+                  <p>Technique licences held by the cooperative's members, viewed as distribution across the membership rather than one farmer's line items.</p>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Adopting cooperative</th><th>Licence executed</th><th>Rate this season</th><th>Members benefiting</th><th>Distribution status</th></tr></thead>
+                      <tbody>
+                        <tr>
+                          <td className="mono">Kabitet Cooperative Society</td>
+                          <td className="mono">2023-04-14</td>
+                          <td className="mono">3.0% of premium pool above floor</td>
+                          <td className="mono">1 of {coop?.member_count ?? "—"}</td>
+                          <td className="green">Distributed · M-PESA confirmed</td>
+                        </tr>
+                        <tr>
+                          <td className="mono">Cheptebo Cooperative Society</td>
+                          <td className="mono">2024-02-22</td>
+                          <td className="mono">2.4% of premium pool above floor</td>
+                          <td className="mono">1 of {coop?.member_count ?? "—"}</td>
+                          <td className="amber">Awaiting adopter's NCE settlement</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note">Each licence is capped at KES 5,000 per derivative per season and decays 20%/yr from execution, so no single member's derivative claim compounds against the pool.</div>
+                </section>
+
+                <section className="card">
+                  <h2>Governance framing</h2>
+                  <p>
+                    With every delivery, auction price and payout observable against the same record, distribution accuracy is
+                    now checkable rather than asserted — a governance tool for managers who are getting it right, and a way to
+                    surface it quickly where they are not.
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    That auditability is also a credit-profile benefit: lenders can assess the cooperative itself on demonstrated
+                    distribution accuracy, not just on collateral.
+                  </p>
+                </section>
+
                 <DecayCard decay={decay} title="Pool decay across the membership" />
               </>
             )}
@@ -366,9 +406,63 @@ const NandiSandbox = () => {
             {active === "development_actor" && (
               <>
                 <section className="card">
+                  <h2>Why this gap persists</h2>
+                  <p>
+                    A 2013 European Commission study of the Kenyan coffee value chain found that farmers delivering through
+                    cooperatives received roughly <strong>19.5% of the Nairobi Coffee Exchange auction price</strong> (2010
+                    figures) — and that is before labour and input costs are deducted. The loss is not primarily at the border or
+                    the roaster; it happens between the auction and the individual farmer, inside the intermediary layer, where
+                    nothing is independently observable.
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>What Kenyan law already changed, and what it didn't</h2>
+                  <p>
+                    The <strong>Coffee Act 2025</strong> caps cooperative deductions at 10% and establishes the{" "}
+                    <strong>Direct Settlement System</strong>, routing NCE auction proceeds directly to cooperatives through the
+                    Cooperative Bank of Kenya rather than through marketing agents.
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    That closes the exchange-to-cooperative gap. It does not close the cooperative-to-individual gap: once money
+                    lands in the cooperative account, apportionment to each farmer remains unobservable.{" "}
+                    <strong>SCORE starts where the Direct Settlement System ends.</strong>
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>Existing infrastructure to integrate with, not duplicate</h2>
+                  <p style={{ margin: 0 }}>
+                    The <strong>Nandi Coffee Cooperative Union (NCCU)</strong> was formed at county level and has grown from 18 to
+                    over 100 member cooperatives. It is already mapping and registering farmers. SCORE is a record layer on top of
+                    that registration work — not a parallel registry, and not a replacement for the union's convening role.
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>What this is, in three analogies</h2>
+                  <ul className="bullets">
+                    <li><strong>GitHub</strong> — a portable contribution record that follows the contributor, not the employer.</li>
+                    <li><strong>Land Registry</strong> — records entitlement; it does not buy or sell the land.</li>
+                    <li><strong>Credit Bureau</strong> — records creditworthiness; it does not issue the loan.</li>
+                  </ul>
+                </section>
+
+                <section className="card">
+                  <h2>Where this sits relative to certification</h2>
+                  <p style={{ margin: 0 }}>
+                    Fairtrade, UTZ and Rainforest Alliance audit at the cooperative governance layer: they verify that an
+                    organisation has acceptable policies, premiums and practices. SCORE operates one layer below that, at the
+                    individual transaction — this delivery, this grade, this auction price, this payout. A certified cooperative
+                    can still distribute opaquely; a SCORE record shows whether it did. The two are complementary, not competing,
+                    and certification bodies are a plausible consumer of the record rather than a competitor to it.
+                  </p>
+                </section>
+
+                <section className="card">
                   <h2>Evidence confidence distribution</h2>
                   <p>
-                    Compliance and risk posture across every tracked trigger, for institutions assessing whether the model holds:
+                    Supporting evidence for the argument above. Compliance and risk posture across every tracked trigger, for institutions assessing whether the model holds:
                     IFC as investment partner, FAO as a standards and food-systems observer, and Nandi County government as the
                     convening authority. Reliability first — individual payout detail is not the concern here.
                   </p>
