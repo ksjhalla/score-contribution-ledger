@@ -197,7 +197,7 @@ const NandiSandbox = () => {
           <div className="card"><p style={{ margin: 0 }}>Loading sandbox data…</p></div>
         ) : (
           <>
-            {active === "aisha" && (
+            {active === "farmer" && (
               <>
                 <section className="card">
                   <h2>Value summary</h2>
