@@ -50,7 +50,7 @@ background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5
 .nandi footer{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 `;
 
-const AUDIENCES = ["farmer", "cooperative", "trader", "brand", "development_actor"] as const;
+const AUDIENCES = ["farmer", "cooperative", "lender", "trader", "brand", "development_actor"] as const;
 type Audience = (typeof AUDIENCES)[number];
 
 type AudienceProfile = { key: string; label: string; tagline: string | null; description: string | null; sort_order: number };
@@ -121,7 +121,7 @@ const NandiSandbox = () => {
     return order.map((k) => ({ label: k, count: triggers.filter((t) => t.confidence === k).length }));
   }, [triggers]);
 
-  const paidAudience = active === "trader" || active === "brand";
+  const paidAudience = active === "trader" || active === "brand" || active === "lender";
 
   const traceablePct = triggers.length
     ? Math.round((triggers.filter((t) => t.confidence !== "Gap").length / triggers.length) * 100)
