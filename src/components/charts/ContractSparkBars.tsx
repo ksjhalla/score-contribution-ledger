@@ -5,7 +5,7 @@ const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 
 const symbolFor = (c: string) =>
-  c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "";
+  c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : c === "KES" ? "KSh " : "";
 
 const fmt = (n: number, c: string) => {
   const s = symbolFor(c);
@@ -37,6 +37,10 @@ export type SparkContract = {
   evidence_count?: number;
   color?: string;
   contract_id?: string;
+  /** Optional display override, e.g. a confidence label instead of a money value. */
+  displayValue?: string;
+  /** Optional status label override for the tooltip. */
+  statusLabel?: string;
 };
 
 export const ContractSparkBars = ({
@@ -113,7 +117,7 @@ export const ContractSparkBars = ({
                       flexShrink: 0,
                     }}
                   >
-                    {fmt(c.value, currency)}
+                    {c.displayValue ?? fmt(c.value, currency)}
                   </span>
                 </div>
                 <div
@@ -148,7 +152,7 @@ export const ContractSparkBars = ({
                     Status
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 11, color }}>
-                    {STATUS_LABEL[c.status]}
+                    {c.statusLabel ?? STATUS_LABEL[c.status]}
                   </span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
@@ -156,7 +160,7 @@ export const ContractSparkBars = ({
                     Value
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#1A1614" }}>
-                    {fullNumber(c.value, currency)}
+                    {c.displayValue ?? fullNumber(c.value, currency)}
                   </span>
                 </div>
                 {c.contract_id ? (

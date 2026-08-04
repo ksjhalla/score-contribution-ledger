@@ -52,7 +52,8 @@ const statusChip: Record<ValueEventStatus, { bg: string; fg: string }> = {
   Watching: { bg: "rgba(42,92,138,0.10)", fg: "#2A5C8A" },
 };
 
-const currencySymbol = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
+const currencySymbol = (c: string) =>
+  c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : c === "KES" ? "KSh " : "";
 
 const formatAmount = (amount: number | null, currency: string) => {
   if (amount == null) return null;
