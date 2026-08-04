@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap');
 .nandi{--paper:#FDFAF4;--ink:#1A1614;--muted:#5C5248;--faint:#9A8F84;--accent:#5C7A3A;--accent-soft:rgba(92,122,58,.10);--accent-border:rgba(92,122,58,.25);--green:#2A6A45;--amber:#C4892A;--red:#8A2A20;--blue:#2A5C8A;--line:rgba(26,22,14,.12);--display:'Playfair Display',Georgia,serif;--body:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',ui-monospace,monospace;
 background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
 .nandi *{box-sizing:border-box}
