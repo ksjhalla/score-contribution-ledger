@@ -200,13 +200,85 @@ const NandiSandbox = () => {
             {active === "farmer" && (
               <>
                 <section className="card">
+                  <h2>Contribution</h2>
+                  <ul className="bullets">
+                    <li>Delivered three consecutive AA-grade main-crop lots to the Kaptumo wet mill — 2,210 kg (2022), 2,440 kg (2023), 2,780 kg (2024).</li>
+                    <li>Developed an anaerobic fermentation technique, registered as an IP asset (sha256: 9b4e2a1c…, anchored 2022).</li>
+                    <li>Licensed that technique to two neighbouring cooperatives — Kabitet (2023, settled) and Cheptebo (2024, pending).</li>
+                    <li>Sustained 97–100% ripe-cherry quality across every delivery, holding grade factor 1.0 in the apportionment formula.</li>
+                    <li>Triggered the Season 2024 premium at NCE Week 18 · KES 142.40/kg, KES 22.40/kg above the cooperative floor.</li>
+                  </ul>
+                </section>
+
+                <section className="card">
+                  <h2>What changed</h2>
+                  <div className="grid g2">
+                    <div className="stat">
+                      <div className="kicker">Under review · High confidence</div>
+                      <h3 style={{ marginTop: 6 }}>Season 2024 premium pending settlement <span className="amber" style={{ fontFamily: "var(--mono)" }}>KSh 62,000</span></h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>NCE auction Week 18 confirmed an AA-grade premium of KES 22.40/kg above floor. Awaiting the cooperative's M-PESA transfer. 2 of 3 confirmations in.</p>
+                    </div>
+                    <div className="stat">
+                      <div className="kicker">Resolved · High confidence</div>
+                      <h3 style={{ marginTop: 6 }}>Kabitet licence royalty received <span className="green" style={{ fontFamily: "var(--mono)" }}>KSh 14,200</span></h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>Kabitet Cooperative adopted the fermentation technique under licence. First derivative settlement confirmed on-chain and by M-PESA.</p>
+                    </div>
+                    <div className="stat">
+                      <div className="kicker">Watching · Medium confidence</div>
+                      <h3 style={{ marginTop: 6 }}>Cheptebo licence royalty pending <span className="amber" style={{ fontFamily: "var(--mono)" }}>KSh 13,800</span></h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>Cheptebo Cooperative adopted the technique in Feb 2024. Royalty is due within 90 days of their own season settlement.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Value streams</h2>
+                  <div className="grid g2" style={{ marginTop: 8 }}>
+                    <div className="stat">
+                      <h3>Kaptumo premium pool · Season 2024</h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>8% of the cooperative premium pool above the NCE floor (KES 120/kg), proportional to delivery weight × quality grade. Linear decay 15%/yr, 3% floor.</p>
+                      <div className="kicker" style={{ marginTop: 8 }}>Trigger · NCE AA-grade auction price ≥ KES 120.00/kg</div>
+                    </div>
+                    <div className="stat">
+                      <h3>Anaerobic fermentation technique · derivative licences</h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>3% of each adopting cooperative's premium pool above the NCE floor, per licence. Linear decay 20%/yr from execution, capped at KES 5,000 per derivative per season.</p>
+                      <div className="kicker" style={{ marginTop: 8 }}>Trigger · Licence execution + adopter's NCE settlement</div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="card">
                   <h2>Value summary</h2>
                   <p>What has been tracked across three seasons, in Kenyan shillings.</p>
                   <div className="grid g3">
                     <div className="stat"><div className="v green">{ksh(totals.received)}</div><div className="l">Received</div></div>
                     <div className="stat"><div className="v amber">{ksh(totals.pending)}</div><div className="l">Pending</div></div>
-                    <div className="stat"><div className="v blue">{decay.filter((d) => d.status === "Projected").length} seasons</div><div className="l">Projected (indicative)</div></div>
+                    <div className="stat"><div className="v blue">{coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length}</div><div className="l">Seasons active</div></div>
                   </div>
+                </section>
+
+                <section className="card">
+                  <h2>Evidence &amp; triggers</h2>
+                  <p>Every trigger event in the Nandi workflow, mapped to the evidence behind it, who published that evidence, and how anyone can check it.</p>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Trigger</th><th>Status</th><th>Evidence</th><th>Source</th><th>How it is checked</th><th>Strength</th></tr></thead>
+                      <tbody>
+                        {triggers.map((t) => (
+                          <tr key={t.id}>
+                            <td className="mono">{t.trigger_name}</td>
+                            <td>{statusPill(t.status)}</td>
+                            <td>{t.evidence}</td>
+                            <td>{t.source}</td>
+                            <td>{t.verification_method}</td>
+                            <td className={confClass(t.confidence)}>{t.confidence}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note gap"><strong>Known gap:</strong> SCORE detects reuse of the fermentation technique only when a licence is executed or an attestation is filed. Informal adoption by a neighbouring farm stays invisible.</div>
+                  <div className="note"><strong>Weakest link:</strong> ripe-cherry quality rests on a single attestor. The CRE AA grade implicitly confirms it — that linkage should be made explicit, or the CRE grader added as a second attestor.</div>
                 </section>
 
                 <section className="card">
@@ -287,6 +359,46 @@ const NandiSandbox = () => {
                   <div className="note">Derivative licence royalties are distributed per adopting cooperative — Kabitet (settled) and Cheptebo (pending) — and shared back into the Kaptumo premium pool allocation for the season.</div>
                 </section>
 
+                <section className="card">
+                  <h2>Derivative licence roll-up</h2>
+                  <p>Technique licences held by the cooperative's members, viewed as distribution across the membership rather than one farmer's line items.</p>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Adopting cooperative</th><th>Licence executed</th><th>Rate this season</th><th>Members benefiting</th><th>Distribution status</th></tr></thead>
+                      <tbody>
+                        <tr>
+                          <td className="mono">Kabitet Cooperative Society</td>
+                          <td className="mono">2023-04-14</td>
+                          <td className="mono">3.0% of premium pool above floor</td>
+                          <td className="mono">1 of {coop?.member_count ?? "—"}</td>
+                          <td className="green">Distributed · M-PESA confirmed</td>
+                        </tr>
+                        <tr>
+                          <td className="mono">Cheptebo Cooperative Society</td>
+                          <td className="mono">2024-02-22</td>
+                          <td className="mono">2.4% of premium pool above floor</td>
+                          <td className="mono">1 of {coop?.member_count ?? "—"}</td>
+                          <td className="amber">Awaiting adopter's NCE settlement</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note">Each licence is capped at KES 5,000 per derivative per season and decays 20%/yr from execution, so no single member's derivative claim compounds against the pool.</div>
+                </section>
+
+                <section className="card">
+                  <h2>Governance framing</h2>
+                  <p>
+                    With every delivery, auction price and payout observable against the same record, distribution accuracy is
+                    now checkable rather than asserted — a governance tool for managers who are getting it right, and a way to
+                    surface it quickly where they are not.
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    That auditability is also a credit-profile benefit: lenders can assess the cooperative itself on demonstrated
+                    distribution accuracy, not just on collateral.
+                  </p>
+                </section>
+
                 <DecayCard decay={decay} title="Pool decay across the membership" />
               </>
             )}
@@ -294,9 +406,63 @@ const NandiSandbox = () => {
             {active === "development_actor" && (
               <>
                 <section className="card">
+                  <h2>Why this gap persists</h2>
+                  <p>
+                    A 2013 European Commission study of the Kenyan coffee value chain found that farmers delivering through
+                    cooperatives received roughly <strong>19.5% of the Nairobi Coffee Exchange auction price</strong> (2010
+                    figures) — and that is before labour and input costs are deducted. The loss is not primarily at the border or
+                    the roaster; it happens between the auction and the individual farmer, inside the intermediary layer, where
+                    nothing is independently observable.
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>What Kenyan law already changed, and what it didn't</h2>
+                  <p>
+                    The <strong>Coffee Act 2025</strong> caps cooperative deductions at 10% and establishes the{" "}
+                    <strong>Direct Settlement System</strong>, routing NCE auction proceeds directly to cooperatives through the
+                    Cooperative Bank of Kenya rather than through marketing agents.
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    That closes the exchange-to-cooperative gap. It does not close the cooperative-to-individual gap: once money
+                    lands in the cooperative account, apportionment to each farmer remains unobservable.{" "}
+                    <strong>SCORE starts where the Direct Settlement System ends.</strong>
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>Existing infrastructure to integrate with, not duplicate</h2>
+                  <p style={{ margin: 0 }}>
+                    The <strong>Nandi Coffee Cooperative Union (NCCU)</strong> was formed at county level and has grown from 18 to
+                    over 100 member cooperatives. It is already mapping and registering farmers. SCORE is a record layer on top of
+                    that registration work — not a parallel registry, and not a replacement for the union's convening role.
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>What this is, in three analogies</h2>
+                  <ul className="bullets">
+                    <li><strong>GitHub</strong> — a portable contribution record that follows the contributor, not the employer.</li>
+                    <li><strong>Land Registry</strong> — records entitlement; it does not buy or sell the land.</li>
+                    <li><strong>Credit Bureau</strong> — records creditworthiness; it does not issue the loan.</li>
+                  </ul>
+                </section>
+
+                <section className="card">
+                  <h2>Where this sits relative to certification</h2>
+                  <p style={{ margin: 0 }}>
+                    Fairtrade, UTZ and Rainforest Alliance audit at the cooperative governance layer: they verify that an
+                    organisation has acceptable policies, premiums and practices. SCORE operates one layer below that, at the
+                    individual transaction — this delivery, this grade, this auction price, this payout. A certified cooperative
+                    can still distribute opaquely; a SCORE record shows whether it did. The two are complementary, not competing,
+                    and certification bodies are a plausible consumer of the record rather than a competitor to it.
+                  </p>
+                </section>
+
+                <section className="card">
                   <h2>Evidence confidence distribution</h2>
                   <p>
-                    Compliance and risk posture across every tracked trigger, for institutions assessing whether the model holds:
+                    Supporting evidence for the argument above. Compliance and risk posture across every tracked trigger, for institutions assessing whether the model holds:
                     IFC as investment partner, FAO as a standards and food-systems observer, and Nandi County government as the
                     convening authority. Reliability first — individual payout detail is not the concern here.
                   </p>
