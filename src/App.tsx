@@ -22,6 +22,7 @@ import EnvHelp from "./pages/EnvHelp.tsx";
 import EvidenceTriggers from "./pages/EvidenceTriggers.tsx";
 import DemoIdCardPage from "./pages/DemoIdCardPage.tsx";
 import DemoWalletPage from "./pages/DemoWalletPage.tsx";
+import NandiSandbox from "./pages/NandiSandbox.tsx";
 import { AppShell } from "./components/layout/AppShell";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { DemoProvider } from "./contexts/DemoContext";
@@ -55,6 +56,8 @@ const App = () => (
             <Route path="/evidence-triggers" element={<AppShell><EvidenceTriggers /></AppShell>} />
             <Route path="/id-card" element={<AppShell><DemoIdCardPage /></AppShell>} />
             <Route path="/wallet" element={<AppShell><DemoWalletPage /></AppShell>} />
+            <Route path="/sandbox/nandi" element={<Navigate to="/sandbox/nandi/aisha" replace />} />
+            <Route path="/sandbox/nandi/:audience" element={<NandiSandbox />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
