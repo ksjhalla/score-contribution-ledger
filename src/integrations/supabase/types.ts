@@ -562,6 +562,200 @@ export type Database = {
         }
         Relationships: []
       }
+      nandi_audience_profiles: {
+        Row: {
+          description: string | null
+          key: string
+          label: string
+          sort_order: number
+          tagline: string | null
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          label: string
+          sort_order?: number
+          tagline?: string | null
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          label?: string
+          sort_order?: number
+          tagline?: string | null
+        }
+        Relationships: []
+      }
+      nandi_contracts: {
+        Row: {
+          counterparty: string
+          entitlement: string
+          id: string
+          status: string
+          title: string
+          trigger_desc: string
+        }
+        Insert: {
+          counterparty: string
+          entitlement: string
+          id?: string
+          status: string
+          title: string
+          trigger_desc: string
+        }
+        Update: {
+          counterparty?: string
+          entitlement?: string
+          id?: string
+          status?: string
+          title?: string
+          trigger_desc?: string
+        }
+        Relationships: []
+      }
+      nandi_contributions: {
+        Row: {
+          amount_ksh: number
+          id: string
+          label: string
+          occurred_on: string
+          proof_note: string | null
+          sort_order: number | null
+          status: string
+        }
+        Insert: {
+          amount_ksh: number
+          id?: string
+          label: string
+          occurred_on: string
+          proof_note?: string | null
+          sort_order?: number | null
+          status: string
+        }
+        Update: {
+          amount_ksh?: number
+          id?: string
+          label?: string
+          occurred_on?: string
+          proof_note?: string | null
+          sort_order?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
+      nandi_cooperative_summary: {
+        Row: {
+          key: string
+          member_count: number | null
+          note: string | null
+          seasons_active: number | null
+          total_value_tracked_ksh: number | null
+        }
+        Insert: {
+          key?: string
+          member_count?: number | null
+          note?: string | null
+          seasons_active?: number | null
+          total_value_tracked_ksh?: number | null
+        }
+        Update: {
+          key?: string
+          member_count?: number | null
+          note?: string | null
+          seasons_active?: number | null
+          total_value_tracked_ksh?: number | null
+        }
+        Relationships: []
+      }
+      nandi_decay_schedule: {
+        Row: {
+          derivative_pct: number | null
+          kaptumo_pool_pct: number | null
+          status: string | null
+          year: number
+        }
+        Insert: {
+          derivative_pct?: number | null
+          kaptumo_pool_pct?: number | null
+          status?: string | null
+          year: number
+        }
+        Update: {
+          derivative_pct?: number | null
+          kaptumo_pool_pct?: number | null
+          status?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      nandi_evidence_triggers: {
+        Row: {
+          confidence: string
+          evidence: string
+          id: string
+          sort_order: number | null
+          source: string
+          status: string
+          trigger_name: string
+          verification_method: string
+        }
+        Insert: {
+          confidence: string
+          evidence: string
+          id?: string
+          sort_order?: number | null
+          source: string
+          status: string
+          trigger_name: string
+          verification_method: string
+        }
+        Update: {
+          confidence?: string
+          evidence?: string
+          id?: string
+          sort_order?: number | null
+          source?: string
+          status?: string
+          trigger_name?: string
+          verification_method?: string
+        }
+        Relationships: []
+      }
+      nandi_pricing_models: {
+        Row: {
+          audience_key: string
+          basis: string | null
+          indicative_rate: string
+          model_type: string
+          note: string | null
+          payer: string
+        }
+        Insert: {
+          audience_key: string
+          basis?: string | null
+          indicative_rate: string
+          model_type: string
+          note?: string | null
+          payer: string
+        }
+        Update: {
+          audience_key?: string
+          basis?: string | null
+          indicative_rate?: string
+          model_type?: string
+          note?: string | null
+          payer?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nandi_pricing_models_audience_key_fkey"
+            columns: ["audience_key"]
+            isOneToOne: true
+            referencedRelation: "nandi_audience_profiles"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           contract_id: string | null

@@ -1,0 +1,440 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap');
+.nandi{--paper:#FDFAF4;--ink:#1A1614;--muted:#5C5248;--faint:#9A8F84;--accent:#5C7A3A;--accent-soft:rgba(92,122,58,.10);--accent-border:rgba(92,122,58,.25);--green:#2A6A45;--amber:#C4892A;--red:#8A2A20;--blue:#2A5C8A;--line:rgba(26,22,14,.12);--display:'Playfair Display',Georgia,serif;--body:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',ui-monospace,monospace;
+background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+.nandi *{box-sizing:border-box}
+.nandi .wrap{max-width:920px;margin:0 auto;padding:20px 20px 64px}
+.nandi .kicker{font-family:var(--mono);font-size:9px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
+.nandi h1{font-family:var(--display);font-size:clamp(24px,4.2vw,34px);line-height:1.15;margin:6px 0 4px}
+.nandi h2{font-family:var(--display);font-size:20px;margin:0 0 4px}
+.nandi h3{font-family:var(--body);font-size:14px;font-weight:700;margin:0 0 6px}
+.nandi p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.nandi .back{font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;display:inline-block;margin-bottom:12px}
+.nandi .back:hover{text-decoration:underline}
+.nandi .banner{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:5px;padding:8px 12px;margin-bottom:18px}
+.nandi .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px -14px rgba(26,22,14,.25)}
+.nandi .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.nandi .tab{display:block;text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;min-width:150px;flex:1 1 150px}
+.nandi .tab .tl{font-size:13px;font-weight:700;color:var(--ink)}
+.nandi .tab .tt{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);margin-top:2px}
+.nandi .tab[data-active="true"]{border-color:var(--accent-border);background:var(--accent-soft)}
+.nandi .tab[data-active="true"] .tl{color:var(--accent)}
+.nandi .grid{display:grid;gap:12px}
+.nandi .g3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.nandi .g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.nandi .g4{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.nandi .stat{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper)}
+.nandi .stat .v{font-family:var(--mono);font-size:22px}
+.nandi .stat .l{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-top:2px}
+.nandi .green{color:var(--green)}.nandi .amber{color:var(--amber)}.nandi .blue{color:var(--blue)}.nandi .red{color:var(--red)}.nandi .accent{color:var(--accent)}
+.nandi ul.bullets{margin:0;padding-left:18px}
+.nandi ul.bullets li{font-size:14px;color:var(--muted);margin-bottom:6px}
+.nandi table{width:100%;border-collapse:collapse;font-size:13px}
+.nandi th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.nandi td{padding:10px;border-bottom:1px solid rgba(26,22,14,.07);vertical-align:top;color:var(--muted)}
+.nandi td.mono{font-family:var(--mono);color:var(--ink)}
+.nandi .pill{display:inline-block;font-family:var(--mono);font-size:9px;border-radius:3px;padding:2px 6px;white-space:nowrap}
+.nandi .badge{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:3px;padding:3px 8px}
+.nandi .note{font-size:12px;color:var(--muted);background:rgba(196,137,42,.06);border:1px dashed rgba(196,137,42,.35);border-radius:6px;padding:8px 10px;margin-top:8px}
+.nandi .note.gap{background:rgba(138,42,32,.05);border-color:rgba(138,42,32,.30)}
+.nandi .bar{height:8px;border-radius:4px;background:rgba(26,22,14,.06);overflow:hidden}
+.nandi .bar>span{display:block;height:100%;border-radius:4px}
+.nandi .barrow{margin-bottom:12px}
+.nandi .barrow .top{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:4px;flex-wrap:wrap}
+.nandi .barrow .amt{font-family:var(--mono)}
+.nandi .scroll{overflow-x:auto}
+.nandi footer{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+`;
+
+const AUDIENCES = ["aisha", "cooperative", "ifc_investor", "public", "regulator"] as const;
+type Audience = (typeof AUDIENCES)[number];
+
+type AudienceProfile = { key: string; label: string; tagline: string | null; description: string | null; sort_order: number };
+type Pricing = { audience_key: string; payer: string; model_type: string; indicative_rate: string; basis: string | null; note: string | null };
+type Contribution = { id: string; label: string; occurred_on: string; amount_ksh: number; status: string; proof_note: string | null; sort_order: number | null };
+type Contract = { id: string; title: string; counterparty: string; entitlement: string; trigger_desc: string; status: string };
+type Trigger = { id: string; trigger_name: string; status: string; evidence: string; source: string; verification_method: string; confidence: string; sort_order: number | null };
+type Decay = { year: number; kaptumo_pool_pct: number | null; derivative_pct: number | null; status: string | null };
+type CoopSummary = { key: string; member_count: number | null; total_value_tracked_ksh: number | null; seasons_active: number | null; note: string | null };
+
+const ksh = (n: number) => `KSh ${Math.round(n).toLocaleString("en-KE")}`;
+
+const confClass = (c: string) =>
+  c === "Very strong" || c === "Strong" ? "green" : c === "Moderate" ? "amber" : "red";
+
+const statusPill = (status: string) => {
+  const s = status.toUpperCase();
+  const color = s.includes("NOT DETECTED") ? "var(--red)" : s.includes("ASSERTED") || s.includes("PENDING") ? "var(--amber)" : "var(--green)";
+  const bg = s.includes("NOT DETECTED") ? "rgba(138,42,32,.08)" : s.includes("ASSERTED") || s.includes("PENDING") ? "rgba(196,137,42,.10)" : "rgba(42,106,69,.10)";
+  return <span className="pill" style={{ color, background: bg }}>{status}</span>;
+};
+
+const NandiSandbox = () => {
+  const { audience } = useParams<{ audience: string }>();
+  const active = (AUDIENCES as readonly string[]).includes(audience ?? "") ? (audience as Audience) : null;
+
+  const [profiles, setProfiles] = useState<AudienceProfile[]>([]);
+  const [pricing, setPricing] = useState<Pricing[]>([]);
+  const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [decay, setDecay] = useState<Decay[]>([]);
+  const [coop, setCoop] = useState<CoopSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const [p, pr, c, ct, tr, d, cs] = await Promise.all([
+        supabase.from("nandi_audience_profiles").select("*").order("sort_order"),
+        supabase.from("nandi_pricing_models").select("*"),
+        supabase.from("nandi_contributions").select("*").order("sort_order"),
+        supabase.from("nandi_contracts").select("*"),
+        supabase.from("nandi_evidence_triggers").select("*").order("sort_order"),
+        supabase.from("nandi_decay_schedule").select("*").order("year"),
+        supabase.from("nandi_cooperative_summary").select("*").eq("key", "kaptumo").maybeSingle(),
+      ]);
+      setProfiles((p.data ?? []) as AudienceProfile[]);
+      setPricing((pr.data ?? []) as Pricing[]);
+      setContributions((c.data ?? []) as Contribution[]);
+      setContracts((ct.data ?? []) as Contract[]);
+      setTriggers((tr.data ?? []) as Trigger[]);
+      setDecay((d.data ?? []) as Decay[]);
+      setCoop((cs.data as CoopSummary) ?? null);
+      setLoading(false);
+    })();
+  }, []);
+
+  const activeProfile = profiles.find((p) => p.key === active);
+  const activePricing = pricing.find((p) => p.audience_key === active);
+
+  const totals = useMemo(() => {
+    const sum = (s: string) => contributions.filter((c) => c.status === s).reduce((a, c) => a + Number(c.amount_ksh), 0);
+    return { received: sum("Received"), pending: sum("Pending") };
+  }, [contributions]);
+
+  const confidenceCounts = useMemo(() => {
+    const order = ["Very strong", "Strong", "Moderate", "Gap"];
+    return order.map((k) => ({ label: k, count: triggers.filter((t) => t.confidence === k).length }));
+  }, [triggers]);
+
+  useEffect(() => {
+    if (activeProfile) document.title = `Nandi Sandbox — ${activeProfile.label} | SCORE`;
+  }, [activeProfile]);
+
+  if (!active) return <Navigate to="/sandbox/nandi/aisha" replace />;
+
+  return (
+    <div className="nandi">
+      <style>{CSS}</style>
+      <main className="wrap">
+        <Link to="/" className="back">← SCORE Passport</Link>
+        <div className="banner">
+          Sandbox · Aisha Ng'etich · Kaptumo Cooperative · Nandi County, Kenya — demonstration data, not a live record.
+        </div>
+
+        <header className="card">
+          <div className="kicker">SCORE Contribution Ledger · Nandi Sandbox</div>
+          <h1>{activeProfile?.label ?? "Nandi Sandbox"}</h1>
+          <p style={{ margin: 0 }}>{activeProfile?.description ?? ""}</p>
+        </header>
+
+        <nav className="tabs" aria-label="Audience view">
+          {profiles.map((p) => (
+            <Link key={p.key} to={`/sandbox/nandi/${p.key}`} className="tab" data-active={p.key === active}>
+              <div className="tl">{p.label}</div>
+              <div className="tt">{p.tagline}</div>
+            </Link>
+          ))}
+        </nav>
+
+        {activePricing && (
+          <section className="card">
+            <h2>Indicative access model</h2>
+            <p className="kicker" style={{ marginBottom: 10 }}>Illustrative — for pilot conversation only. Not live billing.</p>
+            <div className="grid g3">
+              <div className="stat"><div className="v" style={{ fontSize: 14 }}>{activePricing.payer}</div><div className="l">Who pays</div></div>
+              <div className="stat"><div className="v accent" style={{ fontSize: 14 }}>{activePricing.indicative_rate}</div><div className="l">Indicative rate</div></div>
+              <div className="stat"><div className="v" style={{ fontSize: 14 }}>{activePricing.basis ?? "—"}</div><div className="l">Basis</div></div>
+            </div>
+          </section>
+        )}
+
+        {loading ? (
+          <div className="card"><p style={{ margin: 0 }}>Loading sandbox data…</p></div>
+        ) : (
+          <>
+            {active === "aisha" && (
+              <>
+                <section className="card">
+                  <h2>Value summary</h2>
+                  <p>What has been tracked across three seasons, in Kenyan shillings.</p>
+                  <div className="grid g3">
+                    <div className="stat"><div className="v green">{ksh(totals.received)}</div><div className="l">Received</div></div>
+                    <div className="stat"><div className="v amber">{ksh(totals.pending)}</div><div className="l">Pending</div></div>
+                    <div className="stat"><div className="v blue">{decay.filter((d) => d.status === "Projected").length} seasons</div><div className="l">Projected (indicative)</div></div>
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Recorded contributions</h2>
+                  <p>Each entry, with the proof recorded alongside it.</p>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Contribution</th><th>Date</th><th>Amount</th><th>Status</th><th>Proof</th></tr></thead>
+                      <tbody>
+                        {contributions.map((c) => (
+                          <tr key={c.id}>
+                            <td>{c.label}</td>
+                            <td className="mono">{c.occurred_on}</td>
+                            <td className={`mono ${c.status === "Received" ? "green" : "amber"}`}>{ksh(Number(c.amount_ksh))}</td>
+                            <td>{c.status}</td>
+                            <td>{c.proof_note}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>By contribution</h2>
+                  <p>Each recorded amount, largest first. Green is received, amber is pending.</p>
+                  {[...contributions]
+                    .sort((a, b) => Number(b.amount_ksh) - Number(a.amount_ksh))
+                    .map((c) => {
+                      const max = Math.max(...contributions.map((x) => Number(x.amount_ksh)), 1);
+                      const pct = (Number(c.amount_ksh) / max) * 100;
+                      const col = c.status === "Received" ? "var(--green)" : "var(--amber)";
+                      return (
+                        <div className="barrow" key={c.id}>
+                          <div className="top"><span>{c.label}</span><span className={`amt ${c.status === "Received" ? "green" : "amber"}`}>{ksh(Number(c.amount_ksh))}</span></div>
+                          <div className="bar"><span style={{ width: `${pct}%`, background: col }} /></div>
+                        </div>
+                      );
+                    })}
+                </section>
+
+                <ContractsCard contracts={contracts} />
+                <DecayCard decay={decay} />
+              </>
+            )}
+
+            {active === "cooperative" && (
+              <>
+                <section className="card">
+                  <h2>Kaptumo Cooperative · aggregate</h2>
+                  <div className="grid g3">
+                    <div className="stat"><div className="v">{coop?.member_count ?? "—"}</div><div className="l">Members (assumed)</div></div>
+                    <div className="stat"><div className="v accent">{coop?.total_value_tracked_ksh ? ksh(Number(coop.total_value_tracked_ksh)) : "—"}</div><div className="l">Value tracked (proxy)</div></div>
+                    <div className="stat"><div className="v">{coop?.seasons_active ?? "—"}</div><div className="l">Seasons active</div></div>
+                  </div>
+                  <div className="note gap"><strong>Illustrative aggregate, not a verified cooperative-wide figure.</strong> {coop?.note}</div>
+                </section>
+
+                <section className="card">
+                  <h2>Pool &amp; licence distribution</h2>
+                  <p>How value flows across the cooperative and its adopting neighbours, rather than one farmer's line items.</p>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Stream</th><th>Counterparty</th><th>Entitlement</th><th>Trigger</th><th>Status</th></tr></thead>
+                      <tbody>
+                        {contracts.map((c) => (
+                          <tr key={c.id}>
+                            <td className="mono">{c.title}</td>
+                            <td>{c.counterparty}</td>
+                            <td>{c.entitlement}</td>
+                            <td>{c.trigger_desc}</td>
+                            <td>{c.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note">Derivative licence royalties are distributed per adopting cooperative — Kabitet (settled) and Cheptebo (pending) — and shared back into the Kaptumo premium pool allocation for the season.</div>
+                </section>
+
+                <DecayCard decay={decay} title="Pool decay across the membership" />
+              </>
+            )}
+
+            {active === "ifc_investor" && (
+              <>
+                <section className="card">
+                  <h2>Evidence confidence distribution</h2>
+                  <p>EUDR traceability posture across every tracked trigger. Reliability first — individual payout detail is not the concern here.</p>
+                  <div className="grid g4">
+                    {confidenceCounts.map((c) => (
+                      <div className="stat" key={c.label}>
+                        <div className={`v ${confClass(c.label)}`}>{c.count}</div>
+                        <div className="l">{c.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Traceability gaps</h2>
+                  <p>Surfaced, not softened. These are the points where an EUDR claim cannot currently be independently checked.</p>
+                  {triggers.filter((t) => t.confidence === "Gap" || t.confidence === "Moderate").map((t) => (
+                    <div className="stat" key={t.id} style={{ marginBottom: 10 }}>
+                      <div className="kicker">{t.confidence === "Gap" ? "Gap" : "Weak link"}</div>
+                      <h3 style={{ marginTop: 6 }}>{t.trigger_name} {statusPill(t.status)}</h3>
+                      <p style={{ fontSize: 13, margin: 0 }}>{t.evidence}</p>
+                      <p style={{ fontSize: 12, margin: "6px 0 0" }}><strong>Source:</strong> {t.source} · <strong>Check:</strong> {t.verification_method}</p>
+                    </div>
+                  ))}
+                  <div className="note gap"><strong>Known gap:</strong> reuse of the fermentation technique is detected only when a licence is executed or an attestation is filed. Informal adoption by a neighbouring farm stays invisible.</div>
+                </section>
+
+                <section className="card">
+                  <h2>Verified trigger coverage</h2>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Trigger</th><th>Status</th><th>Confidence</th></tr></thead>
+                      <tbody>
+                        {triggers.map((t) => (
+                          <tr key={t.id}>
+                            <td className="mono">{t.trigger_name}</td>
+                            <td>{statusPill(t.status)}</td>
+                            <td className={confClass(t.confidence)}>{t.confidence}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </>
+            )}
+
+            {active === "public" && (
+              <>
+                <section className="card">
+                  <h2>Verified record</h2>
+                  <p>A read-only trust surface. No commercial terms or amounts are shown.</p>
+                  <div className="grid g3">
+                    <div className="stat"><div className="v green">{coop?.seasons_active ?? decay.filter((d) => d.status === "Received").length} seasons</div><div className="l">Verified deliveries</div></div>
+                    <div className="stat"><div className="v green">{triggers.filter((t) => t.status.toUpperCase().includes("CONFIRMED") || t.status.toUpperCase().includes("FIRED")).length}</div><div className="l">Confirmed triggers</div></div>
+                    <div className="stat"><div className="v accent">{contracts.length}</div><div className="l">Active agreements</div></div>
+                  </div>
+                  <p style={{ marginTop: 12 }}>
+                    <span className="badge">SCR-AN-2021-001</span>
+                  </p>
+                </section>
+
+                <section className="card">
+                  <h2>Trust signals</h2>
+                  <ul className="bullets">
+                    {contributions.map((c) => (
+                      <li key={c.id}>
+                        <strong>{c.label}</strong> — {c.occurred_on} · {c.status === "Received" ? "verified" : "awaiting confirmation"}
+                      </li>
+                    ))}
+                    <li>Full traceability from wet-mill delivery through to auction settlement.</li>
+                  </ul>
+                </section>
+
+                <section className="card">
+                  <h2>How claims are checked</h2>
+                  <div className="scroll">
+                    <table>
+                      <thead><tr><th>Claim</th><th>Independently checkable</th></tr></thead>
+                      <tbody>
+                        {triggers.map((t) => (
+                          <tr key={t.id}>
+                            <td className="mono">{t.trigger_name}</td>
+                            <td className={confClass(t.confidence)}>{t.confidence === "Gap" ? "Not detectable" : t.confidence}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </>
+            )}
+
+            {active === "regulator" && (
+              <section className="card">
+                <h2>Evidence &amp; triggers · full audit view</h2>
+                <p>Every trigger event in the Nandi workflow, the evidence behind it, who published that evidence, and how anyone can check it.</p>
+                <div className="scroll">
+                  <table>
+                    <thead><tr><th>Trigger</th><th>Status</th><th>Evidence</th><th>Source</th><th>Verification method</th><th>Confidence</th></tr></thead>
+                    <tbody>
+                      {triggers.map((t) => (
+                        <tr key={t.id}>
+                          <td className="mono">{t.trigger_name}</td>
+                          <td>{statusPill(t.status)}</td>
+                          <td>{t.evidence}</td>
+                          <td>{t.source}</td>
+                          <td>{t.verification_method}</td>
+                          <td className={confClass(t.confidence)}>{t.confidence}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="note gap"><strong>Known gap:</strong> informal technique adoption cannot be automated without a digital touchpoint.</div>
+                <div className="note"><strong>Weakest link:</strong> ripe-cherry quality rests on a single attestor. The CRE AA grade implicitly confirms it — that linkage should be made explicit, or the CRE grader added as a second attestor.</div>
+              </section>
+            )}
+          </>
+        )}
+
+        <footer>
+          <span>SCORE Contribution Ledger · Nandi Sandbox · Demonstration data</span>
+          <span style={{ color: "var(--accent)" }}>SCORE tracks and verifies value. Contracts and payments remain with their respective systems.</span>
+        </footer>
+      </main>
+    </div>
+  );
+};
+
+const ContractsCard = ({ contracts }: { contracts: Contract[] }) => (
+  <section className="card">
+    <h2>Contracts ({contracts.length})</h2>
+    <div className="scroll">
+      <table>
+        <thead><tr><th>Contract</th><th>Counterparty</th><th>Entitlement</th><th>Trigger</th><th>Status</th></tr></thead>
+        <tbody>
+          {contracts.map((c) => (
+            <tr key={c.id}>
+              <td>{c.title}</td>
+              <td>{c.counterparty}</td>
+              <td>{c.entitlement}</td>
+              <td>{c.trigger_desc}</td>
+              <td>{c.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+);
+
+const DecayCard = ({ decay, title = "Decay schedule · how the share falls over time" }: { decay: Decay[]; title?: string }) => (
+  <section className="card">
+    <h2>{title}</h2>
+    <div className="scroll">
+      <table>
+        <thead><tr><th>Year</th><th>Kaptumo premium pool</th><th>Derivative licences</th><th>Status</th></tr></thead>
+        <tbody>
+          {decay.map((d) => (
+            <tr key={d.year}>
+              <td className="mono">{d.year}</td>
+              <td className="mono">{d.kaptumo_pool_pct != null ? `${Number(d.kaptumo_pool_pct).toFixed(1)}%` : "—"}</td>
+              <td className="mono">{d.derivative_pct != null ? `${Number(d.derivative_pct).toFixed(1)}%` : "—"}</td>
+              <td>{d.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div className="note">Primary pool decays 15%/yr with a 3% floor. Derivative licences decay 20%/yr and are capped at KES 5,000 per derivative per season. Projected figures are indicative, not owed.</div>
+  </section>
+);
+
+export default NandiSandbox;
