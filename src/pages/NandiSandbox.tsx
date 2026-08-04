@@ -121,6 +121,20 @@ const NandiSandbox = () => {
     return order.map((k) => ({ label: k, count: triggers.filter((t) => t.confidence === k).length }));
   }, [triggers]);
 
+  const paidAudience = active === "trader" || active === "brand";
+
+  const traceablePct = triggers.length
+    ? Math.round((triggers.filter((t) => t.confidence !== "Gap").length / triggers.length) * 100)
+    : 0;
+  const strongPct = triggers.length
+    ? Math.round(
+        (triggers.filter((t) => t.confidence === "Very strong" || t.confidence === "Strong").length /
+          triggers.length) *
+          100,
+      )
+    : 0;
+  const gapTriggers = triggers.filter((t) => t.confidence === "Gap");
+
   useEffect(() => {
     if (activeProfile) document.title = `Nandi Sandbox — ${activeProfile.label} | SCORE`;
   }, [activeProfile]);
