@@ -5,7 +5,8 @@ const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 
-const symbolFor = (c: string) => (c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "");
+const symbolFor = (c: string) =>
+  c === "ZAR" ? "R" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : c === "KES" ? "KSh " : "";
 const fmt = (n: number, c: string) => {
   const s = symbolFor(c);
   if (n >= 1_000_000) return `${s}${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
@@ -22,6 +23,12 @@ type Props = {
   esgLabel?: string;
   currency: string;
   label: string;
+  /** Optional label overrides so the donut can express non-currency mixes. */
+  settledLabel?: string;
+  pendingLabel?: string;
+  futureLabel?: string;
+  /** Optional formatter, e.g. plain counts instead of money. */
+  formatValue?: (n: number) => string;
 };
 
 export const ValueMixDonut = ({
@@ -33,12 +40,17 @@ export const ValueMixDonut = ({
   esgLabel = "ESG / system value",
   currency,
   label,
+  settledLabel = "Received",
+  pendingLabel = "Waiting",
+  futureLabel = "Future",
+  formatValue,
 }: Props) => {
+  const show = (n: number) => (formatValue ? formatValue(n) : fmt(n, currency));
   const allRows = [
-    { name: "Received", value: settled, color: "#2A6A45" },
-    { name: "Waiting", value: pending, color: "#C4892A" },
+    { name: settledLabel, value: settled, color: "#2A6A45" },
+    { name: pendingLabel, value: pending, color: "#C4892A" },
     ...(esg > 0 ? [{ name: esgLabel, value: esg, color: esgColor }] : []),
-    { name: "Future", value: future, color: "#2A5C8A" },
+    { name: futureLabel, value: future, color: "#2A5C8A" },
   ];
   const data = allRows.filter((d) => d.value > 0);
   const total = settled + pending + future + esg;
@@ -72,7 +84,7 @@ export const ValueMixDonut = ({
                 const p = payload[0];
                 return (
                   <div style={{ background: "#1A1614", color: "#F5F1E8", fontFamily: FONT_MONO, fontSize: 10, borderRadius: 4, padding: "6px 10px" }}>
-                    {p.name}: {fmt(Number(p.value), currency)}
+                    {p.name}: {show(Number(p.value))}
                   </div>
                 );
               }}
@@ -80,7 +92,7 @@ export const ValueMixDonut = ({
           </PieChart>
         </ResponsiveContainer>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 700, color: "#1A1614" }}>{fmt(total, currency)}</div>
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 700, color: "#1A1614" }}>{show(total)}</div>
           <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>{label}</div>
         </div>
       </div>
@@ -91,7 +103,7 @@ export const ValueMixDonut = ({
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: row.color, display: "inline-block" }} />
               <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#1A1614" }}>{row.name}</span>
             </div>
-            <span style={{ fontFamily: FONT_MONO, fontSize: 11, fontWeight: 500, color: row.color }}>{fmt(row.value, currency)}</span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, fontWeight: 500, color: row.color }}>{show(row.value)}</span>
           </div>
         ))}
       </div>
