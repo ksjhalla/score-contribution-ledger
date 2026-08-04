@@ -82,7 +82,7 @@ const statusPill = (status: string) => {
 // ---------------------------------------------------------------------------
 
 type Confirmation = { name: string; org?: string; status: "Confirmed" | "Pending" | "Disputed" };
-type NandiEvent = ValueEventCardProps & { confirmations: Confirmation[] };
+type NandiEvent = Omit<ValueEventCardProps, "confirmations"> & { confirmations: Confirmation[] };
 
 const EVENTS: NandiEvent[] = [
   {
