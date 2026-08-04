@@ -344,6 +344,87 @@ const NandiSandbox = () => {
               </>
             )}
 
+            {active === "lender" && (
+              <>
+                <section className="card">
+                  <h2>Borrower readiness</h2>
+                  <p>
+                    What a lender would see before this existed: <strong>nothing verifiable</strong> — no delivery history, no
+                    income record, no way to check a claim against a third party. What they see now:
+                  </p>
+                  <div className="grid g4">
+                    <div className="stat"><div className="v green">{ksh(totals.received)}</div><div className="l">Verified income received</div></div>
+                    <div className="stat"><div className="v amber">{ksh(totals.pending)}</div><div className="l">Pending entitlement (collateral signal)</div></div>
+                    <div className="stat"><div className="v">{coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length}</div><div className="l">Seasons of verified delivery</div></div>
+                    <div className="stat"><div className="v accent">{strongPct}%</div><div className="l">Evidence strong or better</div></div>
+                  </div>
+                  <div className="scroll" style={{ marginTop: 14 }}>
+                    <table>
+                      <thead><tr><th>Season record</th><th>Date</th><th>Amount</th><th>Status</th><th>Independent check</th></tr></thead>
+                      <tbody>
+                        {contributions.map((c) => (
+                          <tr key={c.id}>
+                            <td>{c.label}</td>
+                            <td className="mono">{c.occurred_on}</td>
+                            <td className={`mono ${c.status === "Received" ? "green" : "amber"}`}>{ksh(Number(c.amount_ksh))}</td>
+                            <td>{c.status}</td>
+                            <td>{c.proof_note}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note">
+                    A repeated, third-party-checkable delivery record is the underwriting input that has been missing. It does not
+                    replace a credit decision — it gives one something to sit on.
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Two lending relationships</h2>
+                  <p>The same record supports two different loan books, assessed on different risk.</p>
+                  <div className="stat" style={{ marginBottom: 10 }}>
+                    <div className="kicker">1 · Individual farmer</div>
+                    <h3 style={{ marginTop: 6 }}>Seasonal pre-harvest credit</h3>
+                    <p style={{ fontSize: 13, margin: 0 }}>
+                      Four-month term, balloon repayment timed to NCE settlement rather than a fixed monthly schedule. The pending
+                      entitlement already firing in the evidence data acts as the repayment trigger: when the cooperative settles,
+                      the loan clears. Exposure is bounded by an entitlement that is visible before it pays out.
+                    </p>
+                  </div>
+                  <div className="stat">
+                    <div className="kicker">2 · Cooperative</div>
+                    <h3 style={{ marginTop: 6 }}>Institutional credit on distribution accuracy</h3>
+                    <p style={{ fontSize: 13, margin: 0 }}>
+                      The same confidence data a trader reads as compliance, a lender reads as risk. A cooperative whose
+                      individual distributions reconcile against auction proceeds season after season is a materially different
+                      borrower from one whose payout logic is unobservable — {strongPct}% of tracked triggers are strong or
+                      better, with {gapTriggers.length} open gap{gapTriggers.length === 1 ? "" : "s"} disclosed.
+                    </p>
+                  </div>
+                  <div className="grid g4" style={{ marginTop: 14 }}>
+                    {confidenceCounts.map((c) => (
+                      <div className="stat" key={c.label}>
+                        <div className={`v ${confClass(c.label)}`}>{c.count}</div>
+                        <div className="l">{c.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Precedent</h2>
+                  <div className="note">
+                    TechnoServe's <strong>Haiti Hope / Agripro</strong> programme lent against verified smallholder delivery
+                    records rather than land title or guarantors, and reported <strong>96% repayment</strong> with a{" "}
+                    <strong>2% loan loss rate</strong> — against a roughly <strong>9.4% sector average</strong> for comparable
+                    agricultural lending. The mechanism was the same: make the delivery relationship legible, and the credit
+                    risk changes shape. Cited as supporting evidence, not as a projection for this pilot.
+                  </div>
+                </section>
+              </>
+            )}
+
             {active === "trader" && (
               <>
                 <section className="card">
