@@ -562,6 +562,51 @@ export type Database = {
         }
         Relationships: []
       }
+      nandi_access_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          label: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          label?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          label?: string | null
+        }
+        Relationships: []
+      }
+      nandi_access_log: {
+        Row: {
+          code_attempted: string | null
+          created_at: string
+          id: string
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          code_attempted?: string | null
+          created_at?: string
+          id?: string
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          code_attempted?: string | null
+          created_at?: string
+          id?: string
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       nandi_audience_profiles: {
         Row: {
           description: string | null
