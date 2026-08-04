@@ -291,11 +291,15 @@ const NandiSandbox = () => {
               </>
             )}
 
-            {active === "ifc_investor" && (
+            {active === "development_actor" && (
               <>
                 <section className="card">
                   <h2>Evidence confidence distribution</h2>
-                  <p>EUDR traceability posture across every tracked trigger. Reliability first — individual payout detail is not the concern here.</p>
+                  <p>
+                    Compliance and risk posture across every tracked trigger, for institutions assessing whether the model holds:
+                    IFC as investment partner, FAO as a standards and food-systems observer, and Nandi County government as the
+                    convening authority. Reliability first — individual payout detail is not the concern here.
+                  </p>
                   <div className="grid g4">
                     {confidenceCounts.map((c) => (
                       <div className="stat" key={c.label}>
