@@ -125,7 +125,7 @@ const NandiSandbox = () => {
     if (activeProfile) document.title = `Nandi Sandbox — ${activeProfile.label} | SCORE`;
   }, [activeProfile]);
 
-  if (!active) return <Navigate to="/sandbox/nandi/aisha" replace />;
+  if (!active) return <Navigate to="/sandbox/nandi/farmer" replace />;
 
   return (
     <div className="nandi">
@@ -152,14 +152,30 @@ const NandiSandbox = () => {
         </nav>
 
         {activePricing && (
-          <section className="card">
-            <h2>Indicative access model</h2>
-            <p className="kicker" style={{ marginBottom: 10 }}>Illustrative — for pilot conversation only. Not live billing.</p>
+          <section
+            className="card"
+            style={
+              paidAudience
+                ? { borderColor: "var(--accent-border)", background: "var(--accent-soft)" }
+                : undefined
+            }
+          >
+            <h2>
+              {paidAudience ? "Commercial model — this is the paying stakeholder" : "Indicative access model"}
+            </h2>
+            <p className="kicker" style={{ marginBottom: 10 }}>
+              {active === "development_actor"
+                ? "Validation, not a funding ask. No commercial relationship implied."
+                : "Illustrative — for pilot conversation only. Not live billing."}
+            </p>
             <div className="grid g3">
               <div className="stat"><div className="v" style={{ fontSize: 14 }}>{activePricing.payer}</div><div className="l">Who pays</div></div>
-              <div className="stat"><div className="v accent" style={{ fontSize: 14 }}>{activePricing.indicative_rate}</div><div className="l">Indicative rate</div></div>
+              <div className="stat"><div className="v accent" style={{ fontSize: paidAudience ? 18 : 14 }}>{activePricing.indicative_rate}</div><div className="l">Indicative rate</div></div>
               <div className="stat"><div className="v" style={{ fontSize: 14 }}>{activePricing.basis ?? "—"}</div><div className="l">Basis</div></div>
             </div>
+            {activePricing.note && (
+              <div className="note" style={{ marginTop: 12 }}>{activePricing.note}</div>
+            )}
           </section>
         )}
 
