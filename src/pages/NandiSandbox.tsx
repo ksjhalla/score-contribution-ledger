@@ -344,76 +344,129 @@ const NandiSandbox = () => {
               </>
             )}
 
-            {active === "public" && (
+            {active === "trader" && (
               <>
                 <section className="card">
-                  <h2>Verified record</h2>
-                  <p>A read-only trust surface. No commercial terms or amounts are shown.</p>
-                  <div className="grid g3">
-                    <div className="stat"><div className="v green">{coop?.seasons_active ?? decay.filter((d) => d.status === "Received").length} seasons</div><div className="l">Verified deliveries</div></div>
-                    <div className="stat"><div className="v green">{triggers.filter((t) => t.status.toUpperCase().includes("CONFIRMED") || t.status.toUpperCase().includes("FIRED")).length}</div><div className="l">Confirmed triggers</div></div>
-                    <div className="stat"><div className="v accent">{contracts.length}</div><div className="l">Active agreements</div></div>
-                  </div>
-                  <p style={{ marginTop: 12 }}>
-                    <span className="badge">SCR-AN-2021-001</span>
+                  <h2>What this delivers for your compliance file</h2>
+                  <p>
+                    EUDR documentation assembled automatically from the same delivery records you already receive — instead of a
+                    manual audit at the end of the season.
                   </p>
+                  <div className="grid g4">
+                    <div className="stat"><div className="v green">{traceablePct}%</div><div className="l">Traceable triggers</div></div>
+                    <div className="stat"><div className="v accent">{strongPct}%</div><div className="l">Strong or better</div></div>
+                    <div className="stat"><div className="v">{triggers.length}</div><div className="l">Tracked triggers</div></div>
+                    <div className="stat"><div className={`v ${gapTriggers.length ? "red" : "green"}`}>{gapTriggers.length}</div><div className="l">Open gaps</div></div>
+                  </div>
                 </section>
 
                 <section className="card">
-                  <h2>Trust signals</h2>
-                  <ul className="bullets">
-                    {contributions.map((c) => (
-                      <li key={c.id}>
-                        <strong>{c.label}</strong> — {c.occurred_on} · {c.status === "Received" ? "verified" : "awaiting confirmation"}
-                      </li>
+                  <h2>Confidence distribution</h2>
+                  <p>How the evidence behind each trigger stands up, aggregated across the season.</p>
+                  <div className="grid g4">
+                    {confidenceCounts.map((c) => (
+                      <div className="stat" key={c.label}>
+                        <div className={`v ${confClass(c.label)}`}>{c.count}</div>
+                        <div className="l">{c.label}</div>
+                      </div>
                     ))}
-                    <li>Full traceability from wet-mill delivery through to auction settlement.</li>
-                  </ul>
-                </section>
-
-                <section className="card">
-                  <h2>How claims are checked</h2>
-                  <div className="scroll">
+                  </div>
+                  <div className="scroll" style={{ marginTop: 14 }}>
                     <table>
-                      <thead><tr><th>Claim</th><th>Independently checkable</th></tr></thead>
+                      <thead><tr><th>Trigger</th><th>Status</th><th>Source</th><th>Verification method</th><th>Confidence</th></tr></thead>
                       <tbody>
                         {triggers.map((t) => (
                           <tr key={t.id}>
                             <td className="mono">{t.trigger_name}</td>
-                            <td className={confClass(t.confidence)}>{t.confidence === "Gap" ? "Not detectable" : t.confidence}</td>
+                            <td>{statusPill(t.status)}</td>
+                            <td>{t.source}</td>
+                            <td>{t.verification_method}</td>
+                            <td className={confClass(t.confidence)}>{t.confidence}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </section>
+
+                <section className="card">
+                  <h2>Stated plainly: the gap</h2>
+                  <p>Nothing is smoothed over. This is what a compliance file cannot currently claim.</p>
+                  {gapTriggers.length === 0 ? (
+                    <div className="note">No open gaps recorded this season.</div>
+                  ) : (
+                    gapTriggers.map((t) => (
+                      <div className="stat" key={t.id} style={{ marginBottom: 10 }}>
+                        <h3>{t.trigger_name} {statusPill(t.status)}</h3>
+                        <p style={{ fontSize: 13, margin: 0 }}>{t.evidence}</p>
+                        <p style={{ fontSize: 12, margin: "6px 0 0" }}><strong>Source:</strong> {t.source} · <strong>Check:</strong> {t.verification_method}</p>
+                      </div>
+                    ))
+                  )}
+                  <div className="note gap"><strong>Known gap:</strong> informal reuse of the fermentation technique is only detected when a licence is executed or an attestation is filed.</div>
+                </section>
+
+                <section className="card">
+                  <h2>Cooperative you would be filing for</h2>
+                  <div className="grid g3">
+                    <div className="stat"><div className="v">{coop?.member_count ?? "—"}</div><div className="l">Members (assumed)</div></div>
+                    <div className="stat"><div className="v accent">{coop?.total_value_tracked_ksh ? ksh(Number(coop.total_value_tracked_ksh)) : "—"}</div><div className="l">Value tracked (proxy)</div></div>
+                    <div className="stat"><div className="v">{coop?.seasons_active ?? "—"}</div><div className="l">Seasons active</div></div>
+                  </div>
+                  <div className="note gap"><strong>Illustrative aggregate, not a verified cooperative-wide figure.</strong> {coop?.note}</div>
+                </section>
               </>
             )}
 
-            {active === "regulator" && (
-              <section className="card">
-                <h2>Evidence &amp; triggers · full audit view</h2>
-                <p>Every trigger event in the Nandi workflow, the evidence behind it, who published that evidence, and how anyone can check it.</p>
-                <div className="scroll">
-                  <table>
-                    <thead><tr><th>Trigger</th><th>Status</th><th>Evidence</th><th>Source</th><th>Verification method</th><th>Confidence</th></tr></thead>
-                    <tbody>
-                      {triggers.map((t) => (
-                        <tr key={t.id}>
-                          <td className="mono">{t.trigger_name}</td>
-                          <td>{statusPill(t.status)}</td>
-                          <td>{t.evidence}</td>
-                          <td>{t.source}</td>
-                          <td>{t.verification_method}</td>
-                          <td className={confClass(t.confidence)}>{t.confidence}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="note gap"><strong>Known gap:</strong> informal technique adoption cannot be automated without a digital touchpoint.</div>
-                <div className="note"><strong>Weakest link:</strong> ripe-cherry quality rests on a single attestor. The CRE AA grade implicitly confirms it — that linkage should be made explicit, or the CRE grader added as a second attestor.</div>
-              </section>
+            {active === "brand" && (
+              <>
+                <section className="card">
+                  <h2>The dataset a brand would license</h2>
+                  <p>
+                    Anonymised, aggregate attribution statistics for CSRD/ESRS reporting — individual-level supply chain impact,
+                    without individual identities. No farmer names, no payout amounts, no counterparty terms.
+                  </p>
+                  <div className="grid g4">
+                    <div className="stat"><div className="v green">{traceablePct}%</div><div className="l">Traceability coverage</div></div>
+                    <div className="stat"><div className="v accent">{strongPct}%</div><div className="l">Quality consistency</div></div>
+                    <div className="stat"><div className="v">{coop?.seasons_active ?? "—"}</div><div className="l">Seasons verified</div></div>
+                    <div className="stat"><div className="v">{coop?.member_count ?? "—"}</div><div className="l">Contributors covered</div></div>
+                  </div>
+                  <div className="note">
+                    Equivalent manual reporting currently costs brands <strong>$50,000–$200,000</strong> per supply chain
+                    sustainability report via consultants. SCORE generates the same attribution evidence continuously, as a
+                    by-product of the record itself.
+                  </div>
+                </section>
+
+                <section className="card">
+                  <h2>Attribution quality, aggregated</h2>
+                  <p>The evidence strength profile behind every claim you would carry into an ESG disclosure.</p>
+                  <div className="grid g4">
+                    {confidenceCounts.map((c) => (
+                      <div className="stat" key={c.label}>
+                        <div className={`v ${confClass(c.label)}`}>{c.count}</div>
+                        <div className="l">{c.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="scroll" style={{ marginTop: 14 }}>
+                    <table>
+                      <thead><tr><th>Attribution claim</th><th>Independently checkable</th><th>Verification method</th></tr></thead>
+                      <tbody>
+                        {triggers.map((t) => (
+                          <tr key={t.id}>
+                            <td className="mono">{t.trigger_name}</td>
+                            <td className={confClass(t.confidence)}>{t.confidence === "Gap" ? "Not detectable" : t.confidence}</td>
+                            <td>{t.verification_method}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="note gap"><strong>Disclosed limitation:</strong> informal technique adoption cannot be automated without a digital touchpoint, so reuse figures understate real diffusion.</div>
+                </section>
+              </>
             )}
           </>
         )}
