@@ -6,6 +6,7 @@ import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
 import { ContractSparkBars, type SparkContract } from "@/components/charts/ContractSparkBars";
 import { QuickReadPanel, type QuickReadRow } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc, type Milestone } from "@/components/charts/MilestoneArc";
+import { NandiMethodologyView } from "@/components/nandi/NandiMethodologyView";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -28,6 +29,11 @@ background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5
 .nandi .tab .tt{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);margin-top:2px}
 .nandi .tab[data-active="true"]{border-color:var(--accent-border);background:var(--accent-soft)}
 .nandi .tab[data-active="true"] .tl{color:var(--accent)}
+.nandi .tabs .tabdiv{width:1px;align-self:stretch;background:var(--line);margin:2px 4px}
+.nandi .tab.meta{background:transparent;border-style:dashed;flex:0 0 auto;min-width:190px}
+.nandi .tab.meta .tl{font-family:var(--display);font-weight:600;color:var(--muted)}
+.nandi .tab.meta[data-active="true"]{border-style:solid;border-color:var(--ink);background:rgba(26,22,14,.04)}
+.nandi .tab.meta[data-active="true"] .tl{color:var(--ink)}
 .nandi h3.sec{font-family:var(--display);font-size:20px;font-weight:600;margin:0 0 12px}
 .nandi h4.sub{font-family:var(--display);font-size:15px;font-weight:600;margin:0 0 6px;color:var(--ink)}
 .nandi .panel{border:1px solid var(--line);border-radius:6px;background:var(--paper);padding:14px 16px}
@@ -854,7 +860,45 @@ const NandiSandbox = () => {
     },
   };
 
-  if (!active) return <Navigate to="/sandbox/nandi/farmer" replace />;
+  const isMethodology = audience === "methodology";
+
+  const tabsNav = (
+    <nav className="tabs" aria-label="Audience view">
+      {profiles.map((p) => (
+        <Link key={p.key} to={`/nandi/${p.key}`} className="tab" data-active={p.key === active}>
+          <div className="tl">{p.label}</div>
+          <div className="tt">{p.tagline}</div>
+        </Link>
+      ))}
+      <span className="tabdiv" aria-hidden="true" />
+      <Link to="/nandi/methodology" className="tab meta" data-active={isMethodology}>
+        <div className="tl">Methodology</div>
+        <div className="tt">About this sandbox</div>
+      </Link>
+    </nav>
+  );
+
+  if (isMethodology) {
+    return (
+      <div className="nandi">
+        <style>{CSS}</style>
+        <main className="wrap">
+          <Link to="/" className="back">← SCORE Passport</Link>
+          <div className="banner">
+            Meta page · what in this sandbox is sourced, what is placeholder, and what is still unanswered.
+          </div>
+          {tabsNav}
+          <NandiMethodologyView />
+          <footer>
+            <span>SCORE Contribution Ledger · Nandi Sandbox · Methodology</span>
+            <span style={{ color: "var(--accent)" }}>SCORE tracks and verifies value. Contracts and payments remain with their respective systems.</span>
+          </footer>
+        </main>
+      </div>
+    );
+  }
+
+  if (!active) return <Navigate to="/nandi/farmer" replace />;
 
   const view = VIEWS[active];
 
@@ -867,14 +911,7 @@ const NandiSandbox = () => {
           Sandbox · Aisha Ng'etich · Kaptumo Cooperative · Nandi County, Kenya — demonstration data, not a live record.
         </div>
 
-        <nav className="tabs" aria-label="Audience view">
-          {profiles.map((p) => (
-            <Link key={p.key} to={`/sandbox/nandi/${p.key}`} className="tab" data-active={p.key === active}>
-              <div className="tl">{p.label}</div>
-              <div className="tt">{p.tagline}</div>
-            </Link>
-          ))}
-        </nav>
+        {tabsNav}
 
         {loading ? (
           <div className="panel">Loading sandbox data…</div>
