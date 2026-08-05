@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-const ADMIN_CONTACT = "access@score.example";
+const ADMIN_CONTACT = "hello@smarterfrontiers.com";
 
 export function NandiInviteGate({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
