@@ -52,8 +52,11 @@ background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5
 .nandi footer{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 `;
 
-const AUDIENCES = ["farmer", "cooperative", "lender", "trader", "brand", "development_actor"] as const;
+const AUDIENCES = ["farmer", "cooperative", "lender", "trader", "brand", "development_partner"] as const;
 type Audience = (typeof AUDIENCES)[number];
+
+/** Legacy key kept working for continuity. */
+const LEGACY_AUDIENCE_REDIRECTS: Record<string, Audience> = { development_actor: "development_partner" };
 
 type AudienceProfile = { key: string; label: string; tagline: string | null; description: string | null; sort_order: number };
 type Pricing = { audience_key: string; payer: string; model_type: string; indicative_rate: string; basis: string | null; note: string | null };
@@ -412,8 +415,10 @@ const NandiSandbox = () => {
     name: string;
     roleLine: string;
     bio: string;
+    lead: string;
     badges: string[];
     stats: { label: string; value: string; color: string }[];
+    statBlocks?: { title: string; subtitle: string; stats: { label: string; value: string; color: string }[] }[];
     donut: ReactNode;
     bars: ReactNode;
     barsLabel: string;
@@ -498,6 +503,7 @@ const NandiSandbox = () => {
       name: "Aisha Ng'etich",
       roleLine: "Smallholder Farmer · Kaptumo Cooperative Society Ltd. · Nandi County, Kenya",
       bio: "Three seasons of AA-grade main-crop deliveries to the Kaptumo wet mill, plus an anaerobic fermentation technique now licensed to two neighbouring cooperatives. What used to end at the cooperative gate is now a record she carries.",
+      lead: "One farmer's contribution record, carried by her rather than held at the cooperative gate.",
       badges: ["3 seasons consistent AA", "NCE trigger public & independent", "2 derivative licences", "Verifiable borrower"],
       stats: [
         { label: "Received", value: ksh(totals.received), color: "#2A6A45" },
@@ -527,6 +533,7 @@ const NandiSandbox = () => {
       name: "Kaptumo Farmers Cooperative Society Ltd.",
       roleLine: "Cooperative · Nandi County, Kenya",
       bio: "Aggregate view of how auction proceeds are apportioned across the membership. With every delivery, auction price and payout observable against the same record, distribution accuracy becomes checkable rather than asserted — a governance tool where it is right, and a fast signal where it is not.",
+      lead: `Aisha Ng'etich: ${ksh(totals.received)} received and ${ksh(totals.pending)} pending this season — 1 of an estimated ${coop?.member_count ?? "—"} members shown in detail here. The cooperative-wide total below extrapolates from her figures and is illustrative, not a measured cooperative-wide total.`,
       badges: [
         `${coop?.member_count ?? "—"} members`,
         "2 derivative licences distributed",
@@ -534,10 +541,14 @@ const NandiSandbox = () => {
         `${seasons} seasons active`,
       ],
       stats: [
-        { label: "Total distributed", value: ksh(totals.received), color: "#2A6A45" },
-        { label: "Pending distribution", value: ksh(totals.pending), color: "#C4892A" },
-        { label: "Active licences", value: "2", color: ACCENT },
-        { label: "Members covered", value: String(coop?.member_count ?? "—"), color: "#1A1614" },
+        { label: "Aisha received (1 member)", value: ksh(totals.received), color: "#2A6A45" },
+        { label: "Aisha pending (1 member)", value: ksh(totals.pending), color: "#C4892A" },
+        { label: "Members covered", value: String(coop?.member_count ?? "—"), color: ACCENT },
+        {
+          label: "Illustrative coop-wide total",
+          value: coop?.total_value_tracked_ksh != null ? ksh(Number(coop.total_value_tracked_ksh)) : "—",
+          color: "#1A1614",
+        },
       ],
       donut: (
         <ValueMixDonut
@@ -609,12 +620,39 @@ const NandiSandbox = () => {
       name: "KCB / Equity Bank / SACCOs",
       roleLine: "Credit Assessment View · Nandi County, Kenya",
       bio: "What a lender would see before this existed: nothing verifiable — no delivery history, no income record, no way to check a claim against a third party. A repeated, third-party-checkable delivery record is the underwriting input that has been missing. It does not replace a credit decision — it gives one something to sit on.",
+      lead: "Two separate borrowers sit behind this record: Aisha as an individual, and Kaptumo as an institution. Every figure below is labelled with which one it describes.",
       badges: [`${seasons} seasons verified`, `${strongPct}% evidence strong or better`, `${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed`],
       stats: [
         { label: "Verified income", value: ksh(totals.received), color: "#2A6A45" },
         { label: "Pending entitlement", value: ksh(totals.pending), color: "#C4892A" },
         { label: "Seasons verified", value: String(seasons), color: ACCENT },
         { label: "Evidence strong+", value: `${strongPct}%`, color: "#1A1614" },
+      ],
+      statBlocks: [
+        {
+          title: "Lending to Aisha (individual)",
+          subtitle: "Aisha Ng'etich · smallholder borrower · personal record only",
+          stats: [
+            { label: "Her verified income", value: ksh(totals.received), color: "#2A6A45" },
+            { label: "Her pending entitlement", value: ksh(totals.pending), color: "#C4892A" },
+            { label: "Her seasons verified", value: String(seasons), color: ACCENT },
+            { label: "Her evidence strong+", value: `${strongPct}%`, color: "#1A1614" },
+          ],
+        },
+        {
+          title: "Lending to Kaptumo (cooperative)",
+          subtitle: "Kaptumo Farmers Cooperative Society Ltd. · institutional borrower",
+          stats: [
+            { label: "Coop members", value: String(coop?.member_count ?? "—"), color: ACCENT },
+            { label: "Coop distribution accuracy", value: `${strongPct}%`, color: "#2A6A45" },
+            { label: "Coop open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
+            {
+              label: "Coop value tracked (illustrative)",
+              value: coop?.total_value_tracked_ksh != null ? ksh(Number(coop.total_value_tracked_ksh)) : "—",
+              color: "#1A1614",
+            },
+          ],
+        },
       ],
       donut: (
         <ValueMixDonut
@@ -681,6 +719,7 @@ const NandiSandbox = () => {
       name: "Ecom Kenya / Volcafe",
       roleLine: "EUDR Compliance View · Nandi County, Kenya",
       bio: "EUDR documentation assembled automatically from the same delivery records you already receive — instead of a manual audit at the end of the season. Nothing is smoothed over: gaps are surfaced rather than softened.",
+      lead: `${traceablePct}% of tracked triggers are independently traceable, with ${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed rather than smoothed over.`,
       badges: [`${traceablePct}% traceability`, `${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed`, `${seasons} seasons verified`],
       stats: [
         { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
@@ -733,6 +772,7 @@ const NandiSandbox = () => {
       name: "Nestlé / JDE / Starbucks",
       roleLine: "ESG Data View · Nandi County, Kenya",
       bio: "Anonymised, aggregate attribution statistics for CSRD/ESRS reporting — individual-level supply chain impact, without individual identities. No farmer names, no payout amounts, no counterparty terms.",
+      lead: `${strongPct}% of attribution claims carry strong-or-better evidence, anonymised and ready for a CSRD/ESRS disclosure.`,
       badges: [`${seasons} seasons verified`, "Replaces $50K–$200K consultant reporting", `${traceablePct}% traceability coverage`],
       stats: [
         { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
@@ -780,11 +820,12 @@ const NandiSandbox = () => {
         </>
       ),
     },
-    development_actor: {
+    development_partner: {
       kicker: "Passport · VALIDATION",
       name: "IFC / FAO / Nandi County Government",
       roleLine: "Validation View · Nandi County, Kenya",
       bio: "A 2013 European Commission study found farmers delivering through cooperatives received roughly 19.5% of the Nairobi Coffee Exchange auction price (2010 figures), before labour and inputs. The Coffee Act 2025 and its Direct Settlement System closed the exchange-to-cooperative gap — not the cooperative-to-individual one. SCORE starts where the Direct Settlement System ends.",
+      lead: "The Coffee Act 2025 closed the exchange-to-cooperative gap; SCORE starts where the Direct Settlement System ends, at the cooperative-to-individual gap.",
       badges: ["19.5% → 80%+ farmer share (2010–2025)", "Coffee Act 2025 aligned", "NCCU-integrated"],
       stats: [
         { label: "Confidence strong+", value: `${strongPct}%`, color: "#2A6A45" },
@@ -899,9 +940,14 @@ const NandiSandbox = () => {
     );
   }
 
+  if (audience && LEGACY_AUDIENCE_REDIRECTS[audience]) {
+    return <Navigate to={`/nandi/${LEGACY_AUDIENCE_REDIRECTS[audience]}`} replace />;
+  }
+
   if (!active) return <Navigate to="/nandi/farmer" replace />;
 
   const view = VIEWS[active];
+  const progressive = active !== "farmer";
 
   return (
     <div className="nandi">
@@ -927,6 +973,23 @@ const NandiSandbox = () => {
                 {view.name}
               </h1>
               <div style={{ fontSize: 13, color: "#5C5248" }}>{view.roleLine}</div>
+              {progressive ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    border: "1px solid rgba(26,22,14,0.10)",
+                    borderLeft: `3px solid ${ACCENT}`,
+                    borderRadius: 5,
+                    background: "#FDFAF4",
+                    padding: "14px 16px",
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    color: "#1A1614",
+                  }}
+                >
+                  {view.lead}
+                </div>
+              ) : (
               <div
                 style={{
                   marginTop: 14,
@@ -956,6 +1019,7 @@ const NandiSandbox = () => {
                   ))}
                 </div>
               </div>
+              )}
 
               {active === "farmer" && (
                 <div style={{ marginTop: 14 }}>
@@ -975,7 +1039,19 @@ const NandiSandbox = () => {
             <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
               {active === "farmer" ? "Your value in this project" : "What this view measures"}
             </div>
-            <StatCards stats={view.stats} />
+            {view.statBlocks ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {view.statBlocks.map((b) => (
+                  <div key={b.title}>
+                    <h4 className="sub" style={{ marginBottom: 2 }}>{b.title}</h4>
+                    <div className="kicker" style={{ marginBottom: 8 }}>{b.subtitle}</div>
+                    <StatCards stats={b.stats} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <StatCards stats={view.stats} />
+            )}
 
             {/* Pricing — folded in directly below the stat cards */}
             {activePricing && (
@@ -990,7 +1066,7 @@ const NandiSandbox = () => {
                   {paidAudience ? "Commercial model — this is the paying stakeholder" : "Indicative access model"}
                 </div>
                 <div className="kicker" style={{ margin: "4px 0 10px" }}>
-                  {active === "development_actor"
+                  {active === "development_partner"
                     ? "Validation, not a funding ask. No commercial relationship implied."
                     : "Illustrative — for pilot conversation only. Not live billing."}
                 </div>
@@ -1010,12 +1086,15 @@ const NandiSandbox = () => {
               </div>
             )}
 
+            {(() => {
+              const rest = (
+                <>
             {/* 3 · DONUT + BARS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28 }}>
               <div className="panel">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {active === "trader" || active === "brand" || active === "development_actor" ? "Confidence mix" : "Value mix"}
+                    {active === "trader" || active === "brand" || active === "development_partner" ? "Confidence mix" : "Value mix"}
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A5C8A", background: "rgba(42,92,138,0.08)", padding: "2px 6px", borderRadius: 3 }}>At a glance</span>
                 </div>
@@ -1100,28 +1179,77 @@ const NandiSandbox = () => {
               </div>
             </div>
 
-            {/* 6 · EXPANDABLE DETAILS */}
-            <details style={{ marginTop: 8, border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4" }}>
-              <summary
-                style={{
-                  cursor: "pointer", listStyle: "none", padding: "14px 16px",
-                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none",
-                }}
-              >
+            {/* 6 · DETAILS */}
+            {progressive ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>View details</div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
-                    {activeProfile?.description ?? "Supporting evidence and the detail behind this view."}
+                  <h4 className="sub">Background &amp; framing</h4>
+                  <p className="body" style={{ margin: 0 }}>{view.bio}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                    {view.badges.map((b) => (
+                      <span
+                        key={b}
+                        style={{
+                          fontFamily: FONT_MONO, fontSize: 9, color: ACCENT,
+                          background: "rgba(92,122,58,0.08)", border: `1px solid ${ACCENT}33`,
+                          borderRadius: 3, padding: "3px 8px",
+                        }}
+                      >
+                        {b}
+                      </span>
+                    ))}
                   </div>
                 </div>
-                <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ACCENT, background: "rgba(0,0,0,0.03)", padding: "4px 8px", borderRadius: 3, whiteSpace: "nowrap" }}>
-                  Expand ↓
-                </span>
-              </summary>
-              <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
                 {view.details}
               </div>
-            </details>
+            ) : (
+              <details style={{ marginTop: 8, border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4" }}>
+                <summary
+                  style={{
+                    cursor: "pointer", listStyle: "none", padding: "14px 16px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>View details</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
+                      {activeProfile?.description ?? "Supporting evidence and the detail behind this view."}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ACCENT, background: "rgba(0,0,0,0.03)", padding: "4px 8px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                    Expand ↓
+                  </span>
+                </summary>
+                <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
+                  {view.details}
+                </div>
+              </details>
+            )}
+                </>
+              );
+              if (!progressive) return rest;
+              return (
+                <details style={{ marginTop: 8, border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4" }}>
+                  <summary
+                    style={{
+                      cursor: "pointer", listStyle: "none", padding: "14px 16px",
+                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>Full detail</div>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
+                        {activeProfile?.description ?? "Charts, narrative and the evidence behind this view."}
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ACCENT, background: "rgba(0,0,0,0.03)", padding: "4px 8px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                      Learn more ↓
+                    </span>
+                  </summary>
+                  <div style={{ padding: "0 16px 16px" }}>{rest}</div>
+                </details>
+              );
+            })()}
           </>
         )}
 
