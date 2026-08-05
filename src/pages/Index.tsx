@@ -243,6 +243,11 @@ export default function Index() {
     }
   }, []);
 
+  useEffect(() => {
+    const uc = new URLSearchParams(window.location.search).get("use_case");
+    if (uc && USE_CASES.includes(uc)) setForm((s) => ({ ...s, use_case: uc }));
+  }, []);
+
   const validateField = (key: keyof typeof form, value: string): string | undefined => {
     if (key === "name") {
       if (!value.trim()) return "Please enter your name.";
