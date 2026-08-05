@@ -52,8 +52,11 @@ background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5
 .nandi footer{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 `;
 
-const AUDIENCES = ["farmer", "cooperative", "lender", "trader", "brand", "development_actor"] as const;
+const AUDIENCES = ["farmer", "cooperative", "lender", "trader", "brand", "development_partner"] as const;
 type Audience = (typeof AUDIENCES)[number];
+
+/** Legacy key kept working for continuity. */
+const LEGACY_AUDIENCE_REDIRECTS: Record<string, Audience> = { development_actor: "development_partner" };
 
 type AudienceProfile = { key: string; label: string; tagline: string | null; description: string | null; sort_order: number };
 type Pricing = { audience_key: string; payer: string; model_type: string; indicative_rate: string; basis: string | null; note: string | null };
