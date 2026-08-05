@@ -382,6 +382,13 @@ const NandiSandbox = () => {
   const gapTriggers = triggers.filter((t) => t.confidence === "Gap");
   const seasons = coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length;
 
+  const farmerVerifiedSince = useMemo(() => {
+    const years = contributions
+      .map((c) => Number(String(c.occurred_on).slice(0, 4)))
+      .filter((y) => Number.isFinite(y) && y > 1900);
+    return years.length ? String(Math.min(...years)) : "—";
+  }, [contributions]);
+
   useEffect(() => {
     if (audience === "methodology") document.title = "Nandi Sandbox — Methodology & Open Questions | SCORE";
     else if (activeProfile) document.title = `Nandi Sandbox — ${activeProfile.label} | SCORE`;
