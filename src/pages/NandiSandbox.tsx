@@ -377,8 +377,9 @@ const NandiSandbox = () => {
   const seasons = coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length;
 
   useEffect(() => {
-    if (activeProfile) document.title = `Nandi Sandbox — ${activeProfile.label} | SCORE`;
-  }, [activeProfile]);
+    if (audience === "methodology") document.title = "Nandi Sandbox — Methodology & Open Questions | SCORE";
+    else if (activeProfile) document.title = `Nandi Sandbox — ${activeProfile.label} | SCORE`;
+  }, [activeProfile, audience]);
 
   const allConfs = EVENTS.flatMap((e) => e.confirmations);
   const confirmedTotal = allConfs.filter((c) => c.status === "Confirmed").length;
