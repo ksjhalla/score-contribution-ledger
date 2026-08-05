@@ -431,6 +431,7 @@ const Admin = () => {
 
         <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {stats && (
+        {/* placeholder-anchor */}
             <>
               <Stat label="Users" value={String(stats.total_users)} />
               <Stat label="Active 30d" value={String(stats.active_users_30d)} />
