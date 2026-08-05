@@ -124,6 +124,14 @@ export const CARDS: CardSpec[] = [
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 
+/**
+ * Profiles offered in the "Try a demo profile" switcher.
+ * "agri" (Aisha Ng'etich) is intentionally excluded — that experience is now
+ * served by the live /nandi sandbox. Its data stays in CARDS for other lookups.
+ */
+const SELECTABLE_KEYS: DemoKey[] = ["pharma", "ncaa", "supplyChain", "ai", "ppp"];
+const SELECTABLE_CARDS = CARDS.filter((c) => SELECTABLE_KEYS.includes(c.key));
+
 export const DemoProfileCards = ({ fullWidth = false }: { fullWidth?: boolean }) => {
   const { activeDemo, setActiveDemo } = useDemo();
 
@@ -149,7 +157,7 @@ export const DemoProfileCards = ({ fullWidth = false }: { fullWidth?: boolean })
           margin: fullWidth ? 0 : "0 12px",
         }}
       >
-        {CARDS.map((c) => {
+        {SELECTABLE_CARDS.map((c) => {
           const isActive = activeDemo === c.key;
           return (
             <button

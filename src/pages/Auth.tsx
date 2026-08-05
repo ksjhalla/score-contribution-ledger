@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { SEO } from "@/components/SEO"
+import { consumePostAuthRedirect, stashPostAuthRedirect } from "@/lib/postAuthRedirect"
 
 const FONT_MONO = "'DM Mono', ui-monospace, monospace"
 const FONT_BODY = "'DM Sans', system-ui, sans-serif"
@@ -26,9 +27,7 @@ const Auth = () => {
   useEffect(() => {
     if (authState.status === "loading") return
     if (authState.status === "authenticated") {
-      const next = new URLSearchParams(window.location.search).get("next")
-      const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null
-      navigate(safeNext ?? "/dashboard", { replace: true })
+      navigate(consumePostAuthRedirect() ?? "/dashboard", { replace: true })
     }
     // unauthenticated: stay, show the form
   }, [authState, navigate])
@@ -42,8 +41,14 @@ const Auth = () => {
 
   const handleGoogle = async () => {
     setBusy(true)
+    const next = new URLSearchParams(window.location.search).get("next")
+    let redirectUri = window.location.origin + "/auth"
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      stashPostAuthRedirect(next)
+      redirectUri += `?next=${encodeURIComponent(next)}`
+    }
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: redirectUri,
     })
     if (result.error) {
       setBusy(false)

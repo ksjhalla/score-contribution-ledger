@@ -138,7 +138,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               Contribution Ledger
             </div>
           </div>
-          <nav style={{ display: "flex", flexDirection: "column", paddingTop: 8 }}>
+          <nav style={{ display: "flex", flexDirection: "column", paddingTop: 8, flexShrink: 0 }}>
             {NAV.map((n) => (
               <NavLink
                 key={n.to}
@@ -150,10 +150,18 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               </NavLink>
             ))}
           </nav>
-          <div style={{ marginTop: 4 }}>
+          <div style={{ marginTop: 4, flex: "1 1 auto", minHeight: 0, overflowY: "auto" }}>
             <DemoProfileCards />
           </div>
-          <div style={{ marginTop: "auto", borderTop: "1px solid rgba(26,22,14,0.08)", padding: "14px 20px" }}>
+          <div
+            style={{
+              marginTop: "auto",
+              flexShrink: 0,
+              borderTop: "1px solid rgba(26,22,14,0.08)",
+              padding: "14px 20px",
+              background: "#FDFAF4",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
                 style={{
