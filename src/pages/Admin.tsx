@@ -429,9 +429,84 @@ const Admin = () => {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Nandi sandbox invites</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="text-[11px] text-muted-foreground">
+              Accounts on this list can open /nandi after signing in. No invite code, no profile required.
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Email (required)</label>
+                <Input value={nandiEmail} onChange={(e) => setNandiEmail(e.target.value)} placeholder="viewer@ifc.org" type="email" className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Note</label>
+                <Input value={nandiNote} onChange={(e) => setNandiNote(e.target.value)} placeholder="Who this is for" className="h-9 text-xs" />
+              </div>
+              <div className="flex items-end">
+                <Button size="sm" onClick={addNandiInvite} disabled={nandiAdding || !nandiEmail.trim()}>
+                  {nandiAdding ? "Adding…" : "Add →"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="text-left py-2">Email</th>
+                    <th className="text-left">Note</th>
+                    <th className="text-right">Added</th>
+                    <th className="text-right">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nandiInvites.length === 0 && (
+                    <tr><td colSpan={5} className="py-3 text-muted-foreground text-center">No sandbox invites yet.</td></tr>
+                  )}
+                  {nandiInvites.map((r) => (
+                    <tr key={r.id} className="border-b">
+                      <td className="py-2 font-mono text-[11px]">{r.email}</td>
+                      <td className="font-mono text-[11px]">{r.note ?? "—"}</td>
+                      <td className="text-right font-mono text-[11px]">{new Date(r.created_at).toLocaleDateString()}</td>
+                      <td className={`text-right font-mono text-[11px] ${r.revoked_at ? "text-muted-foreground" : "text-emerald-700 dark:text-emerald-400"}`}>
+                        {r.revoked_at ? "Revoked" : "Active"}
+                      </td>
+                      <td className="text-right whitespace-nowrap">
+                        {r.revoked_at ? null : nandiRevokeId === r.id ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="text-[12px]">Revoke access?</span>
+                            <button
+                              onClick={() => revokeNandiInvite(r.id)}
+                              className="font-mono text-[9px] px-2 py-0.5 rounded"
+                              style={{ color: "#9A3020", border: "1px solid rgba(154,48,32,0.25)", background: "transparent" }}
+                            >Confirm</button>
+                            <button
+                              onClick={() => setNandiRevokeId(null)}
+                              className="font-mono text-[9px] px-2 py-0.5"
+                              style={{ color: "#9A8F84", background: "transparent", border: "none" }}
+                            >Cancel</button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setNandiRevokeId(r.id)}
+                            className="font-mono text-[9px] px-2 py-0.5 rounded"
+                            style={{ color: "#9A3020", border: "1px solid rgba(154,48,32,0.25)", background: "transparent" }}
+                          >Revoke</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
         <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {stats && (
-        {/* placeholder-anchor */}
             <>
               <Stat label="Users" value={String(stats.total_users)} />
               <Stat label="Active 30d" value={String(stats.active_users_30d)} />
