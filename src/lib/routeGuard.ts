@@ -6,6 +6,7 @@
 export const PUBLIC_ROUTES = [
   "/",
   "/pricing",
+  "/coffee",
   "/auth",
   "/auth/callback",
   "/invite",
