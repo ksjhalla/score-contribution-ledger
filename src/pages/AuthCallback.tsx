@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
+import { consumePostAuthRedirect } from "@/lib/postAuthRedirect"
 
 const AuthCallback = () => {
   const navigate = useNavigate()
@@ -8,8 +9,9 @@ const AuthCallback = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        window.history.replaceState(null, "", "/dashboard")
-        navigate("/dashboard", { replace: true })
+        const dest = consumePostAuthRedirect() ?? "/dashboard"
+        window.history.replaceState(null, "", dest)
+        navigate(dest, { replace: true })
       } else {
         navigate("/auth", { replace: true })
       }

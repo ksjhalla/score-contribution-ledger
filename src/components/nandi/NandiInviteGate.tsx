@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { stashPostAuthRedirect } from "@/lib/postAuthRedirect";
 
 const ADMIN_CONTACT = "hello@smarterfrontiers.com";
 
@@ -16,6 +17,7 @@ export function NandiInviteGate({ children }: { children: ReactNode }) {
       if (cancelled) return;
       if (!session?.user) {
         const next = location.pathname + location.search;
+        stashPostAuthRedirect(next);
         navigate(`/auth?next=${encodeURIComponent(next)}`, { replace: true });
         return;
       }
