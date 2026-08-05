@@ -36,91 +36,50 @@ const ILLUSTRATIVE: { claim: string; why: string }[] = [
   },
 ];
 
-type Q = { n: number; title: string; body: string };
-
-const GROUPS: { heading: string; note: string; items: Q[] }[] = [
+const FAQS: { q: string; a: string }[] = [
   {
-    heading: "Needs primary research — not yet done",
-    note: "No one has done this work. Nothing below should be asserted to IFC until it is.",
-    items: [
-      {
-        n: 1,
-        title: "Africa's share of world coffee production and export over time",
-        body:
-          "Whether Africa's overall share has risen or declined, in which destination markets it has grown, and — where it has grown — whether the gain accrued to farmers or was absorbed by intermediaries. The third part is the one that matters for SCORE's argument and is the least likely to be answerable from published aggregates alone.",
-      },
-      {
-        n: 2,
-        title: "Robusta vs. Arabica consumption shift and what it implies for Africa",
-        body:
-          "The figures currently circulating in our documents — Arabica commanding 56–68% of specialty value, ~7% CAGR — have not been independently verified. They should be fact-checked against a primary source before being repeated to IFC. Treat them as unsourced until then.",
-      },
-    ],
+    q: "How reliable are the market figures behind this (Africa's coffee share, Arabica vs. Robusta trends)?",
+    a: "The core value-chain figures — the ~19.5% farmer share and the Coffee Act 2025 reforms — are drawn from the published sources cited above. Broader market-share and consumption-trend figures are still being validated against primary trade data; we'll share the latest as we confirm it.",
   },
   {
-    heading: "Needs a structural decision — more research will not resolve these",
-    note: "Currently undetermined. These are choices, not unknowns.",
-    items: [
-      {
-        n: 3,
-        title: "SCORE's legal entity",
-        body: "Jurisdiction, entity type, ownership structure, and cap table are all undetermined.",
-      },
-      {
-        n: 4,
-        title: "Long-term ownership, maintenance, and go-to-market",
-        body:
-          "Who owns, maintains, and markets the platform after a pilot, and by what mechanism new cooperatives are onboarded. Undetermined.",
-      },
-    ],
+    q: "Doesn't IFC already get this data through the cooperatives you work with?",
+    a: "Cooperative- and programme-level indicators (like HIPSO) capture aggregate yield and farmer counts. What they don't capture is individual-level income attribution — which farmer earned what, from which delivery, verified against which price. That's the layer SCORE adds, and it's also the layer that reporting standards like CSRD/ESRS increasingly require.",
   },
   {
-    heading: "Needs a sharper argument — the material exists but is not consolidated",
-    note: "These are writing and positioning gaps, not evidence gaps.",
-    items: [
-      {
-        n: 5,
-        title: "\"Doesn't IFC already have this data through the cooperatives?\"",
-        body:
-          "The rebuttal exists in pieces: HIPSO indicators capture aggregate yield and farmer counts, not individual income attribution; CSRD/ESRS from 2025 requires individual-level verification that cooperative-level reporting cannot supply. It has never been written as one direct answer to the question as asked.",
-      },
-      {
-        n: 6,
-        title: "The cooperative's actual incentive to adopt SCORE",
-        body:
-          "This sandbox's own cooperative view states that accurate managers gain a governance tool while inaccurate ones are exposed. That is honest, and it is a reason a cooperative manager might resist adoption rather than seek it. The strongest counter-argument so far is the cooperative's improved credit profile with lenders — it is under-developed and currently rests on an unpriced assumption about how lenders would weigh distribution accuracy.",
-      },
-      {
-        n: 7,
-        title: "A dedicated case for standards organisations",
-        body:
-          "Fairtrade, CRE and similar bodies currently get one paragraph inside the Development Actor view. If standards organisations are a distinct pitch target, that is not enough and they likely need their own audience view.",
-      },
-      {
-        n: 8,
-        title: "End-to-end data-pipeline explainer",
-        body:
-          "QR scan → hash → timestamp → chain anchor → NCE listener → CRE certificate. This exists implicitly in the Source and Verification columns of the evidence tables across the sandbox, but has never been written as a standalone \"how it works\" narrative that a technical reviewer could evaluate.",
-      },
-    ],
+    q: "How does the traceability actually work?",
+    a: "Each delivery is scanned and fingerprinted (SHA-256) and timestamped (RFC 3161) at the point of intake, then linked to Nairobi Coffee Exchange auction pricing and Coffee Research & Extension grade certificates. That chain is what every audience view in this sandbox is built on.",
+  },
+  {
+    q: "What's SCORE's legal and ownership structure?",
+    a: "We're finalising entity structure and governance ahead of scaling past the pilot phase — happy to walk through current thinking in a working session.",
+  },
+  {
+    q: "Who owns and maintains this after the pilot, and how would other cooperatives come on board?",
+    a: "We're designing the long-term stewardship and onboarding model now. This is one of the things we'd most value structured input on from a partner like IFC.",
+  },
+  {
+    q: "What's in it for the cooperative?",
+    a: "A verifiable distribution record the cooperative can show lenders and buyers — improving its credit profile and market access. That's the value case we're building out with Kaptumo.",
+  },
+  {
+    q: "Is this relevant to certification and standards bodies, like Fairtrade?",
+    a: "Yes. We see a distinct case for standards organisations and are developing that positioning as a next step.",
   },
 ];
 
 export const NandiMethodologyView = () => (
   <>
     <div style={{ marginBottom: 22 }}>
-      <div className="kicker">Meta · about this sandbox</div>
+      <div className="kicker">Methodology</div>
       <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 600, margin: "6px 0 6px" }}>
-        Methodology &amp; Open Research Questions
+        Methodology &amp; FAQ
       </h1>
       <p className="body" style={{ maxWidth: 680 }}>
-        This page is not a stakeholder view. It states which claims in the sandbox are sourced, which are
-        placeholders, and which questions remain unanswered. It is written to be read as an internal audit
-        rather than as a pitch. Where something is undetermined, it says so.
+        Straight answers on what's confirmed, what's an estimate, and what we're still working out as the Nandi pilot scales.
       </p>
     </div>
 
-    <h3 className="sec">1 · What's verified vs. illustrative</h3>
+    <h3 className="sec">1 · What's confirmed vs. illustrative</h3>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 14, marginBottom: 30 }}>
       <div className="panel" style={{ borderLeft: "3px solid var(--green)" }}>
         <div className="kicker" style={{ color: "var(--green)" }}>Verified / sourced</div>
@@ -136,8 +95,8 @@ export const NandiMethodologyView = () => (
       </div>
 
       <div className="panel" style={{ borderLeft: "3px solid var(--red)" }}>
-        <div className="kicker" style={{ color: "var(--red)" }}>Illustrative / placeholder — not verified</div>
-        <h4 className="sub" style={{ marginTop: 6 }}>Do not quote these as findings</h4>
+        <div className="kicker" style={{ color: "var(--red)" }}>Illustrative — not yet verified</div>
+        <h4 className="sub" style={{ marginTop: 6 }}>Treat these as planning estimates, not measured results.</h4>
         <ul className="bullets" style={{ marginTop: 10 }}>
           {ILLUSTRATIVE.map((v) => (
             <li key={v.claim} style={{ marginBottom: 12 }}>
@@ -149,37 +108,18 @@ export const NandiMethodologyView = () => (
       </div>
     </div>
 
-    <h3 className="sec">2 · Open research questions</h3>
-    <p className="body" style={{ maxWidth: 680 }}>
-      Eight items, unresolved. They are grouped by what would actually close them — research, a decision, or
-      writing — because the three require different work and are often confused for one another.
-    </p>
-
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {GROUPS.map((g) => (
-        <div key={g.heading} className="panel">
-          <h4 className="sub">{g.heading}</h4>
-          <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--faint)", marginBottom: 12 }}>{g.note}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {g.items.map((q) => (
-              <div key={q.n} style={{ display: "flex", gap: 12 }}>
-                <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--accent)", paddingTop: 1 }}>
-                  {String(q.n).padStart(2, "0")}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{q.title}</div>
-                  <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.65, marginTop: 3 }}>{q.body}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+    <h3 className="sec">2 · Frequently asked questions</h3>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {FAQS.map((f) => (
+        <div key={f.q} className="panel">
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>{f.q}</div>
+          <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.65 }}>{f.a}</div>
         </div>
       ))}
     </div>
 
     <div className="note" style={{ marginTop: 20 }}>
-      Nothing on this page is resolved by the sandbox itself. The sandbox demonstrates the tracking layer; it does
-      not establish the market data, the entity, or the adoption incentive.
+      This page reflects where the Nandi pilot stands today. We'll update it as figures are confirmed and open questions are resolved.
     </div>
   </>
 );
