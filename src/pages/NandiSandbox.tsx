@@ -415,8 +415,10 @@ const NandiSandbox = () => {
     name: string;
     roleLine: string;
     bio: string;
+    lead: string;
     badges: string[];
     stats: { label: string; value: string; color: string }[];
+    statBlocks?: { title: string; subtitle: string; stats: { label: string; value: string; color: string }[] }[];
     donut: ReactNode;
     bars: ReactNode;
     barsLabel: string;
