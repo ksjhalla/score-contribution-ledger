@@ -503,6 +503,7 @@ const NandiSandbox = () => {
       name: "Aisha Ng'etich",
       roleLine: "Smallholder Farmer · Kaptumo Cooperative Society Ltd. · Nandi County, Kenya",
       bio: "Three seasons of AA-grade main-crop deliveries to the Kaptumo wet mill, plus an anaerobic fermentation technique now licensed to two neighbouring cooperatives. What used to end at the cooperative gate is now a record she carries.",
+      lead: "One farmer's contribution record, carried by her rather than held at the cooperative gate.",
       badges: ["3 seasons consistent AA", "NCE trigger public & independent", "2 derivative licences", "Verifiable borrower"],
       stats: [
         { label: "Received", value: ksh(totals.received), color: "#2A6A45" },
@@ -532,6 +533,7 @@ const NandiSandbox = () => {
       name: "Kaptumo Farmers Cooperative Society Ltd.",
       roleLine: "Cooperative · Nandi County, Kenya",
       bio: "Aggregate view of how auction proceeds are apportioned across the membership. With every delivery, auction price and payout observable against the same record, distribution accuracy becomes checkable rather than asserted — a governance tool where it is right, and a fast signal where it is not.",
+      lead: `Aisha Ng'etich: ${ksh(totals.received)} received and ${ksh(totals.pending)} pending this season — 1 of an estimated ${coop?.member_count ?? "—"} members shown in detail here. The cooperative-wide total below extrapolates from her figures and is illustrative, not a measured cooperative-wide total.`,
       badges: [
         `${coop?.member_count ?? "—"} members`,
         "2 derivative licences distributed",
@@ -539,10 +541,14 @@ const NandiSandbox = () => {
         `${seasons} seasons active`,
       ],
       stats: [
-        { label: "Total distributed", value: ksh(totals.received), color: "#2A6A45" },
-        { label: "Pending distribution", value: ksh(totals.pending), color: "#C4892A" },
-        { label: "Active licences", value: "2", color: ACCENT },
-        { label: "Members covered", value: String(coop?.member_count ?? "—"), color: "#1A1614" },
+        { label: "Aisha received (1 member)", value: ksh(totals.received), color: "#2A6A45" },
+        { label: "Aisha pending (1 member)", value: ksh(totals.pending), color: "#C4892A" },
+        { label: "Members covered", value: String(coop?.member_count ?? "—"), color: ACCENT },
+        {
+          label: "Illustrative coop-wide total",
+          value: coop?.total_value_tracked_ksh != null ? ksh(Number(coop.total_value_tracked_ksh)) : "—",
+          color: "#1A1614",
+        },
       ],
       donut: (
         <ValueMixDonut
