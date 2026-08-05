@@ -427,6 +427,36 @@ export default function Index() {
         </div>
       </Section>
 
+      {/* CASE STUDY CALLOUT */}
+      <Section id="case-study-callout" style={{ padding: "0 0 56px" }}>
+        <div style={containerStyle}>
+          <Link
+            to="/coffee"
+            onClick={() => trackEvent("case_study_callout_clicked", { source: "home_banner" })}
+            className="score-casestudy-banner"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              flexWrap: "wrap", gap: 10,
+              border: `1px solid rgba(196,137,42,0.45)`,
+              background: "rgba(196,137,42,0.07)",
+              borderRadius: 6, padding: "14px 20px", textDecoration: "none",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: 10 }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: COLORS.amber }}>
+                ↗ Case study · Nandi County, Kenya
+              </span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.text }}>
+                A live pilot with a coffee cooperative and its farmers.
+              </span>
+            </span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: COLORS.amber, whiteSpace: "nowrap" }}>
+              See how it works →
+            </span>
+          </Link>
+        </div>
+      </Section>
+
       {/* PROBLEM (dark) */}
       <Section id="problem" style={{ background: COLORS.dark, color: COLORS.darkText, padding: "80px 0" }}>
         <div style={containerStyle}>
