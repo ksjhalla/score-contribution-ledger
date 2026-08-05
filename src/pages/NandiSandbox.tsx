@@ -1086,12 +1086,15 @@ const NandiSandbox = () => {
               </div>
             )}
 
+            {(() => {
+              const rest = (
+                <>
             {/* 3 · DONUT + BARS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5" style={{ marginBottom: 28 }}>
               <div className="panel">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {active === "trader" || active === "brand" || active === "development_actor" ? "Confidence mix" : "Value mix"}
+                    {active === "trader" || active === "brand" || active === "development_partner" ? "Confidence mix" : "Value mix"}
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A5C8A", background: "rgba(42,92,138,0.08)", padding: "2px 6px", borderRadius: 3 }}>At a glance</span>
                 </div>
@@ -1176,28 +1179,77 @@ const NandiSandbox = () => {
               </div>
             </div>
 
-            {/* 6 · EXPANDABLE DETAILS */}
-            <details style={{ marginTop: 8, border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4" }}>
-              <summary
-                style={{
-                  cursor: "pointer", listStyle: "none", padding: "14px 16px",
-                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none",
-                }}
-              >
+            {/* 6 · DETAILS */}
+            {progressive ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>View details</div>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
-                    {activeProfile?.description ?? "Supporting evidence and the detail behind this view."}
+                  <h4 className="sub">Background &amp; framing</h4>
+                  <p className="body" style={{ margin: 0 }}>{view.bio}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                    {view.badges.map((b) => (
+                      <span
+                        key={b}
+                        style={{
+                          fontFamily: FONT_MONO, fontSize: 9, color: ACCENT,
+                          background: "rgba(92,122,58,0.08)", border: `1px solid ${ACCENT}33`,
+                          borderRadius: 3, padding: "3px 8px",
+                        }}
+                      >
+                        {b}
+                      </span>
+                    ))}
                   </div>
                 </div>
-                <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ACCENT, background: "rgba(0,0,0,0.03)", padding: "4px 8px", borderRadius: 3, whiteSpace: "nowrap" }}>
-                  Expand ↓
-                </span>
-              </summary>
-              <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
                 {view.details}
               </div>
-            </details>
+            ) : (
+              <details style={{ marginTop: 8, border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4" }}>
+                <summary
+                  style={{
+                    cursor: "pointer", listStyle: "none", padding: "14px 16px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>View details</div>
+                    <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
+                      {activeProfile?.description ?? "Supporting evidence and the detail behind this view."}
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ACCENT, background: "rgba(0,0,0,0.03)", padding: "4px 8px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                    Expand ↓
+                  </span>
+                </summary>
+                <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
+                  {view.details}
+                </div>
+              </details>
+            )}
+                </>
+              );
+              if (!progressive) return rest;
+              return (
+                <details style={{ marginTop: 8, border: "1px solid rgba(26,22,14,0.10)", borderRadius: 6, background: "#FDFAF4" }}>
+                  <summary
+                    style={{
+                      cursor: "pointer", listStyle: "none", padding: "14px 16px",
+                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: "#1A1614" }}>Full detail</div>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5C5248", marginTop: 2 }}>
+                        {activeProfile?.description ?? "Charts, narrative and the evidence behind this view."}
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: ACCENT, background: "rgba(0,0,0,0.03)", padding: "4px 8px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                      Learn more ↓
+                    </span>
+                  </summary>
+                  <div style={{ padding: "0 16px 16px" }}>{rest}</div>
+                </details>
+              );
+            })()}
           </>
         )}
 
