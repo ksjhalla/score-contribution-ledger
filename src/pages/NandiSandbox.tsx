@@ -940,9 +940,14 @@ const NandiSandbox = () => {
     );
   }
 
+  if (audience && LEGACY_AUDIENCE_REDIRECTS[audience]) {
+    return <Navigate to={`/nandi/${LEGACY_AUDIENCE_REDIRECTS[audience]}`} replace />;
+  }
+
   if (!active) return <Navigate to="/nandi/farmer" replace />;
 
   const view = VIEWS[active];
+  const progressive = active !== "farmer";
 
   return (
     <div className="nandi">
@@ -968,6 +973,23 @@ const NandiSandbox = () => {
                 {view.name}
               </h1>
               <div style={{ fontSize: 13, color: "#5C5248" }}>{view.roleLine}</div>
+              {progressive ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    border: "1px solid rgba(26,22,14,0.10)",
+                    borderLeft: `3px solid ${ACCENT}`,
+                    borderRadius: 5,
+                    background: "#FDFAF4",
+                    padding: "14px 16px",
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    color: "#1A1614",
+                  }}
+                >
+                  {view.lead}
+                </div>
+              ) : (
               <div
                 style={{
                   marginTop: 14,
@@ -997,6 +1019,7 @@ const NandiSandbox = () => {
                   ))}
                 </div>
               </div>
+              )}
 
               {active === "farmer" && (
                 <div style={{ marginTop: 14 }}>
