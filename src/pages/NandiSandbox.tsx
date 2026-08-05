@@ -7,6 +7,8 @@ import { ContractSparkBars, type SparkContract } from "@/components/charts/Contr
 import { QuickReadPanel, type QuickReadRow } from "@/components/charts/QuickReadPanel";
 import { MilestoneArc, type Milestone } from "@/components/charts/MilestoneArc";
 import { NandiMethodologyView } from "@/components/nandi/NandiMethodologyView";
+import { NandiFarmerWallet } from "@/components/nandi/NandiFarmerWallet";
+import { NandiFarmerIdCard } from "@/components/nandi/NandiFarmerIdCard";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -330,6 +332,7 @@ const NandiSandbox = () => {
   const [decay, setDecay] = useState<Decay[]>([]);
   const [coop, setCoop] = useState<CoopSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [farmerFull, setFarmerFull] = useState(false);
 
   useEffect(() => {
     (async () => {
