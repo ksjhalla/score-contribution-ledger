@@ -620,12 +620,39 @@ const NandiSandbox = () => {
       name: "KCB / Equity Bank / SACCOs",
       roleLine: "Credit Assessment View · Nandi County, Kenya",
       bio: "What a lender would see before this existed: nothing verifiable — no delivery history, no income record, no way to check a claim against a third party. A repeated, third-party-checkable delivery record is the underwriting input that has been missing. It does not replace a credit decision — it gives one something to sit on.",
+      lead: "Two separate borrowers sit behind this record: Aisha as an individual, and Kaptumo as an institution. Every figure below is labelled with which one it describes.",
       badges: [`${seasons} seasons verified`, `${strongPct}% evidence strong or better`, `${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed`],
       stats: [
         { label: "Verified income", value: ksh(totals.received), color: "#2A6A45" },
         { label: "Pending entitlement", value: ksh(totals.pending), color: "#C4892A" },
         { label: "Seasons verified", value: String(seasons), color: ACCENT },
         { label: "Evidence strong+", value: `${strongPct}%`, color: "#1A1614" },
+      ],
+      statBlocks: [
+        {
+          title: "Lending to Aisha (individual)",
+          subtitle: "Aisha Ng'etich · smallholder borrower · personal record only",
+          stats: [
+            { label: "Her verified income", value: ksh(totals.received), color: "#2A6A45" },
+            { label: "Her pending entitlement", value: ksh(totals.pending), color: "#C4892A" },
+            { label: "Her seasons verified", value: String(seasons), color: ACCENT },
+            { label: "Her evidence strong+", value: `${strongPct}%`, color: "#1A1614" },
+          ],
+        },
+        {
+          title: "Lending to Kaptumo (cooperative)",
+          subtitle: "Kaptumo Farmers Cooperative Society Ltd. · institutional borrower",
+          stats: [
+            { label: "Coop members", value: String(coop?.member_count ?? "—"), color: ACCENT },
+            { label: "Coop distribution accuracy", value: `${strongPct}%`, color: "#2A6A45" },
+            { label: "Coop open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
+            {
+              label: "Coop value tracked (illustrative)",
+              value: coop?.total_value_tracked_ksh != null ? ksh(Number(coop.total_value_tracked_ksh)) : "—",
+              color: "#1A1614",
+            },
+          ],
+        },
       ],
       donut: (
         <ValueMixDonut
@@ -692,6 +719,7 @@ const NandiSandbox = () => {
       name: "Ecom Kenya / Volcafe",
       roleLine: "EUDR Compliance View · Nandi County, Kenya",
       bio: "EUDR documentation assembled automatically from the same delivery records you already receive — instead of a manual audit at the end of the season. Nothing is smoothed over: gaps are surfaced rather than softened.",
+      lead: `${traceablePct}% of tracked triggers are independently traceable, with ${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed rather than smoothed over.`,
       badges: [`${traceablePct}% traceability`, `${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed`, `${seasons} seasons verified`],
       stats: [
         { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
@@ -744,6 +772,7 @@ const NandiSandbox = () => {
       name: "Nestlé / JDE / Starbucks",
       roleLine: "ESG Data View · Nandi County, Kenya",
       bio: "Anonymised, aggregate attribution statistics for CSRD/ESRS reporting — individual-level supply chain impact, without individual identities. No farmer names, no payout amounts, no counterparty terms.",
+      lead: `${strongPct}% of attribution claims carry strong-or-better evidence, anonymised and ready for a CSRD/ESRS disclosure.`,
       badges: [`${seasons} seasons verified`, "Replaces $50K–$200K consultant reporting", `${traceablePct}% traceability coverage`],
       stats: [
         { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
@@ -791,11 +820,12 @@ const NandiSandbox = () => {
         </>
       ),
     },
-    development_actor: {
+    development_partner: {
       kicker: "Passport · VALIDATION",
       name: "IFC / FAO / Nandi County Government",
       roleLine: "Validation View · Nandi County, Kenya",
       bio: "A 2013 European Commission study found farmers delivering through cooperatives received roughly 19.5% of the Nairobi Coffee Exchange auction price (2010 figures), before labour and inputs. The Coffee Act 2025 and its Direct Settlement System closed the exchange-to-cooperative gap — not the cooperative-to-individual one. SCORE starts where the Direct Settlement System ends.",
+      lead: "The Coffee Act 2025 closed the exchange-to-cooperative gap; SCORE starts where the Direct Settlement System ends, at the cooperative-to-individual gap.",
       badges: ["19.5% → 80%+ farmer share (2010–2025)", "Coffee Act 2025 aligned", "NCCU-integrated"],
       stats: [
         { label: "Confidence strong+", value: `${strongPct}%`, color: "#2A6A45" },
