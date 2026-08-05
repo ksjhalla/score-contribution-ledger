@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Contracts from "./pages/Contracts.tsx";
 import Account from "./pages/Account.tsx";
 import Pricing from "./pages/Pricing.tsx";
+import Coffee from "./pages/Coffee.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import EnvHelp from "./pages/EnvHelp.tsx";
 import EvidenceTriggers from "./pages/EvidenceTriggers.tsx";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/coffee" element={<Coffee />} />
             <Route path="/invite" element={<Invite />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/passport/:contributorId" element={<PublicPassport />} />

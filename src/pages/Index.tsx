@@ -243,6 +243,11 @@ export default function Index() {
     }
   }, []);
 
+  useEffect(() => {
+    const uc = new URLSearchParams(window.location.search).get("use_case");
+    if (uc && USE_CASES.includes(uc)) setForm((s) => ({ ...s, use_case: uc }));
+  }, []);
+
   const validateField = (key: keyof typeof form, value: string): string | undefined => {
     if (key === "name") {
       if (!value.trim()) return "Please enter your name.";
@@ -419,6 +424,36 @@ export default function Index() {
           }}>
             Already have an account? <Link to="/auth" onClick={() => trackEvent("signin_link_clicked", { source: "hero" })} style={{ color: COLORS.amber, textDecoration: "none" }} className="score-link-underline">Sign in →</Link>
           </div>
+        </div>
+      </Section>
+
+      {/* CASE STUDY CALLOUT */}
+      <Section id="case-study-callout" style={{ padding: "0 0 56px" }}>
+        <div style={containerStyle}>
+          <Link
+            to="/coffee"
+            onClick={() => trackEvent("case_study_callout_clicked", { source: "home_banner" })}
+            className="score-casestudy-banner"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              flexWrap: "wrap", gap: 10,
+              border: `1px solid rgba(196,137,42,0.45)`,
+              background: "rgba(196,137,42,0.07)",
+              borderRadius: 6, padding: "14px 20px", textDecoration: "none",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: 10 }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: COLORS.amber }}>
+                ↗ Case study · Nandi County, Kenya
+              </span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, color: COLORS.text }}>
+                A live pilot with a coffee cooperative and its farmers.
+              </span>
+            </span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: COLORS.amber, whiteSpace: "nowrap" }}>
+              See how it works →
+            </span>
+          </Link>
         </div>
       </Section>
 
