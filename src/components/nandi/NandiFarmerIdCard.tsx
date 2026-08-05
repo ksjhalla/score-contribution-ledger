@@ -24,7 +24,7 @@ export const NandiFarmerIdCard = ({
   const qrValue = `${origin}/nandi/farmer`;
 
   return (
-    <div style={{ maxWidth: 420, margin: "0 auto", fontFamily: FONT_BODY }}>
+    <div style={{ maxWidth: 420, width: "100%", margin: "0 auto", fontFamily: FONT_BODY }}>
       <div
         style={{
           borderRadius: 10,

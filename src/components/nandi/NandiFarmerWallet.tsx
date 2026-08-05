@@ -44,6 +44,7 @@ export const NandiFarmerWallet = ({
     <div
       style={{
         maxWidth: 420,
+        width: "100%",
         margin: "0 auto",
         fontFamily: FONT_BODY,
         display: "flex",
