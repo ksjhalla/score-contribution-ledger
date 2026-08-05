@@ -11,6 +11,7 @@ import { toast } from "sonner";
 type Stats = { total_contracts: number; total_executions: number; total_settled_value: number; total_users: number; active_users_30d: number };
 type UserRow = { id: string; contributor_id: string | null; full_name: string | null; sector: string | null; created_at: string; anonymised: boolean; deleted_at: string | null; contract_count: number; execution_count: number; last_active: string | null };
 type InviteRow = { id: string; code: string; email: string | null; note: string | null; max_uses: number; use_count: number; expires_at: string | null; used_at: string | null; created_at: string };
+type NandiInviteRow = { id: string; email: string; note: string | null; created_at: string; revoked_at: string | null };
 type SignerRoleValue = "viewer" | "reviewer" | "approver";
 type SignerRoleRow = { id: string; full_name: string | null; contributor_id: string | null; signer_role: SignerRoleValue; organisation: string | null; professional_role: string | null; created_at: string };
 type ReminderRun = {
@@ -52,6 +53,11 @@ const Admin = () => {
   const [lastCode, setLastCode] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [nandiInvites, setNandiInvites] = useState<NandiInviteRow[]>([]);
+  const [nandiEmail, setNandiEmail] = useState("");
+  const [nandiNote, setNandiNote] = useState("");
+  const [nandiAdding, setNandiAdding] = useState(false);
+  const [nandiRevokeId, setNandiRevokeId] = useState<string | null>(null);
   const [signerRoles, setSignerRoles] = useState<SignerRoleRow[]>([]);
   const [signerSearch, setSignerSearch] = useState("");
   const [signerSaving, setSignerSaving] = useState<string | null>(null);
@@ -106,6 +112,41 @@ const Admin = () => {
     setInvites((data as InviteRow[]) ?? []);
   };
 
+  const loadNandiInvites = async () => {
+    const { data } = await supabase
+      .from("nandi_invites")
+      .select("id,email,note,created_at,revoked_at")
+      .order("created_at", { ascending: false });
+    setNandiInvites((data as NandiInviteRow[]) ?? []);
+  };
+
+  const addNandiInvite = async () => {
+    const email = nandiEmail.trim().toLowerCase();
+    if (!email) { toast.error("Email is required."); return; }
+    setNandiAdding(true);
+    const { error } = await supabase.from("nandi_invites").insert({
+      email,
+      note: nandiNote.trim() ? nandiNote.trim() : null,
+      created_by: user?.id ?? null,
+    });
+    setNandiAdding(false);
+    if (error) {
+      toast.error(error.code === "23505" ? "That email is already on the list." : error.message);
+      return;
+    }
+    setNandiEmail(""); setNandiNote("");
+    toast.success("Added to the Nandi sandbox access list.");
+    await loadNandiInvites();
+  };
+
+  const revokeNandiInvite = async (id: string) => {
+    const { error } = await supabase.from("nandi_invites").update({ revoked_at: new Date().toISOString() }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Sandbox access revoked.");
+    setNandiRevokeId(null);
+    await loadNandiInvites();
+  };
+
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
@@ -120,6 +161,7 @@ const Admin = () => {
         loadInvites(),
         loadSignerRoles(),
         loadReminderRuns(),
+        loadNandiInvites(),
       ]);
       setStats(s.data as unknown as Stats);
       setUsers((u.data as unknown as UserRow[]) ?? []);
