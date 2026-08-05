@@ -1039,7 +1039,19 @@ const NandiSandbox = () => {
             <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
               {active === "farmer" ? "Your value in this project" : "What this view measures"}
             </div>
-            <StatCards stats={view.stats} />
+            {view.statBlocks ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {view.statBlocks.map((b) => (
+                  <div key={b.title}>
+                    <h4 className="sub" style={{ marginBottom: 2 }}>{b.title}</h4>
+                    <div className="kicker" style={{ marginBottom: 8 }}>{b.subtitle}</div>
+                    <StatCards stats={b.stats} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <StatCards stats={view.stats} />
+            )}
 
             {/* Pricing — folded in directly below the stat cards */}
             {activePricing && (
@@ -1054,7 +1066,7 @@ const NandiSandbox = () => {
                   {paidAudience ? "Commercial model — this is the paying stakeholder" : "Indicative access model"}
                 </div>
                 <div className="kicker" style={{ margin: "4px 0 10px" }}>
-                  {active === "development_actor"
+                  {active === "development_partner"
                     ? "Validation, not a funding ask. No commercial relationship implied."
                     : "Illustrative — for pilot conversation only. Not live billing."}
                 </div>
