@@ -967,6 +967,29 @@ const NandiSandbox = () => {
           <div className="panel">Loading sandbox data…</div>
         ) : (
           <>
+            {active === "farmer" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 18, marginBottom: 24 }}>
+                <NandiFarmerWallet contributions={contributions} />
+                <NandiFarmerIdCard verifiedSince={farmerVerifiedSince} />
+                <button
+                  type="button"
+                  onClick={() => setFarmerFull((v) => !v)}
+                  style={{
+                    maxWidth: 420, width: "100%", margin: "0 auto",
+                    background: farmerFull ? "transparent" : ACCENT,
+                    color: farmerFull ? ACCENT : "#FDFAF4",
+                    border: `1px solid ${ACCENT}`, borderRadius: 999,
+                    padding: "16px 20px", fontFamily: FONT_BODY, fontSize: 15,
+                    fontWeight: 600, cursor: "pointer", minHeight: 52,
+                  }}
+                >
+                  {farmerFull ? "Hide full record ↑" : "See full record ↓"}
+                </button>
+              </div>
+            )}
+
+            {(active !== "farmer" || farmerFull) && (
+              <>
             {/* 1 · HEADER */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -1253,6 +1276,8 @@ const NandiSandbox = () => {
                 </details>
               );
             })()}
+              </>
+            )}
           </>
         )}
 
