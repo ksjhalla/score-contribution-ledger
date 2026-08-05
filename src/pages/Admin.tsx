@@ -11,6 +11,7 @@ import { toast } from "sonner";
 type Stats = { total_contracts: number; total_executions: number; total_settled_value: number; total_users: number; active_users_30d: number };
 type UserRow = { id: string; contributor_id: string | null; full_name: string | null; sector: string | null; created_at: string; anonymised: boolean; deleted_at: string | null; contract_count: number; execution_count: number; last_active: string | null };
 type InviteRow = { id: string; code: string; email: string | null; note: string | null; max_uses: number; use_count: number; expires_at: string | null; used_at: string | null; created_at: string };
+type NandiInviteRow = { id: string; email: string; note: string | null; created_at: string; revoked_at: string | null };
 type SignerRoleValue = "viewer" | "reviewer" | "approver";
 type SignerRoleRow = { id: string; full_name: string | null; contributor_id: string | null; signer_role: SignerRoleValue; organisation: string | null; professional_role: string | null; created_at: string };
 type ReminderRun = {
@@ -52,6 +53,11 @@ const Admin = () => {
   const [lastCode, setLastCode] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [nandiInvites, setNandiInvites] = useState<NandiInviteRow[]>([]);
+  const [nandiEmail, setNandiEmail] = useState("");
+  const [nandiNote, setNandiNote] = useState("");
+  const [nandiAdding, setNandiAdding] = useState(false);
+  const [nandiRevokeId, setNandiRevokeId] = useState<string | null>(null);
   const [signerRoles, setSignerRoles] = useState<SignerRoleRow[]>([]);
   const [signerSearch, setSignerSearch] = useState("");
   const [signerSaving, setSignerSaving] = useState<string | null>(null);
@@ -106,6 +112,41 @@ const Admin = () => {
     setInvites((data as InviteRow[]) ?? []);
   };
 
+  const loadNandiInvites = async () => {
+    const { data } = await supabase
+      .from("nandi_invites")
+      .select("id,email,note,created_at,revoked_at")
+      .order("created_at", { ascending: false });
+    setNandiInvites((data as NandiInviteRow[]) ?? []);
+  };
+
+  const addNandiInvite = async () => {
+    const email = nandiEmail.trim().toLowerCase();
+    if (!email) { toast.error("Email is required."); return; }
+    setNandiAdding(true);
+    const { error } = await supabase.from("nandi_invites").insert({
+      email,
+      note: nandiNote.trim() ? nandiNote.trim() : null,
+      created_by: user?.id ?? null,
+    });
+    setNandiAdding(false);
+    if (error) {
+      toast.error(error.code === "23505" ? "That email is already on the list." : error.message);
+      return;
+    }
+    setNandiEmail(""); setNandiNote("");
+    toast.success("Added to the Nandi sandbox access list.");
+    await loadNandiInvites();
+  };
+
+  const revokeNandiInvite = async (id: string) => {
+    const { error } = await supabase.from("nandi_invites").update({ revoked_at: new Date().toISOString() }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Sandbox access revoked.");
+    setNandiRevokeId(null);
+    await loadNandiInvites();
+  };
+
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
@@ -120,6 +161,7 @@ const Admin = () => {
         loadInvites(),
         loadSignerRoles(),
         loadReminderRuns(),
+        loadNandiInvites(),
       ]);
       setStats(s.data as unknown as Stats);
       setUsers((u.data as unknown as UserRow[]) ?? []);
@@ -381,6 +423,82 @@ const Admin = () => {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Nandi sandbox invites</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="text-[11px] text-muted-foreground">
+              Accounts on this list can open /nandi after signing in. No invite code, no profile required.
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Email (required)</label>
+                <Input value={nandiEmail} onChange={(e) => setNandiEmail(e.target.value)} placeholder="viewer@ifc.org" type="email" className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground">Note</label>
+                <Input value={nandiNote} onChange={(e) => setNandiNote(e.target.value)} placeholder="Who this is for" className="h-9 text-xs" />
+              </div>
+              <div className="flex items-end">
+                <Button size="sm" onClick={addNandiInvite} disabled={nandiAdding || !nandiEmail.trim()}>
+                  {nandiAdding ? "Adding…" : "Add →"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="text-left py-2">Email</th>
+                    <th className="text-left">Note</th>
+                    <th className="text-right">Added</th>
+                    <th className="text-right">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nandiInvites.length === 0 && (
+                    <tr><td colSpan={5} className="py-3 text-muted-foreground text-center">No sandbox invites yet.</td></tr>
+                  )}
+                  {nandiInvites.map((r) => (
+                    <tr key={r.id} className="border-b">
+                      <td className="py-2 font-mono text-[11px]">{r.email}</td>
+                      <td className="font-mono text-[11px]">{r.note ?? "—"}</td>
+                      <td className="text-right font-mono text-[11px]">{new Date(r.created_at).toLocaleDateString()}</td>
+                      <td className={`text-right font-mono text-[11px] ${r.revoked_at ? "text-muted-foreground" : "text-emerald-700 dark:text-emerald-400"}`}>
+                        {r.revoked_at ? "Revoked" : "Active"}
+                      </td>
+                      <td className="text-right whitespace-nowrap">
+                        {r.revoked_at ? null : nandiRevokeId === r.id ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="text-[12px]">Revoke access?</span>
+                            <button
+                              onClick={() => revokeNandiInvite(r.id)}
+                              className="font-mono text-[9px] px-2 py-0.5 rounded"
+                              style={{ color: "#9A3020", border: "1px solid rgba(154,48,32,0.25)", background: "transparent" }}
+                            >Confirm</button>
+                            <button
+                              onClick={() => setNandiRevokeId(null)}
+                              className="font-mono text-[9px] px-2 py-0.5"
+                              style={{ color: "#9A8F84", background: "transparent", border: "none" }}
+                            >Cancel</button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setNandiRevokeId(r.id)}
+                            className="font-mono text-[9px] px-2 py-0.5 rounded"
+                            style={{ color: "#9A3020", border: "1px solid rgba(154,48,32,0.25)", background: "transparent" }}
+                          >Revoke</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

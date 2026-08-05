@@ -26,7 +26,9 @@ const Auth = () => {
   useEffect(() => {
     if (authState.status === "loading") return
     if (authState.status === "authenticated") {
-      navigate("/dashboard", { replace: true })
+      const next = new URLSearchParams(window.location.search).get("next")
+      const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null
+      navigate(safeNext ?? "/dashboard", { replace: true })
     }
     // unauthenticated: stay, show the form
   }, [authState, navigate])

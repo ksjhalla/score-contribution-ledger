@@ -766,6 +766,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nandi_invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          note: string | null
+          revoked_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          note?: string | null
+          revoked_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          note?: string | null
+          revoked_at?: string | null
+        }
+        Relationships: []
+      }
       nandi_pricing_models: {
         Row: {
           audience_key: string
@@ -1187,6 +1214,7 @@ export type Database = {
       get_attestation_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_passport: { Args: { p_contributor_id: string }; Returns: Json }
       get_reminder_job_runs: { Args: { p_limit?: number }; Returns: Json }
+      has_nandi_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

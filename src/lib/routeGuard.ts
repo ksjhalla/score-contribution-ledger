@@ -13,6 +13,7 @@ export const PUBLIC_ROUTES = [
   "/passport", // prefix match (/passport/:contributorId)
   "/report",
   "/sandbox", // prefix match (/sandbox/nandi/:audience) — code-gated, no account
+  "/nandi", // prefix match (/nandi/:audience) — gated by NandiInviteGate, not the global auth guard
 ] as const;
 
 export const isPublicRoute = (pathname: string): boolean => {
