@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthState } from "@/hooks/useAuthState";
 import { ValueEventCard, type ValueEventCardProps } from "@/components/value-events/ValueEventCard";
 import { ValueMixDonut } from "@/components/charts/ValueMixDonut";
 import { ContractSparkBars, type SparkContract } from "@/components/charts/ContractSparkBars";
@@ -52,6 +53,35 @@ background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5
 .nandi .note.gap{background:rgba(138,42,32,.05);border-color:rgba(138,42,32,.30)}
 .nandi .scroll{overflow-x:auto}
 .nandi footer{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nandi .nside{position:fixed;top:0;left:0;bottom:0;width:260px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:40}
+.nandi .nside-head{padding:18px 20px;border-bottom:1px solid var(--line)}
+.nandi .nside-head .wm{font-family:var(--mono);font-size:15px;color:var(--accent)}
+.nandi .nside-head .sub{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:2px}
+.nandi .nside-list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.nandi .nside-label{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:2px}
+.nandi .ncard{display:block;text-decoration:none;border:1px solid var(--accent-border);border-left:3px solid var(--accent);border-radius:5px;background:rgba(92,122,58,.04);padding:10px 12px;opacity:.9}
+.nandi .ncard:hover{opacity:1}
+.nandi .ncard[data-active="true"]{border-color:var(--accent);opacity:1;background:var(--accent-soft)}
+.nandi .ncard .nrow{display:flex;align-items:center;gap:10px}
+.nandi .ncard .nav-av{width:32px;height:32px;border-radius:50%;background:rgba(92,122,58,.12);border:1px solid rgba(92,122,58,.3);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nandi .ncard .nm{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nandi .ncard .rl{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nandi .ncard .nstats{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.nandi .ncard .nstats .sv{font-family:var(--mono);font-size:11px}
+.nandi .ncard .nstats .sl{font-family:var(--mono);font-size:8px;color:var(--faint)}
+.nandi .ncard.meta{border-style:dashed;border-color:var(--line);background:transparent}
+.nandi .ncard.meta .nm{font-family:var(--display);font-weight:600;color:var(--muted)}
+.nandi .ncard.meta[data-active="true"]{border-style:solid;border-color:var(--ink);background:rgba(26,22,14,.04)}
+.nandi .ncard.meta[data-active="true"] .nm{color:var(--ink)}
+.nandi .nacct{margin-top:auto;flex-shrink:0;border-top:1px solid var(--line);padding:14px 20px;background:#fff;display:flex;align-items:center;gap:10px}
+.nandi .nacct .em{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nandi .nacct .subl{font-family:var(--mono);font-size:9px;color:var(--faint)}
+.nandi .signout{font-family:var(--mono);font-size:9px;color:var(--faint);background:none;border:none;padding:0;cursor:pointer}
+.nandi .signout:hover{text-decoration:underline}
+.nandi .nacct-mobile{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:8px 10px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.nandi .nacct-mobile .em{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nandi .tabs.mobile{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+.nandi .tabs.mobile .tab{flex:0 0 auto}
 `;
 
 const AUDIENCES = ["farmer", "cooperative", "lender", "trader", "brand", "development_partner"] as const;
