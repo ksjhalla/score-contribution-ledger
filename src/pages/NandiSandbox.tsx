@@ -962,8 +962,38 @@ const NandiSandbox = () => {
 
   const isMethodology = audience === "methodology";
 
-  const tabsNav = (
-    <nav className="tabs" aria-label="Audience view">
+  const initialsOf = (s: string) =>
+    s
+      .replace(/[^A-Za-z ]/g, " ")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "??";
+
+  const accountBlock = (
+    <div className="nacct">
+      <div className="nav-av" style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(92,122,58,.12)", border: "1px solid rgba(92,122,58,.3)", color: ACCENT, fontFamily: FONT_MONO, fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {signedInEmail ? signedInEmail.slice(0, 2).toUpperCase() : "??"}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="em">{signedInEmail || "Not signed in"}</div>
+        <div className="subl">Nandi invite access</div>
+      </div>
+      <button type="button" className="signout" onClick={handleSignOut}>Sign out</button>
+    </div>
+  );
+
+  const accountLineMobile = (
+    <div className="nacct-mobile">
+      <span className="em">{signedInEmail || "Not signed in"}</span>
+      <button type="button" className="signout" onClick={handleSignOut}>Sign out</button>
+    </div>
+  );
+
+  const mobileTabs = (
+    <nav className="tabs mobile" aria-label="Audience view">
       {profiles.map((p) => (
         <Link key={p.key} to={`/nandi/${p.key}`} className="tab" data-active={p.key === active}>
           <div className="tl">{p.label}</div>
@@ -978,16 +1008,74 @@ const NandiSandbox = () => {
     </nav>
   );
 
+  const sidebar = (
+    <aside className="nside">
+      <div className="nside-head">
+        <div className="wm">SCORE</div>
+        <div className="sub">Nandi Sandbox</div>
+      </div>
+      <div className="nside-list">
+        <div className="nside-label">Choose a view</div>
+        {profiles.map((p) => {
+          const stats = (AUDIENCES as readonly string[]).includes(p.key)
+            ? VIEWS[p.key as Audience].stats.slice(0, 2)
+            : [];
+          return (
+            <Link key={p.key} to={`/nandi/${p.key}`} className="ncard" data-active={p.key === active}>
+              <div className="nrow">
+                <div className="nav-av">{initialsOf(p.label)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="nm">{p.label}</div>
+                  <div className="rl">{p.tagline}</div>
+                </div>
+              </div>
+              {stats.length > 0 && (
+                <div className="nstats">
+                  {stats.map((s) => (
+                    <div key={s.label}>
+                      <div className="sv" style={{ color: s.color }}>{s.value}</div>
+                      <div className="sl">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Link>
+          );
+        })}
+        <Link to="/nandi/methodology" className="ncard meta" data-active={isMethodology}>
+          <div className="nrow">
+            <div className="nav-av" style={{ background: "transparent", borderStyle: "dashed" }}>M</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="nm">Methodology</div>
+              <div className="rl">About this sandbox</div>
+            </div>
+          </div>
+        </Link>
+      </div>
+      {accountBlock}
+    </aside>
+  );
+
+  const shellNav = isMobile ? (
+    <>
+      {accountLineMobile}
+      {mobileTabs}
+    </>
+  ) : null;
+
+  const wrapStyle = { marginLeft: isMobile ? 0 : 260 } as const;
+
   if (isMethodology) {
     return (
       <div className="nandi">
         <style>{CSS}</style>
-        <main className="wrap">
+        {!isMobile && sidebar}
+        <main className="wrap" style={wrapStyle}>
           <Link to="/" className="back">← SCORE Passport</Link>
           <div className="banner">
             Meta page · what in this sandbox is sourced, what is placeholder, and what is still unanswered.
           </div>
-          {tabsNav}
+          {shellNav}
           <NandiMethodologyView />
           <footer>
             <span>SCORE Contribution Ledger · Nandi Sandbox · Methodology</span>
