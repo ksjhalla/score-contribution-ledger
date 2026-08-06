@@ -353,6 +353,24 @@ const DecayTable = ({ decay }: { decay: Decay[] }) => (
 const NandiSandbox = () => {
   const { audience } = useParams<{ audience: string }>();
   const active = (AUDIENCES as readonly string[]).includes(audience ?? "") ? (audience as Audience) : null;
+  const navigate = useNavigate();
+  const authState = useAuthState();
+  const signedInEmail = authState.status === "authenticated" ? authState.email : "";
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/", { replace: true });
+  };
 
   const [profiles, setProfiles] = useState<AudienceProfile[]>([]);
   const [pricing, setPricing] = useState<Pricing[]>([]);
