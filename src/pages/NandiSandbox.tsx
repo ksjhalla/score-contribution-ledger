@@ -1098,13 +1098,14 @@ const NandiSandbox = () => {
   return (
     <div className="nandi">
       <style>{CSS}</style>
-      <main className="wrap">
+      {!isMobile && sidebar}
+      <main className="wrap" style={wrapStyle}>
         <Link to="/" className="back">← SCORE Passport</Link>
         <div className="banner">
           Sandbox · Aisha Ng'etich · Kaptumo Cooperative · Nandi County, Kenya — demonstration data, not a live record.
         </div>
 
-        {tabsNav}
+        {shellNav}
 
         {loading ? (
           <div className="panel">Loading sandbox data…</div>
