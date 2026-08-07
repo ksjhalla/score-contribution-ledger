@@ -433,11 +433,6 @@ const NandiSandbox = () => {
     return { received: sum("Received"), pending: sum("Pending") };
   }, [allContributions]);
 
-  const unusedConfidence = useMemo(() => {
-    const order = ["Very strong", "Strong", "Moderate", "Gap"];
-    return order.map((k) => ({ label: k, count: triggers.filter((t) => t.confidence === k).length }));
-  }, [triggers]);
-
   const countOf = (label: string) => confidenceCounts.find((c) => c.label === label)?.count ?? 0;
 
   const paidAudience = active === "trader" || active === "brand" || active === "lender";
