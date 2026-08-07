@@ -10,6 +10,7 @@ import { MilestoneArc, type Milestone } from "@/components/charts/MilestoneArc";
 import { NandiMethodologyView } from "@/components/nandi/NandiMethodologyView";
 import { NandiFarmerWallet } from "@/components/nandi/NandiFarmerWallet";
 import { NandiFarmerIdCard } from "@/components/nandi/NandiFarmerIdCard";
+import { NandiCoopRoster, type CoopFarmer } from "@/components/nandi/NandiCoopRoster";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -92,7 +93,7 @@ const LEGACY_AUDIENCE_REDIRECTS: Record<string, Audience> = { development_actor:
 
 type AudienceProfile = { key: string; label: string; tagline: string | null; description: string | null; sort_order: number };
 type Pricing = { audience_key: string; payer: string; model_type: string; indicative_rate: string; basis: string | null; note: string | null };
-type Contribution = { id: string; label: string; occurred_on: string; amount_ksh: number; status: string; proof_note: string | null; sort_order: number | null };
+type Contribution = { id: string; label: string; occurred_on: string; amount_ksh: number; status: string; proof_note: string | null; sort_order: number | null; farmer_id: string | null };
 type Contract = { id: string; title: string; counterparty: string; entitlement: string; trigger_desc: string; status: string };
 type Trigger = { id: string; trigger_name: string; status: string; evidence: string; source: string; verification_method: string; confidence: string; sort_order: number | null };
 type Decay = { year: number; kaptumo_pool_pct: number | null; derivative_pct: number | null; status: string | null };
@@ -375,6 +376,8 @@ const NandiSandbox = () => {
   const [profiles, setProfiles] = useState<AudienceProfile[]>([]);
   const [pricing, setPricing] = useState<Pricing[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [allContributions, setAllContributions] = useState<Contribution[]>([]);
+  const [farmers, setFarmers] = useState<CoopFarmer[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [decay, setDecay] = useState<Decay[]>([]);
@@ -384,7 +387,7 @@ const NandiSandbox = () => {
 
   useEffect(() => {
     (async () => {
-      const [p, pr, c, ct, tr, d, cs] = await Promise.all([
+      const [p, pr, c, ct, tr, d, cs, fm] = await Promise.all([
         supabase.from("nandi_audience_profiles").select("*").order("sort_order"),
         supabase.from("nandi_pricing_models").select("*"),
         supabase.from("nandi_contributions").select("*").order("sort_order"),
@@ -392,10 +395,17 @@ const NandiSandbox = () => {
         supabase.from("nandi_evidence_triggers").select("*").order("sort_order"),
         supabase.from("nandi_decay_schedule").select("*").order("year"),
         supabase.from("nandi_cooperative_summary").select("*").eq("key", "kaptumo").maybeSingle(),
+        supabase.from("nandi_farmers").select("*").eq("cooperative_key", "kaptumo").order("sort_order"),
       ]);
       setProfiles((p.data ?? []) as AudienceProfile[]);
       setPricing((pr.data ?? []) as Pricing[]);
-      setContributions((c.data ?? []) as Contribution[]);
+      const rows = (c.data ?? []) as Contribution[];
+      const roster = (fm.data ?? []) as CoopFarmer[];
+      // Aisha remains the single-farmer data source for every other audience view.
+      const aisha = roster.find((f) => f.name.startsWith("Aisha"));
+      setFarmers(roster);
+      setAllContributions(rows);
+      setContributions(aisha ? rows.filter((r) => r.farmer_id === aisha.id) : rows);
       setContracts((ct.data ?? []) as Contract[]);
       setTriggers((tr.data ?? []) as Trigger[]);
       setDecay((d.data ?? []) as Decay[]);
@@ -416,6 +426,12 @@ const NandiSandbox = () => {
     const order = ["Very strong", "Strong", "Moderate", "Gap"];
     return order.map((k) => ({ label: k, count: triggers.filter((t) => t.confidence === k).length }));
   }, [triggers]);
+
+  const coopTotals = useMemo(() => {
+    const sum = (s: string) =>
+      allContributions.filter((c) => c.status === s).reduce((a, c) => a + Number(c.amount_ksh), 0);
+    return { received: sum("Received"), pending: sum("Pending") };
+  }, [allContributions]);
 
   const countOf = (label: string) => confidenceCounts.find((c) => c.label === label)?.count ?? 0;
 
@@ -591,17 +607,17 @@ const NandiSandbox = () => {
       name: "Kaptumo Farmers Cooperative Society Ltd.",
       roleLine: "Cooperative · Nandi County, Kenya",
       bio: "Aggregate view of how auction proceeds are apportioned across the membership. With every delivery, auction price and payout observable against the same record, distribution accuracy becomes checkable rather than asserted — a governance tool where it is right, and a fast signal where it is not.",
-      lead: `Aisha Ng'etich: ${ksh(totals.received)} received and ${ksh(totals.pending)} pending this season — 1 of an estimated ${coop?.member_count ?? "—"} members shown in detail here. The cooperative-wide total below extrapolates from her figures and is illustrative, not a measured cooperative-wide total.`,
+      lead: `${farmers.length} members tracked in detail here — ${ksh(coopTotals.received)} received and ${ksh(coopTotals.pending)} pending across their ${allContributions.length} recorded contributions. The cooperative-wide total below extrapolates to an estimated ${coop?.member_count ?? "—"} members and is illustrative, not a measured cooperative-wide total.`,
       badges: [
-        `${coop?.member_count ?? "—"} members`,
+        `${farmers.length} of ~${coop?.member_count ?? "—"} members tracked`,
         "2 derivative licences distributed",
         "Distribution auditable",
         `${seasons} seasons active`,
       ],
       stats: [
-        { label: "Aisha received (1 member)", value: ksh(totals.received), color: "#2A6A45" },
-        { label: "Aisha pending (1 member)", value: ksh(totals.pending), color: "#C4892A" },
-        { label: "Members covered", value: String(coop?.member_count ?? "—"), color: ACCENT },
+        { label: `Received (${farmers.length} tracked members)`, value: ksh(coopTotals.received), color: "#2A6A45" },
+        { label: `Pending (${farmers.length} tracked members)`, value: ksh(coopTotals.pending), color: "#C4892A" },
+        { label: "Members tracked / estimated", value: `${farmers.length} / ${coop?.member_count ?? "—"}`, color: ACCENT },
         {
           label: "Illustrative coop-wide total",
           value: coop?.total_value_tracked_ksh != null ? ksh(Number(coop.total_value_tracked_ksh)) : "—",
@@ -623,12 +639,13 @@ const NandiSandbox = () => {
       bars: <ContractSparkBars contracts={licenceBars} currency="KES" />,
       barsLabel: "By licence",
       quickRead: [
-        { question: "How much has reached members?", answer: "Distributed and confirmed against auction proceeds.", value: ksh(totals.received), valueColor: "green" },
-        { question: "What is still to be apportioned?", answer: "Triggered but not yet transferred.", value: ksh(totals.pending), valueColor: "amber" },
+        { question: "How much has reached members?", answer: `Distributed and confirmed across ${farmers.length} tracked members.`, value: ksh(coopTotals.received), valueColor: "green" },
+        { question: "What is still to be apportioned?", answer: "Triggered but not yet transferred.", value: ksh(coopTotals.pending), valueColor: "amber" },
         { question: "How auditable is the distribution?", answer: "Share of tracked triggers with strong-or-better evidence.", value: `${strongPct}%`, valueColor: "blue" },
       ],
       details: (
         <>
+          <NandiCoopRoster farmers={farmers} contributions={allContributions} />
           <div>
             <h4 className="sub">Derivative licence roll-up</h4>
             <p className="body">Technique licences held by the cooperative's members, viewed as distribution across the membership rather than one farmer's line items.</p>
