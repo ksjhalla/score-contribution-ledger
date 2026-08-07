@@ -77,6 +77,28 @@ export const NandiMethodologyView = () => (
       <p className="body" style={{ maxWidth: 680 }}>
         Straight answers on what's confirmed, what's an estimate, and what we're still working out as the Nandi pilot scales.
       </p>
+      <a
+        href="/downloads/score-background-note-summary.docx"
+        download
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          marginTop: 14,
+          padding: "9px 16px",
+          borderRadius: 8,
+          background: "var(--accent)",
+          color: "#FDFAF4",
+          fontFamily: "'DM Sans',system-ui,sans-serif",
+          fontSize: 13,
+          fontWeight: 500,
+          textDecoration: "none",
+          border: "1px solid var(--accent)",
+        }}
+      >
+        ↓ Download background note (DOCX)
+      </a>
+      <div className="kicker" style={{ marginTop: 8 }}>Summary · Kenya coffee value chain · Nandi County pilot</div>
     </div>
 
     <h3 className="sec">1 · What's confirmed vs. illustrative</h3>
