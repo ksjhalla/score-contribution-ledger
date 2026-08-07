@@ -539,6 +539,7 @@ const NandiSandbox = () => {
     stats: { label: string; value: string; color: string }[];
     statBlocks?: { title: string; subtitle: string; stats: { label: string; value: string; color: string }[] }[];
     donut: ReactNode;
+    donutLabel?: string;
     bars: ReactNode;
     barsLabel: string;
     quickRead: QuickReadRow[];
