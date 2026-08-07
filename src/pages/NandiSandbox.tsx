@@ -1417,7 +1417,7 @@ const NandiSandbox = () => {
               <div className="panel">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {active === "trader" || active === "brand" || active === "development_partner" ? "Confidence mix" : "Value mix"}
+                    {view.donutLabel ?? (active === "development_partner" ? "Confidence mix" : "Value mix")}
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A5C8A", background: "rgba(42,92,138,0.08)", padding: "2px 6px", borderRadius: 3 }}>At a glance</span>
                 </div>
