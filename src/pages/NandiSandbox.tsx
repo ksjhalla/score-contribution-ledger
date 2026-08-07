@@ -839,30 +839,49 @@ const NandiSandbox = () => {
       kicker: "Passport · EUDR COMPLIANCE",
       name: "Ecom Kenya / Volcafe",
       roleLine: "EUDR Compliance View · Nandi County, Kenya",
-      bio: "EUDR documentation assembled automatically from the same delivery records you already receive — instead of a manual audit at the end of the season. Nothing is smoothed over: gaps are surfaced rather than softened.",
-      lead: `${traceablePct}% of tracked triggers are independently traceable, with ${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed rather than smoothed over.`,
-      badges: [`${traceablePct}% traceability`, `${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed`, `${seasons} seasons verified`],
-      stats: [
-        { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
-        { label: "Strong or better", value: `${strongPct}%`, color: ACCENT },
-        { label: "Tracked triggers", value: String(triggers.length), color: "#1A1614" },
-        { label: "Open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
+      bio: "A sourcing view: which Nandi cooperatives are documentation-ready to buy from this season, and which are not there yet. EUDR paperwork assembled from the delivery records you already receive, rather than a manual audit at the end of the season.",
+      lead: `${readinessCounts.Ready} of ${coops.length} Nandi cooperatives are documentation-ready to source from; ${readinessCounts.Partial} are partial and ${readinessCounts["Not yet"]} are not yet there. Only Kaptumo carries instrumented trigger-level evidence today.`,
+      badges: [
+        `${readinessCounts.Ready} of ${coops.length} sourcing-ready`,
+        `${totalCoopMembers.toLocaleString("en-KE")} members in scope`,
+        `${pilotCoops.length} cooperative instrumented`,
       ],
-      donut: confidenceDonut,
-      bars: <ContractSparkBars contracts={confidenceBars} currency="KES" />,
-      barsLabel: "By trigger confidence",
+      stats: [
+        { label: "Sourcing-ready cooperatives", value: `${readinessCounts.Ready} of ${coops.length}`, color: "#2A6A45" },
+        { label: "Farmers in sourcing scope", value: totalCoopMembers ? totalCoopMembers.toLocaleString("en-KE") : "—", color: ACCENT },
+        { label: "Average traceability", value: `${avgTraceability}%`, color: "#1A1614" },
+        { label: "Instrumented today", value: `${pilotCoops.length} of ${coops.length}`, color: pilotCoops.length ? "#C4892A" : "#8A2A20" },
+      ],
+      donut: (
+        <ValueMixDonut
+          settled={readinessCounts.Ready}
+          pending={readinessCounts.Partial}
+          future={readinessCounts["Not yet"]}
+          currency="KES"
+          label="Cooperatives"
+          settledLabel="Ready"
+          pendingLabel="Partial"
+          futureLabel="Not yet"
+          formatValue={(n) => String(n)}
+        />
+      ),
+      donutLabel: "EUDR readiness mix",
+      bars: <ContractSparkBars contracts={coopTraceabilityBars} currency="KES" />,
+      barsLabel: "By cooperative traceability",
       quickRead: [
-        { question: "Can the chain be traced?", answer: "Share of triggers with independently checkable evidence.", value: `${traceablePct}%`, valueColor: "green" },
-        { question: "How strong is that evidence?", answer: "Strong or very strong against a published source.", value: `${strongPct}%`, valueColor: "blue" },
-        { question: "What cannot be claimed?", answer: "Open gaps disclosed in the compliance file.", value: String(gapTriggers.length), valueColor: "amber" },
+        { question: "Which cooperatives can I source from now?", answer: "Documentation-ready under the illustrative readiness bands.", value: `${readinessCounts.Ready} of ${coops.length}`, valueColor: "green" },
+        { question: "How many farmers does that cover?", answer: "Combined membership across cooperatives in scope.", value: totalCoopMembers ? totalCoopMembers.toLocaleString("en-KE") : "—", valueColor: "blue" },
+        { question: "Where would a filing still be thin?", answer: `Cooperatives below the readiness threshold, plus ${gapTriggers.length} disclosed gap${gapTriggers.length === 1 ? "" : "s"} at Kaptumo.`, value: String(readinessCounts.Partial + readinessCounts["Not yet"]), valueColor: "amber" },
       ],
       details: (
         <>
+          <CoopComplianceTable coops={coops} />
           <div>
-            <h4 className="sub">What this delivers for your compliance file</h4>
+            <h4 className="sub">Drill-down · Kaptumo Cooperative (the instrumented pilot)</h4>
             <p className="body">
-              EUDR documentation assembled automatically from the same delivery records you already receive — instead of a manual
-              audit at the end of the season.
+              Kaptumo is the only cooperative with trigger-level evidence behind its traceability figure — {traceablePct}% of
+              tracked triggers are independently traceable, {strongPct}% strong or better. No trigger-level detail is shown for
+              the other three cooperatives because none exists yet.
             </p>
             <TriggerTable triggers={triggers} full={false} />
           </div>
