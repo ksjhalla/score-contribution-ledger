@@ -376,6 +376,8 @@ const NandiSandbox = () => {
   const [profiles, setProfiles] = useState<AudienceProfile[]>([]);
   const [pricing, setPricing] = useState<Pricing[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [allContributions, setAllContributions] = useState<Contribution[]>([]);
+  const [farmers, setFarmers] = useState<CoopFarmer[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [decay, setDecay] = useState<Decay[]>([]);
@@ -385,7 +387,7 @@ const NandiSandbox = () => {
 
   useEffect(() => {
     (async () => {
-      const [p, pr, c, ct, tr, d, cs] = await Promise.all([
+      const [p, pr, c, ct, tr, d, cs, fm] = await Promise.all([
         supabase.from("nandi_audience_profiles").select("*").order("sort_order"),
         supabase.from("nandi_pricing_models").select("*"),
         supabase.from("nandi_contributions").select("*").order("sort_order"),
@@ -393,10 +395,17 @@ const NandiSandbox = () => {
         supabase.from("nandi_evidence_triggers").select("*").order("sort_order"),
         supabase.from("nandi_decay_schedule").select("*").order("year"),
         supabase.from("nandi_cooperative_summary").select("*").eq("key", "kaptumo").maybeSingle(),
+        supabase.from("nandi_farmers").select("*").eq("cooperative_key", "kaptumo").order("sort_order"),
       ]);
       setProfiles((p.data ?? []) as AudienceProfile[]);
       setPricing((pr.data ?? []) as Pricing[]);
-      setContributions((c.data ?? []) as Contribution[]);
+      const rows = (c.data ?? []) as Contribution[];
+      const roster = (fm.data ?? []) as CoopFarmer[];
+      // Aisha remains the single-farmer data source for every other audience view.
+      const aisha = roster.find((f) => f.name.startsWith("Aisha"));
+      setFarmers(roster);
+      setAllContributions(rows);
+      setContributions(aisha ? rows.filter((r) => r.farmer_id === aisha.id) : rows);
       setContracts((ct.data ?? []) as Contract[]);
       setTriggers((tr.data ?? []) as Trigger[]);
       setDecay((d.data ?? []) as Decay[]);
