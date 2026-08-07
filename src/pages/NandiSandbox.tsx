@@ -911,25 +911,77 @@ const NandiSandbox = () => {
       kicker: "Passport · ESG DATA",
       name: "Nestlé / JDE / Starbucks",
       roleLine: "ESG Data View · Nandi County, Kenya",
-      bio: "Anonymised, aggregate attribution statistics for CSRD/ESRS reporting — individual-level supply chain impact, without individual identities. No farmer names, no payout amounts, no counterparty terms.",
-      lead: `${strongPct}% of attribution claims carry strong-or-better evidence, anonymised and ready for a CSRD/ESRS disclosure.`,
-      badges: [`${seasons} seasons verified`, "Replaces $50K–$200K consultant reporting", `${traceablePct}% traceability coverage`],
+      bio: "An impact and provenance view: what actually reached the farmer behind the cup, and where the coffee in a disclosure comes from. Anonymised at aggregate level for CSRD/ESRS reporting — no farmer names, no counterparty terms — with one named story shown here with consent.",
+      lead: "A 2013 European Commission study put the farmer's share at roughly 19.5% of the Nairobi Coffee Exchange price (2010 figures). For the first time, this pilot makes one farmer's actual share observable rather than estimated.",
+      badges: ["Farmer share observable, not estimated", `${coops.length} Nandi cooperatives in sourcing mix`, `${seasons} seasons of provenance`],
       stats: [
-        { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
-        { label: "Strong or better", value: `${strongPct}%`, color: ACCENT },
-        { label: "Tracked triggers", value: String(triggers.length), color: "#1A1614" },
-        { label: "Open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
+        { label: "Industry baseline (EC 2013 study)", value: "~19.5%", color: "#8A2A20" },
+        { label: "Tracked and attributed to this farmer", value: ksh(totals.received + totals.pending), color: "#2A6A45" },
+        { label: "Of which reached her", value: ksh(totals.received), color: ACCENT },
+        { label: "Cooperatives in sourcing mix", value: String(coops.length), color: "#1A1614" },
       ],
-      donut: confidenceDonut,
-      bars: <ContractSparkBars contracts={confidenceBars} currency="KES" />,
-      barsLabel: "By attribution claim",
+      donut: (
+        <ValueMixDonut
+          settled={pilotMembers}
+          pending={Math.max(0, totalCoopMembers - pilotMembers)}
+          currency="KES"
+          label="Members"
+          settledLabel="Live pilot cooperative"
+          pendingLabel="Illustrative cooperatives"
+          formatValue={(n) => String(n)}
+        />
+      ),
+      donutLabel: "Sourcing mix by membership",
+      bars: <ContractSparkBars contracts={coopMemberBars} currency="KES" />,
+      barsLabel: "By cooperative membership",
       quickRead: [
-        { question: "How much of the chain is covered?", answer: "Traceability coverage across tracked triggers.", value: `${traceablePct}%`, valueColor: "green" },
-        { question: "How defensible is a disclosure?", answer: "Claims with strong-or-better evidence.", value: `${strongPct}%`, valueColor: "blue" },
-        { question: "What must be disclosed as limitation?", answer: "Claims not independently detectable.", value: String(gapTriggers.length), valueColor: "amber" },
+        { question: "What actually reached the farmer?", answer: "Received and confirmed by independent M-PESA record, against a ~19.5% industry baseline.", value: ksh(totals.received), valueColor: "green" },
+        { question: "What is still owed to her?", answer: "Triggered and evidenced, awaiting the cooperative's transfer.", value: ksh(totals.pending), valueColor: "amber" },
+        { question: "Where does the coffee come from?", answer: "Nandi County only — a single-origin pilot, not a multi-country footprint.", value: `${coops.length} coops`, valueColor: "blue" },
       ],
       details: (
         <>
+          <div>
+            <h4 className="sub">Farmer share of price — against the industry baseline</h4>
+            <p className="body">
+              The EC 2013 study of the Kenyan coffee value chain found farmers delivering through cooperatives received roughly{" "}
+              <strong>19.5% of the NCE auction price</strong> (2010 figures, before labour and inputs). Against that baseline,
+              this record shows one farmer's actual outcome: <strong>{ksh(totals.received)}</strong> received and{" "}
+              <strong>{ksh(totals.pending)}</strong> still pending across {contributions.length} tracked contributions, each
+              with a checkable trigger behind it.
+            </p>
+            <div className="note gap">
+              <strong>Stated plainly:</strong> the auction sale price for her specific lots is not yet in this record, so we do
+              not publish a percentage share for her. The comparison is between a cited industry estimate and an observed,
+              itemised payout — not between two like-for-like percentages.
+            </div>
+          </div>
+          <div>
+            <h4 className="sub">Farmer spotlight · Aisha Ng'etich</h4>
+            <p className="body">
+              Smallholder farmer, Kaptumo Cooperative Society Ltd., Nandi County. Three seasons of AA-grade main-crop deliveries
+              to the Kaptumo wet mill, plus an anaerobic fermentation technique now licensed to two neighbouring cooperatives.
+              What used to end at the cooperative gate is now a record she carries — and the provenance claim behind a bag on a
+              shelf.
+            </p>
+            <div className="scroll">
+              <table>
+                <thead><tr><th>Contribution</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  {contributions.slice(0, 4).map((c) => (
+                    <tr key={c.id}>
+                      <td>{c.label}</td>
+                      <td className="mono">{c.occurred_on}</td>
+                      <td className={`mono ${c.status === "Received" ? "green" : "amber"}`}>{ksh(Number(c.amount_ksh))}</td>
+                      <td>{c.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="note">Named and shown with consent. Aggregate reporting to brands is anonymised by default.</div>
+          </div>
+          <CoopSourcingMix coops={coops} />
           <div>
             <h4 className="sub">Attribution quality, aggregated</h4>
             <p className="body">The evidence strength profile behind every claim you would carry into an ESG disclosure.</p>
