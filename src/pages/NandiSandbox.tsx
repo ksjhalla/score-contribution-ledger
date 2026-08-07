@@ -11,6 +11,13 @@ import { NandiMethodologyView } from "@/components/nandi/NandiMethodologyView";
 import { NandiFarmerWallet } from "@/components/nandi/NandiFarmerWallet";
 import { NandiFarmerIdCard } from "@/components/nandi/NandiFarmerIdCard";
 import { NandiCoopRoster, type CoopFarmer } from "@/components/nandi/NandiCoopRoster";
+import {
+  CoopComplianceTable,
+  CoopSourcingMix,
+  CoopInstrumentationTable,
+  eudrReadiness,
+  type NandiCooperative,
+} from "@/components/nandi/NandiCoopComparison";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -98,6 +105,10 @@ type Contract = { id: string; title: string; counterparty: string; entitlement: 
 type Trigger = { id: string; trigger_name: string; status: string; evidence: string; source: string; verification_method: string; confidence: string; sort_order: number | null };
 type Decay = { year: number; kaptumo_pool_pct: number | null; derivative_pct: number | null; status: string | null };
 type CoopSummary = { key: string; member_count: number | null; total_value_tracked_ksh: number | null; seasons_active: number | null; note: string | null };
+
+/** Phase 1 design, from the SCORE background note (v8). */
+const PHASE1_COOPS = 5;
+const NCCU_COMPARISON_SET = 90;
 
 const ksh = (n: number) => `KSh ${Math.round(n).toLocaleString("en-KE")}`;
 
@@ -382,12 +393,13 @@ const NandiSandbox = () => {
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [decay, setDecay] = useState<Decay[]>([]);
   const [coop, setCoop] = useState<CoopSummary | null>(null);
+  const [coops, setCoops] = useState<NandiCooperative[]>([]);
   const [loading, setLoading] = useState(true);
   const [farmerFull, setFarmerFull] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const [p, pr, c, ct, tr, d, cs, fm] = await Promise.all([
+      const [p, pr, c, ct, tr, d, cs, fm, co] = await Promise.all([
         supabase.from("nandi_audience_profiles").select("*").order("sort_order"),
         supabase.from("nandi_pricing_models").select("*"),
         supabase.from("nandi_contributions").select("*").order("sort_order"),
@@ -396,6 +408,7 @@ const NandiSandbox = () => {
         supabase.from("nandi_decay_schedule").select("*").order("year"),
         supabase.from("nandi_cooperative_summary").select("*").eq("key", "kaptumo").maybeSingle(),
         supabase.from("nandi_farmers").select("*").eq("cooperative_key", "kaptumo").order("sort_order"),
+        supabase.from("nandi_cooperatives").select("*").order("sort_order"),
       ]);
       setProfiles((p.data ?? []) as AudienceProfile[]);
       setPricing((pr.data ?? []) as Pricing[]);
@@ -410,6 +423,7 @@ const NandiSandbox = () => {
       setTriggers((tr.data ?? []) as Trigger[]);
       setDecay((d.data ?? []) as Decay[]);
       setCoop((cs.data as CoopSummary) ?? null);
+      setCoops((co.data ?? []) as NandiCooperative[]);
       setLoading(false);
     })();
   }, []);
@@ -445,6 +459,37 @@ const NandiSandbox = () => {
     : 0;
   const gapTriggers = triggers.filter((t) => t.confidence === "Gap");
   const seasons = coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length;
+
+  // --- Cooperative-level derivations (Trader / Brand / Development Partner) ---
+  const pilotCoops = coops.filter((c) => c.is_pilot);
+  const readinessCounts = useMemo(() => {
+    const c = { Ready: 0, Partial: 0, "Not yet": 0 } as Record<string, number>;
+    coops.forEach((x) => { c[eudrReadiness(x.traceability_pct).label] += 1; });
+    return c;
+  }, [coops]);
+  const totalCoopMembers = coops.reduce((a, c) => a + Number(c.member_count ?? 0), 0);
+  const pilotMembers = pilotCoops.reduce((a, c) => a + Number(c.member_count ?? 0), 0);
+  const avgTraceability = coops.length
+    ? Math.round(coops.reduce((a, c) => a + Number(c.traceability_pct ?? 0), 0) / coops.length)
+    : 0;
+
+  const coopTraceabilityBars: SparkContract[] = coops.map((c) => ({
+    label: c.name,
+    value: Number(c.traceability_pct ?? 0),
+    status: eudrReadiness(c.traceability_pct).label === "Ready" ? "settled" : "pending",
+    color: eudrReadiness(c.traceability_pct).label === "Ready" ? "#2A6A45" : eudrReadiness(c.traceability_pct).label === "Partial" ? "#C4892A" : "#8A2A20",
+    displayValue: `${Math.round(Number(c.traceability_pct ?? 0))}% · ${eudrReadiness(c.traceability_pct).label}`,
+    statusLabel: c.is_pilot ? "Pilot" : "Illustrative",
+  }));
+
+  const coopMemberBars: SparkContract[] = coops.map((c) => ({
+    label: c.name,
+    value: Number(c.member_count ?? 0),
+    status: c.is_pilot ? "settled" : "pending",
+    color: c.is_pilot ? ACCENT : "#9A8F84",
+    displayValue: `${c.member_count ?? "—"} members`,
+    statusLabel: c.is_pilot ? "Live pilot" : "Illustrative",
+  }));
 
   const farmerVerifiedSince = useMemo(() => {
     const years = contributions
@@ -494,6 +539,7 @@ const NandiSandbox = () => {
     stats: { label: string; value: string; color: string }[];
     statBlocks?: { title: string; subtitle: string; stats: { label: string; value: string; color: string }[] }[];
     donut: ReactNode;
+    donutLabel?: string;
     bars: ReactNode;
     barsLabel: string;
     quickRead: QuickReadRow[];
@@ -793,30 +839,49 @@ const NandiSandbox = () => {
       kicker: "Passport · EUDR COMPLIANCE",
       name: "Ecom Kenya / Volcafe",
       roleLine: "EUDR Compliance View · Nandi County, Kenya",
-      bio: "EUDR documentation assembled automatically from the same delivery records you already receive — instead of a manual audit at the end of the season. Nothing is smoothed over: gaps are surfaced rather than softened.",
-      lead: `${traceablePct}% of tracked triggers are independently traceable, with ${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed rather than smoothed over.`,
-      badges: [`${traceablePct}% traceability`, `${gapTriggers.length} gap${gapTriggers.length === 1 ? "" : "s"} disclosed`, `${seasons} seasons verified`],
-      stats: [
-        { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
-        { label: "Strong or better", value: `${strongPct}%`, color: ACCENT },
-        { label: "Tracked triggers", value: String(triggers.length), color: "#1A1614" },
-        { label: "Open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
+      bio: "A sourcing view: which Nandi cooperatives are documentation-ready to buy from this season, and which are not there yet. EUDR paperwork assembled from the delivery records you already receive, rather than a manual audit at the end of the season.",
+      lead: `${readinessCounts.Ready} of ${coops.length} Nandi cooperatives are documentation-ready to source from; ${readinessCounts.Partial} are partial and ${readinessCounts["Not yet"]} are not yet there. Only Kaptumo carries instrumented trigger-level evidence today.`,
+      badges: [
+        `${readinessCounts.Ready} of ${coops.length} sourcing-ready`,
+        `${totalCoopMembers.toLocaleString("en-KE")} members in scope`,
+        `${pilotCoops.length} cooperative instrumented`,
       ],
-      donut: confidenceDonut,
-      bars: <ContractSparkBars contracts={confidenceBars} currency="KES" />,
-      barsLabel: "By trigger confidence",
+      stats: [
+        { label: "Sourcing-ready cooperatives", value: `${readinessCounts.Ready} of ${coops.length}`, color: "#2A6A45" },
+        { label: "Farmers in sourcing scope", value: totalCoopMembers ? totalCoopMembers.toLocaleString("en-KE") : "—", color: ACCENT },
+        { label: "Average traceability", value: `${avgTraceability}%`, color: "#1A1614" },
+        { label: "Instrumented today", value: `${pilotCoops.length} of ${coops.length}`, color: pilotCoops.length ? "#C4892A" : "#8A2A20" },
+      ],
+      donut: (
+        <ValueMixDonut
+          settled={readinessCounts.Ready}
+          pending={readinessCounts.Partial}
+          future={readinessCounts["Not yet"]}
+          currency="KES"
+          label="Cooperatives"
+          settledLabel="Ready"
+          pendingLabel="Partial"
+          futureLabel="Not yet"
+          formatValue={(n) => String(n)}
+        />
+      ),
+      donutLabel: "EUDR readiness mix",
+      bars: <ContractSparkBars contracts={coopTraceabilityBars} currency="KES" />,
+      barsLabel: "By cooperative traceability",
       quickRead: [
-        { question: "Can the chain be traced?", answer: "Share of triggers with independently checkable evidence.", value: `${traceablePct}%`, valueColor: "green" },
-        { question: "How strong is that evidence?", answer: "Strong or very strong against a published source.", value: `${strongPct}%`, valueColor: "blue" },
-        { question: "What cannot be claimed?", answer: "Open gaps disclosed in the compliance file.", value: String(gapTriggers.length), valueColor: "amber" },
+        { question: "Which cooperatives can I source from now?", answer: "Documentation-ready under the illustrative readiness bands.", value: `${readinessCounts.Ready} of ${coops.length}`, valueColor: "green" },
+        { question: "How many farmers does that cover?", answer: "Combined membership across cooperatives in scope.", value: totalCoopMembers ? totalCoopMembers.toLocaleString("en-KE") : "—", valueColor: "blue" },
+        { question: "Where would a filing still be thin?", answer: `Cooperatives below the readiness threshold, plus ${gapTriggers.length} disclosed gap${gapTriggers.length === 1 ? "" : "s"} at Kaptumo.`, value: String(readinessCounts.Partial + readinessCounts["Not yet"]), valueColor: "amber" },
       ],
       details: (
         <>
+          <CoopComplianceTable coops={coops} />
           <div>
-            <h4 className="sub">What this delivers for your compliance file</h4>
+            <h4 className="sub">Drill-down · Kaptumo Cooperative (the instrumented pilot)</h4>
             <p className="body">
-              EUDR documentation assembled automatically from the same delivery records you already receive — instead of a manual
-              audit at the end of the season.
+              Kaptumo is the only cooperative with trigger-level evidence behind its traceability figure — {traceablePct}% of
+              tracked triggers are independently traceable, {strongPct}% strong or better. No trigger-level detail is shown for
+              the other three cooperatives because none exists yet.
             </p>
             <TriggerTable triggers={triggers} full={false} />
           </div>
@@ -846,25 +911,77 @@ const NandiSandbox = () => {
       kicker: "Passport · ESG DATA",
       name: "Nestlé / JDE / Starbucks",
       roleLine: "ESG Data View · Nandi County, Kenya",
-      bio: "Anonymised, aggregate attribution statistics for CSRD/ESRS reporting — individual-level supply chain impact, without individual identities. No farmer names, no payout amounts, no counterparty terms.",
-      lead: `${strongPct}% of attribution claims carry strong-or-better evidence, anonymised and ready for a CSRD/ESRS disclosure.`,
-      badges: [`${seasons} seasons verified`, "Replaces $50K–$200K consultant reporting", `${traceablePct}% traceability coverage`],
+      bio: "An impact and provenance view: what actually reached the farmer behind the cup, and where the coffee in a disclosure comes from. Anonymised at aggregate level for CSRD/ESRS reporting — no farmer names, no counterparty terms — with one named story shown here with consent.",
+      lead: "A 2013 European Commission study put the farmer's share at roughly 19.5% of the Nairobi Coffee Exchange price (2010 figures). For the first time, this pilot makes one farmer's actual share observable rather than estimated.",
+      badges: ["Farmer share observable, not estimated", `${coops.length} Nandi cooperatives in sourcing mix`, `${seasons} seasons of provenance`],
       stats: [
-        { label: "Traceable triggers", value: `${traceablePct}%`, color: "#2A6A45" },
-        { label: "Strong or better", value: `${strongPct}%`, color: ACCENT },
-        { label: "Tracked triggers", value: String(triggers.length), color: "#1A1614" },
-        { label: "Open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
+        { label: "Industry baseline (EC 2013 study)", value: "~19.5%", color: "#8A2A20" },
+        { label: "Tracked and attributed to this farmer", value: ksh(totals.received + totals.pending), color: "#2A6A45" },
+        { label: "Of which reached her", value: ksh(totals.received), color: ACCENT },
+        { label: "Cooperatives in sourcing mix", value: String(coops.length), color: "#1A1614" },
       ],
-      donut: confidenceDonut,
-      bars: <ContractSparkBars contracts={confidenceBars} currency="KES" />,
-      barsLabel: "By attribution claim",
+      donut: (
+        <ValueMixDonut
+          settled={pilotMembers}
+          pending={Math.max(0, totalCoopMembers - pilotMembers)}
+          currency="KES"
+          label="Members"
+          settledLabel="Live pilot cooperative"
+          pendingLabel="Illustrative cooperatives"
+          formatValue={(n) => String(n)}
+        />
+      ),
+      donutLabel: "Sourcing mix by membership",
+      bars: <ContractSparkBars contracts={coopMemberBars} currency="KES" />,
+      barsLabel: "By cooperative membership",
       quickRead: [
-        { question: "How much of the chain is covered?", answer: "Traceability coverage across tracked triggers.", value: `${traceablePct}%`, valueColor: "green" },
-        { question: "How defensible is a disclosure?", answer: "Claims with strong-or-better evidence.", value: `${strongPct}%`, valueColor: "blue" },
-        { question: "What must be disclosed as limitation?", answer: "Claims not independently detectable.", value: String(gapTriggers.length), valueColor: "amber" },
+        { question: "What actually reached the farmer?", answer: "Received and confirmed by independent M-PESA record, against a ~19.5% industry baseline.", value: ksh(totals.received), valueColor: "green" },
+        { question: "What is still owed to her?", answer: "Triggered and evidenced, awaiting the cooperative's transfer.", value: ksh(totals.pending), valueColor: "amber" },
+        { question: "Where does the coffee come from?", answer: "Nandi County only — a single-origin pilot, not a multi-country footprint.", value: `${coops.length} coops`, valueColor: "blue" },
       ],
       details: (
         <>
+          <div>
+            <h4 className="sub">Farmer share of price — against the industry baseline</h4>
+            <p className="body">
+              The EC 2013 study of the Kenyan coffee value chain found farmers delivering through cooperatives received roughly{" "}
+              <strong>19.5% of the NCE auction price</strong> (2010 figures, before labour and inputs). Against that baseline,
+              this record shows one farmer's actual outcome: <strong>{ksh(totals.received)}</strong> received and{" "}
+              <strong>{ksh(totals.pending)}</strong> still pending across {contributions.length} tracked contributions, each
+              with a checkable trigger behind it.
+            </p>
+            <div className="note gap">
+              <strong>Stated plainly:</strong> the auction sale price for her specific lots is not yet in this record, so we do
+              not publish a percentage share for her. The comparison is between a cited industry estimate and an observed,
+              itemised payout — not between two like-for-like percentages.
+            </div>
+          </div>
+          <div>
+            <h4 className="sub">Farmer spotlight · Aisha Ng'etich</h4>
+            <p className="body">
+              Smallholder farmer, Kaptumo Cooperative Society Ltd., Nandi County. Three seasons of AA-grade main-crop deliveries
+              to the Kaptumo wet mill, plus an anaerobic fermentation technique now licensed to two neighbouring cooperatives.
+              What used to end at the cooperative gate is now a record she carries — and the provenance claim behind a bag on a
+              shelf.
+            </p>
+            <div className="scroll">
+              <table>
+                <thead><tr><th>Contribution</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  {contributions.slice(0, 4).map((c) => (
+                    <tr key={c.id}>
+                      <td>{c.label}</td>
+                      <td className="mono">{c.occurred_on}</td>
+                      <td className={`mono ${c.status === "Received" ? "green" : "amber"}`}>{ksh(Number(c.amount_ksh))}</td>
+                      <td>{c.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="note">Named and shown with consent. Aggregate reporting to brands is anonymised by default.</div>
+          </div>
+          <CoopSourcingMix coops={coops} />
           <div>
             <h4 className="sub">Attribution quality, aggregated</h4>
             <p className="body">The evidence strength profile behind every claim you would carry into an ESG disclosure.</p>
@@ -900,24 +1017,43 @@ const NandiSandbox = () => {
       name: "IFC / FAO / Nandi County Government",
       roleLine: "Validation View · Nandi County, Kenya",
       bio: "A 2013 European Commission study found farmers delivering through cooperatives received roughly 19.5% of the Nairobi Coffee Exchange auction price (2010 figures), before labour and inputs. The Coffee Act 2025 and its Direct Settlement System closed the exchange-to-cooperative gap — not the cooperative-to-individual one. SCORE starts where the Direct Settlement System ends.",
-      lead: "The Coffee Act 2025 closed the exchange-to-cooperative gap; SCORE starts where the Direct Settlement System ends, at the cooperative-to-individual gap.",
-      badges: ["19.5% → 80%+ farmer share (2010–2025)", "Coffee Act 2025 aligned", "NCCU-integrated"],
+      lead: `Program monitoring against the Phase 1 design: ${pilotCoops.length} of ${PHASE1_COOPS} Phase 1 cooperatives instrumented, with ~${NCCU_COMPARISON_SET} further Nandi Coffee Cooperative Union societies held as a natural comparison set.`,
+      badges: [
+        `${pilotCoops.length} of ${PHASE1_COOPS} Phase 1 cooperatives instrumented`,
+        `~${NCCU_COMPARISON_SET} societies as comparison set`,
+        "Coffee Act 2025 aligned",
+      ],
       stats: [
-        { label: "Confidence strong+", value: `${strongPct}%`, color: "#2A6A45" },
-        { label: "Open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
-        { label: "Cooperatives in NCCU", value: "100+", color: ACCENT },
-        { label: "Farmer share today", value: "~80%", color: "#1A1614" },
+        { label: "Phase 1 cooperatives instrumented", value: `${pilotCoops.length} of ${PHASE1_COOPS}`, color: pilotCoops.length >= PHASE1_COOPS ? "#2A6A45" : "#C4892A" },
+        { label: "Comparison set (NCCU societies)", value: `~${NCCU_COMPARISON_SET}`, color: ACCENT },
+        { label: "Farmers in Phase 1 target", value: "500", color: "#1A1614" },
+        { label: "Open gaps disclosed", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
       ],
       donut: confidenceDonut,
+      donutLabel: "Confidence mix · Kaptumo only",
       bars: <ContractSparkBars contracts={confidenceBars} currency="KES" />,
       barsLabel: "By trigger confidence",
       quickRead: [
-        { question: "Does the record hold up?", answer: "Tracked triggers with strong-or-better evidence.", value: `${strongPct}%`, valueColor: "green" },
-        { question: "What is still unobservable?", answer: "Gaps disclosed rather than smoothed over.", value: String(gapTriggers.length), valueColor: "amber" },
-        { question: "What existing structure does it use?", answer: "Nandi Coffee Cooperative Union member cooperatives.", value: "100+", valueColor: "blue" },
+        { question: "How far along is Phase 1 rollout?", answer: `Cooperatives instrumented against the ${PHASE1_COOPS}-cooperative, 500-farmer Phase 1 design.`, value: `${pilotCoops.length} of ${PHASE1_COOPS}`, valueColor: "amber" },
+        { question: "Is there a counterfactual?", answer: "Further NCCU member societies, uninstrumented, act as a natural comparison group.", value: `~${NCCU_COMPARISON_SET}`, valueColor: "blue" },
+        { question: "What is still unobservable?", answer: "Gaps disclosed rather than smoothed over.", value: String(gapTriggers.length), valueColor: "green" },
       ],
       details: (
         <>
+          <div>
+            <h4 className="sub">Phase 1 coverage</h4>
+            <p className="body">
+              Phase 1 covers <strong>500 farmers across five cooperatives</strong> in Nandi County, with roughly{" "}
+              <strong>{NCCU_COMPARISON_SET} further member societies</strong> of the Nandi Coffee Cooperative Union available as
+              a natural comparison group. {pilotCoops.length} of {PHASE1_COOPS} cooperatives are instrumented today
+              {pilotCoops[0] ? ` (${pilotCoops[0].name})` : ""}; the remainder are sequenced behind it.
+            </p>
+            <div className="note">
+              The NCCU has grown from 18 to over 100 member societies and is already mapping and registering farmers — the
+              comparison set is drawn from that population rather than constructed for the study.
+            </div>
+          </div>
+          <CoopInstrumentationTable coops={coops} strongPct={strongPct} gapCount={gapTriggers.length} triggerCount={triggers.length} />
           <div>
             <h4 className="sub">Why this gap persists</h4>
             <p className="body">
@@ -1281,7 +1417,7 @@ const NandiSandbox = () => {
               <div className="panel">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#9A8F84", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {active === "trader" || active === "brand" || active === "development_partner" ? "Confidence mix" : "Value mix"}
+                    {view.donutLabel ?? (active === "development_partner" ? "Confidence mix" : "Value mix")}
                   </span>
                   <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#2A5C8A", background: "rgba(42,92,138,0.08)", padding: "2px 6px", borderRadius: 3 }}>At a glance</span>
                 </div>
