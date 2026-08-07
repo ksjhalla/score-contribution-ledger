@@ -661,6 +661,7 @@ export type Database = {
       nandi_contributions: {
         Row: {
           amount_ksh: number
+          farmer_id: string | null
           id: string
           label: string
           occurred_on: string
@@ -670,6 +671,7 @@ export type Database = {
         }
         Insert: {
           amount_ksh: number
+          farmer_id?: string | null
           id?: string
           label: string
           occurred_on: string
@@ -679,6 +681,7 @@ export type Database = {
         }
         Update: {
           amount_ksh?: number
+          farmer_id?: string | null
           id?: string
           label?: string
           occurred_on?: string
@@ -686,7 +689,15 @@ export type Database = {
           sort_order?: number | null
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "nandi_contributions_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "nandi_farmers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nandi_cooperative_summary: {
         Row: {
@@ -763,6 +774,33 @@ export type Database = {
           status?: string
           trigger_name?: string
           verification_method?: string
+        }
+        Relationships: []
+      }
+      nandi_farmers: {
+        Row: {
+          cooperative_key: string
+          id: string
+          initials: string
+          name: string
+          note: string | null
+          sort_order: number
+        }
+        Insert: {
+          cooperative_key?: string
+          id?: string
+          initials: string
+          name: string
+          note?: string | null
+          sort_order: number
+        }
+        Update: {
+          cooperative_key?: string
+          id?: string
+          initials?: string
+          name?: string
+          note?: string | null
+          sort_order?: number
         }
         Relationships: []
       }
