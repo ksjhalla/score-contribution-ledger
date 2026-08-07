@@ -10,6 +10,7 @@ import { MilestoneArc, type Milestone } from "@/components/charts/MilestoneArc";
 import { NandiMethodologyView } from "@/components/nandi/NandiMethodologyView";
 import { NandiFarmerWallet } from "@/components/nandi/NandiFarmerWallet";
 import { NandiFarmerIdCard } from "@/components/nandi/NandiFarmerIdCard";
+import { NandiCoopRoster, type CoopFarmer } from "@/components/nandi/NandiCoopRoster";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -92,7 +93,7 @@ const LEGACY_AUDIENCE_REDIRECTS: Record<string, Audience> = { development_actor:
 
 type AudienceProfile = { key: string; label: string; tagline: string | null; description: string | null; sort_order: number };
 type Pricing = { audience_key: string; payer: string; model_type: string; indicative_rate: string; basis: string | null; note: string | null };
-type Contribution = { id: string; label: string; occurred_on: string; amount_ksh: number; status: string; proof_note: string | null; sort_order: number | null };
+type Contribution = { id: string; label: string; occurred_on: string; amount_ksh: number; status: string; proof_note: string | null; sort_order: number | null; farmer_id: string | null };
 type Contract = { id: string; title: string; counterparty: string; entitlement: string; trigger_desc: string; status: string };
 type Trigger = { id: string; trigger_name: string; status: string; evidence: string; source: string; verification_method: string; confidence: string; sort_order: number | null };
 type Decay = { year: number; kaptumo_pool_pct: number | null; derivative_pct: number | null; status: string | null };
