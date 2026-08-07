@@ -723,6 +723,42 @@ export type Database = {
         }
         Relationships: []
       }
+      nandi_cooperatives: {
+        Row: {
+          county: string
+          is_pilot: boolean
+          key: string
+          member_count: number | null
+          name: string
+          note: string | null
+          sort_order: number
+          traceability_pct: number | null
+          value_tracked_ksh: number | null
+        }
+        Insert: {
+          county?: string
+          is_pilot?: boolean
+          key: string
+          member_count?: number | null
+          name: string
+          note?: string | null
+          sort_order: number
+          traceability_pct?: number | null
+          value_tracked_ksh?: number | null
+        }
+        Update: {
+          county?: string
+          is_pilot?: boolean
+          key?: string
+          member_count?: number | null
+          name?: string
+          note?: string | null
+          sort_order?: number
+          traceability_pct?: number | null
+          value_tracked_ksh?: number | null
+        }
+        Relationships: []
+      }
       nandi_decay_schedule: {
         Row: {
           derivative_pct: number | null
