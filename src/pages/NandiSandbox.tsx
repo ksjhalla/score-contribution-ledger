@@ -460,6 +460,37 @@ const NandiSandbox = () => {
   const gapTriggers = triggers.filter((t) => t.confidence === "Gap");
   const seasons = coop?.seasons_active ?? decay.filter((d) => d.status !== "Projected").length;
 
+  // --- Cooperative-level derivations (Trader / Brand / Development Partner) ---
+  const pilotCoops = coops.filter((c) => c.is_pilot);
+  const readinessCounts = useMemo(() => {
+    const c = { Ready: 0, Partial: 0, "Not yet": 0 } as Record<string, number>;
+    coops.forEach((x) => { c[eudrReadiness(x.traceability_pct).label] += 1; });
+    return c;
+  }, [coops]);
+  const totalCoopMembers = coops.reduce((a, c) => a + Number(c.member_count ?? 0), 0);
+  const pilotMembers = pilotCoops.reduce((a, c) => a + Number(c.member_count ?? 0), 0);
+  const avgTraceability = coops.length
+    ? Math.round(coops.reduce((a, c) => a + Number(c.traceability_pct ?? 0), 0) / coops.length)
+    : 0;
+
+  const coopTraceabilityBars: SparkContract[] = coops.map((c) => ({
+    label: c.name,
+    value: Number(c.traceability_pct ?? 0),
+    status: eudrReadiness(c.traceability_pct).label === "Ready" ? "settled" : "pending",
+    color: eudrReadiness(c.traceability_pct).label === "Ready" ? "#2A6A45" : eudrReadiness(c.traceability_pct).label === "Partial" ? "#C4892A" : "#8A2A20",
+    displayValue: `${Math.round(Number(c.traceability_pct ?? 0))}% · ${eudrReadiness(c.traceability_pct).label}`,
+    statusLabel: c.is_pilot ? "Pilot" : "Illustrative",
+  }));
+
+  const coopMemberBars: SparkContract[] = coops.map((c) => ({
+    label: c.name,
+    value: Number(c.member_count ?? 0),
+    status: c.is_pilot ? "settled" : "pending",
+    color: c.is_pilot ? ACCENT : "#9A8F84",
+    displayValue: `${c.member_count ?? "—"} members`,
+    statusLabel: c.is_pilot ? "Live pilot" : "Illustrative",
+  }));
+
   const farmerVerifiedSince = useMemo(() => {
     const years = contributions
       .map((c) => Number(String(c.occurred_on).slice(0, 4)))
