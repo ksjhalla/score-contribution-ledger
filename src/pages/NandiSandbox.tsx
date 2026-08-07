@@ -1017,24 +1017,43 @@ const NandiSandbox = () => {
       name: "IFC / FAO / Nandi County Government",
       roleLine: "Validation View · Nandi County, Kenya",
       bio: "A 2013 European Commission study found farmers delivering through cooperatives received roughly 19.5% of the Nairobi Coffee Exchange auction price (2010 figures), before labour and inputs. The Coffee Act 2025 and its Direct Settlement System closed the exchange-to-cooperative gap — not the cooperative-to-individual one. SCORE starts where the Direct Settlement System ends.",
-      lead: "The Coffee Act 2025 closed the exchange-to-cooperative gap; SCORE starts where the Direct Settlement System ends, at the cooperative-to-individual gap.",
-      badges: ["19.5% → 80%+ farmer share (2010–2025)", "Coffee Act 2025 aligned", "NCCU-integrated"],
+      lead: `Program monitoring against the Phase 1 design: ${pilotCoops.length} of ${PHASE1_COOPS} Phase 1 cooperatives instrumented, with ~${NCCU_COMPARISON_SET} further Nandi Coffee Cooperative Union societies held as a natural comparison set.`,
+      badges: [
+        `${pilotCoops.length} of ${PHASE1_COOPS} Phase 1 cooperatives instrumented`,
+        `~${NCCU_COMPARISON_SET} societies as comparison set`,
+        "Coffee Act 2025 aligned",
+      ],
       stats: [
-        { label: "Confidence strong+", value: `${strongPct}%`, color: "#2A6A45" },
-        { label: "Open gaps", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
-        { label: "Cooperatives in NCCU", value: "100+", color: ACCENT },
-        { label: "Farmer share today", value: "~80%", color: "#1A1614" },
+        { label: "Phase 1 cooperatives instrumented", value: `${pilotCoops.length} of ${PHASE1_COOPS}`, color: pilotCoops.length >= PHASE1_COOPS ? "#2A6A45" : "#C4892A" },
+        { label: "Comparison set (NCCU societies)", value: `~${NCCU_COMPARISON_SET}`, color: ACCENT },
+        { label: "Farmers in Phase 1 target", value: "500", color: "#1A1614" },
+        { label: "Open gaps disclosed", value: String(gapTriggers.length), color: gapTriggers.length ? "#8A2A20" : "#2A6A45" },
       ],
       donut: confidenceDonut,
+      donutLabel: "Confidence mix · Kaptumo only",
       bars: <ContractSparkBars contracts={confidenceBars} currency="KES" />,
       barsLabel: "By trigger confidence",
       quickRead: [
-        { question: "Does the record hold up?", answer: "Tracked triggers with strong-or-better evidence.", value: `${strongPct}%`, valueColor: "green" },
-        { question: "What is still unobservable?", answer: "Gaps disclosed rather than smoothed over.", value: String(gapTriggers.length), valueColor: "amber" },
-        { question: "What existing structure does it use?", answer: "Nandi Coffee Cooperative Union member cooperatives.", value: "100+", valueColor: "blue" },
+        { question: "How far along is Phase 1 rollout?", answer: `Cooperatives instrumented against the ${PHASE1_COOPS}-cooperative, 500-farmer Phase 1 design.`, value: `${pilotCoops.length} of ${PHASE1_COOPS}`, valueColor: "amber" },
+        { question: "Is there a counterfactual?", answer: "Further NCCU member societies, uninstrumented, act as a natural comparison group.", value: `~${NCCU_COMPARISON_SET}`, valueColor: "blue" },
+        { question: "What is still unobservable?", answer: "Gaps disclosed rather than smoothed over.", value: String(gapTriggers.length), valueColor: "green" },
       ],
       details: (
         <>
+          <div>
+            <h4 className="sub">Phase 1 coverage</h4>
+            <p className="body">
+              Phase 1 covers <strong>500 farmers across five cooperatives</strong> in Nandi County, with roughly{" "}
+              <strong>{NCCU_COMPARISON_SET} further member societies</strong> of the Nandi Coffee Cooperative Union available as
+              a natural comparison group. {pilotCoops.length} of {PHASE1_COOPS} cooperatives are instrumented today
+              {pilotCoops[0] ? ` (${pilotCoops[0].name})` : ""}; the remainder are sequenced behind it.
+            </p>
+            <div className="note">
+              The NCCU has grown from 18 to over 100 member societies and is already mapping and registering farmers — the
+              comparison set is drawn from that population rather than constructed for the study.
+            </div>
+          </div>
+          <CoopInstrumentationTable coops={coops} strongPct={strongPct} gapCount={gapTriggers.length} triggerCount={triggers.length} />
           <div>
             <h4 className="sub">Why this gap persists</h4>
             <p className="body">
