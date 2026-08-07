@@ -607,17 +607,17 @@ const NandiSandbox = () => {
       name: "Kaptumo Farmers Cooperative Society Ltd.",
       roleLine: "Cooperative · Nandi County, Kenya",
       bio: "Aggregate view of how auction proceeds are apportioned across the membership. With every delivery, auction price and payout observable against the same record, distribution accuracy becomes checkable rather than asserted — a governance tool where it is right, and a fast signal where it is not.",
-      lead: `Aisha Ng'etich: ${ksh(totals.received)} received and ${ksh(totals.pending)} pending this season — 1 of an estimated ${coop?.member_count ?? "—"} members shown in detail here. The cooperative-wide total below extrapolates from her figures and is illustrative, not a measured cooperative-wide total.`,
+      lead: `${farmers.length} members tracked in detail here — ${ksh(coopTotals.received)} received and ${ksh(coopTotals.pending)} pending across their ${allContributions.length} recorded contributions. The cooperative-wide total below extrapolates to an estimated ${coop?.member_count ?? "—"} members and is illustrative, not a measured cooperative-wide total.`,
       badges: [
-        `${coop?.member_count ?? "—"} members`,
+        `${farmers.length} of ~${coop?.member_count ?? "—"} members tracked`,
         "2 derivative licences distributed",
         "Distribution auditable",
         `${seasons} seasons active`,
       ],
       stats: [
-        { label: "Aisha received (1 member)", value: ksh(totals.received), color: "#2A6A45" },
-        { label: "Aisha pending (1 member)", value: ksh(totals.pending), color: "#C4892A" },
-        { label: "Members covered", value: String(coop?.member_count ?? "—"), color: ACCENT },
+        { label: `Received (${farmers.length} tracked members)`, value: ksh(coopTotals.received), color: "#2A6A45" },
+        { label: `Pending (${farmers.length} tracked members)`, value: ksh(coopTotals.pending), color: "#C4892A" },
+        { label: "Members tracked / estimated", value: `${farmers.length} / ${coop?.member_count ?? "—"}`, color: ACCENT },
         {
           label: "Illustrative coop-wide total",
           value: coop?.total_value_tracked_ksh != null ? ksh(Number(coop.total_value_tracked_ksh)) : "—",
@@ -639,12 +639,13 @@ const NandiSandbox = () => {
       bars: <ContractSparkBars contracts={licenceBars} currency="KES" />,
       barsLabel: "By licence",
       quickRead: [
-        { question: "How much has reached members?", answer: "Distributed and confirmed against auction proceeds.", value: ksh(totals.received), valueColor: "green" },
-        { question: "What is still to be apportioned?", answer: "Triggered but not yet transferred.", value: ksh(totals.pending), valueColor: "amber" },
+        { question: "How much has reached members?", answer: `Distributed and confirmed across ${farmers.length} tracked members.`, value: ksh(coopTotals.received), valueColor: "green" },
+        { question: "What is still to be apportioned?", answer: "Triggered but not yet transferred.", value: ksh(coopTotals.pending), valueColor: "amber" },
         { question: "How auditable is the distribution?", answer: "Share of tracked triggers with strong-or-better evidence.", value: `${strongPct}%`, valueColor: "blue" },
       ],
       details: (
         <>
+          <NandiCoopRoster farmers={farmers} contributions={allContributions} />
           <div>
             <h4 className="sub">Derivative licence roll-up</h4>
             <p className="body">Technique licences held by the cooperative's members, viewed as distribution across the membership rather than one farmer's line items.</p>
