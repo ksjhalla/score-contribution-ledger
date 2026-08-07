@@ -11,6 +11,13 @@ import { NandiMethodologyView } from "@/components/nandi/NandiMethodologyView";
 import { NandiFarmerWallet } from "@/components/nandi/NandiFarmerWallet";
 import { NandiFarmerIdCard } from "@/components/nandi/NandiFarmerIdCard";
 import { NandiCoopRoster, type CoopFarmer } from "@/components/nandi/NandiCoopRoster";
+import {
+  CoopComplianceTable,
+  CoopSourcingMix,
+  CoopInstrumentationTable,
+  eudrReadiness,
+  type NandiCooperative,
+} from "@/components/nandi/NandiCoopComparison";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
@@ -98,6 +105,10 @@ type Contract = { id: string; title: string; counterparty: string; entitlement: 
 type Trigger = { id: string; trigger_name: string; status: string; evidence: string; source: string; verification_method: string; confidence: string; sort_order: number | null };
 type Decay = { year: number; kaptumo_pool_pct: number | null; derivative_pct: number | null; status: string | null };
 type CoopSummary = { key: string; member_count: number | null; total_value_tracked_ksh: number | null; seasons_active: number | null; note: string | null };
+
+/** Phase 1 design, from the SCORE background note (v8). */
+const PHASE1_COOPS = 5;
+const NCCU_COMPARISON_SET = 90;
 
 const ksh = (n: number) => `KSh ${Math.round(n).toLocaleString("en-KE")}`;
 
