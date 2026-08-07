@@ -87,13 +87,13 @@ export const NandiMethodologyView = () => (
           marginTop: 14,
           padding: "9px 16px",
           borderRadius: 8,
-          background: "var(--green)",
+          background: "var(--accent)",
           color: "#FDFAF4",
           fontFamily: "'DM Sans',system-ui,sans-serif",
           fontSize: 13,
           fontWeight: 500,
           textDecoration: "none",
-          border: "1px solid var(--green)",
+          border: "1px solid var(--accent)",
         }}
       >
         ↓ Download background note (DOCX)
