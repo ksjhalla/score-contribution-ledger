@@ -393,12 +393,13 @@ const NandiSandbox = () => {
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [decay, setDecay] = useState<Decay[]>([]);
   const [coop, setCoop] = useState<CoopSummary | null>(null);
+  const [coops, setCoops] = useState<NandiCooperative[]>([]);
   const [loading, setLoading] = useState(true);
   const [farmerFull, setFarmerFull] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const [p, pr, c, ct, tr, d, cs, fm] = await Promise.all([
+      const [p, pr, c, ct, tr, d, cs, fm, co] = await Promise.all([
         supabase.from("nandi_audience_profiles").select("*").order("sort_order"),
         supabase.from("nandi_pricing_models").select("*"),
         supabase.from("nandi_contributions").select("*").order("sort_order"),
@@ -407,6 +408,7 @@ const NandiSandbox = () => {
         supabase.from("nandi_decay_schedule").select("*").order("year"),
         supabase.from("nandi_cooperative_summary").select("*").eq("key", "kaptumo").maybeSingle(),
         supabase.from("nandi_farmers").select("*").eq("cooperative_key", "kaptumo").order("sort_order"),
+        supabase.from("nandi_cooperatives").select("*").order("sort_order"),
       ]);
       setProfiles((p.data ?? []) as AudienceProfile[]);
       setPricing((pr.data ?? []) as Pricing[]);
@@ -421,6 +423,7 @@ const NandiSandbox = () => {
       setTriggers((tr.data ?? []) as Trigger[]);
       setDecay((d.data ?? []) as Decay[]);
       setCoop((cs.data as CoopSummary) ?? null);
+      setCoops((co.data ?? []) as NandiCooperative[]);
       setLoading(false);
     })();
   }, []);
