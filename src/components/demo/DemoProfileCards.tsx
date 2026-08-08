@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useDemo } from "@/contexts/DemoContext";
 import type { DemoKey } from "@/data/demoProfiles";
 
