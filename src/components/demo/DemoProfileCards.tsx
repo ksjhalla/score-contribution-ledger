@@ -132,6 +132,41 @@ const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 const SELECTABLE_KEYS: DemoKey[] = ["pharma", "ncaa", "supplyChain", "ai", "ppp"];
 const SELECTABLE_CARDS = CARDS.filter((c) => SELECTABLE_KEYS.includes(c.key));
 
+const FAQ: { q: string; a: React.ReactNode }[] = [
+  {
+    q: "Is this real data?",
+    a: "No — these are illustrative example profiles showing what a passport could look like for a fictional user in each industry.",
+  },
+  {
+    q: "Why does only some profiles have a Wallet tab?",
+    a: "Wallet needs a modeled, multi-year revenue schedule behind it. Only Agriculture, Pharma, and AI have one built so far.",
+  },
+  {
+    q: "How is this different from the Nandi coffee pilot?",
+    a: (
+      <>
+        Nandi is a live pilot with real partners in Kenya, not an illustrative demo — see the{" "}
+        <a href="/coffee" style={{ color: "#5C7A3A", textDecoration: "underline" }}>
+          case study
+        </a>
+        .
+      </>
+    ),
+  },
+  {
+    q: "Can I try this with my own data?",
+    a: (
+      <>
+        Yes —{" "}
+        <a href="/#cta" style={{ color: "#5C7A3A", textDecoration: "underline" }}>
+          request a demo
+        </a>{" "}
+        and we'll set up a real account.
+      </>
+    ),
+  },
+];
+
 export const DemoProfileCards = ({ fullWidth = false }: { fullWidth?: boolean }) => {
   const { activeDemo, setActiveDemo } = useDemo();
 
@@ -283,6 +318,69 @@ export const DemoProfileCards = ({ fullWidth = false }: { fullWidth?: boolean })
           );
         })}
       </div>
+
+      <details
+        style={{
+          margin: fullWidth ? "4px 0 0" : "4px 12px 0",
+          border: "1px solid rgba(26,22,14,0.08)",
+          borderRadius: 5,
+          background: "rgba(26,22,14,0.02)",
+        }}
+      >
+        <summary
+          style={{
+            fontFamily: FONT_MONO,
+            fontSize: 9,
+            color: "#9A8F84",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            padding: "8px 10px",
+            cursor: "pointer",
+            listStyle: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>About these demo profiles</span>
+          <span aria-hidden>▾</span>
+        </summary>
+        <div
+          style={{
+            padding: "0 10px 10px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          {FAQ.map(({ q, a }) => (
+            <div key={q}>
+              <div
+                style={{
+                  fontFamily: FONT_BODY,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#1A1614",
+                  lineHeight: 1.4,
+                }}
+              >
+                Q: {q}
+              </div>
+              <div
+                style={{
+                  fontFamily: FONT_BODY,
+                  fontSize: 11,
+                  color: "#5C5248",
+                  lineHeight: 1.45,
+                  marginTop: 2,
+                }}
+              >
+                A: {a}
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
     </div>
   );
 };
