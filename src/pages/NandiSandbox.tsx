@@ -24,6 +24,16 @@ const FONT_BODY = "'DM Sans',system-ui,sans-serif";
 const FONT_MONO = "'DM Mono',ui-monospace,monospace";
 const ACCENT = "#5C7A3A";
 
+/** Shared switcher-card theme for the Nandi sidebar (matches the sandbox palette). */
+const NANDI_CARD_THEME = {
+  accent: ACCENT,
+  accentSoft: "rgba(92,122,58,.10)",
+  accentBorder: "rgba(92,122,58,.25)",
+  accentBg: "rgba(92,122,58,.04)",
+  avatarBg: "rgba(92,122,58,.12)",
+  avatarBorder: "rgba(92,122,58,.3)",
+};
+
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap');
 .nandi{--paper:#FDFAF4;--ink:#1A1614;--muted:#5C5248;--faint:#9A8F84;--accent:#5C7A3A;--accent-soft:rgba(92,122,58,.10);--accent-border:rgba(92,122,58,.25);--green:#2A6A45;--amber:#C4892A;--red:#8A2A20;--blue:#2A5C8A;--line:rgba(26,22,14,.12);--display:'Playfair Display',Georgia,serif;--body:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',ui-monospace,monospace;
@@ -1125,22 +1135,25 @@ const NandiSandbox = () => {
 
   const accountBlock = (
     <div className="nacct">
-      <div className="nav-av" style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(92,122,58,.12)", border: "1px solid rgba(92,122,58,.3)", color: ACCENT, fontFamily: FONT_MONO, fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        {signedInEmail ? signedInEmail.slice(0, 2).toUpperCase() : "??"}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="em">{signedInEmail || "Not signed in"}</div>
-        <div className="subl">Nandi invite access</div>
-      </div>
-      <button type="button" className="signout" onClick={handleSignOut}>Sign out</button>
+      <AccountBlock
+        avatarInitials={signedInEmail ? signedInEmail.slice(0, 2).toUpperCase() : "??"}
+        primaryLabel={signedInEmail || "Not signed in"}
+        secondaryLabel="Nandi invite access"
+        onSignOut={handleSignOut}
+        accent={ACCENT}
+      />
     </div>
   );
 
   const accountLineMobile = (
-    <div className="nacct-mobile">
-      <span className="em">{signedInEmail || "Not signed in"}</span>
-      <button type="button" className="signout" onClick={handleSignOut}>Sign out</button>
-    </div>
+    <AccountBlock
+      avatarInitials={signedInEmail ? signedInEmail.slice(0, 2).toUpperCase() : "??"}
+      primaryLabel={signedInEmail || "Not signed in"}
+      secondaryLabel="Nandi invite access"
+      onSignOut={handleSignOut}
+      accent={ACCENT}
+      compact
+    />
   );
 
   const mobileTabs = (
@@ -1173,34 +1186,25 @@ const NandiSandbox = () => {
             : [];
           return (
             <Link key={p.key} to={`/nandi/${p.key}`} className="ncard" data-active={p.key === active}>
-              <div className="nrow">
-                <div className="nav-av">{initialsOf(p.label)}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="nm">{p.label}</div>
-                  <div className="rl">{p.tagline}</div>
-                </div>
-              </div>
-              {stats.length > 0 && (
-                <div className="nstats">
-                  {stats.map((s) => (
-                    <div key={s.label}>
-                      <div className="sv" style={{ color: s.color }}>{s.value}</div>
-                      <div className="sl">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <SwitcherCard
+                initials={initialsOf(p.label)}
+                title={p.label}
+                subtitle={p.tagline ?? ""}
+                stats={stats.map((s) => ({ value: s.value, label: s.label, color: s.color }))}
+                isActive={p.key === active}
+                theme={NANDI_CARD_THEME}
+              />
             </Link>
           );
         })}
         <Link to="/nandi/methodology" className="ncard meta" data-active={isMethodology}>
-          <div className="nrow">
-            <div className="nav-av" style={{ background: "transparent", borderStyle: "dashed" }}>M</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="nm">Methodology</div>
-              <div className="rl">About this sandbox</div>
-            </div>
-          </div>
+          <SwitcherCard
+            initials="M"
+            title="Methodology"
+            subtitle="About this sandbox"
+            isActive={isMethodology}
+            theme={NANDI_CARD_THEME}
+          />
         </Link>
       </div>
       {accountBlock}
