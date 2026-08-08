@@ -5,6 +5,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DemoProfileCards } from "@/components/demo/DemoProfileCards";
+import { AccountBlock } from "@/components/shared/AccountBlock";
 import { useDemo } from "@/contexts/DemoContext";
 import { hasSchedule } from "@/data/agriSchedule";
 import { Helmet } from "react-helmet-async";
@@ -162,57 +163,13 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               background: "#FDFAF4",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  background: "rgba(196,137,42,0.12)",
-                  border: "1px solid rgba(196,137,42,0.3)",
-                  color: "#C4892A",
-                  fontFamily: "'DM Mono',ui-monospace,monospace",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {initials}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontFamily: "'DM Sans',system-ui,sans-serif",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "#1A1614",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {profile?.full_name ?? "—"}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'DM Mono',ui-monospace,monospace",
-                    fontSize: 9,
-                    color: "#9A8F84",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {profile?.contributor_id ?? "Pending"}
-                </div>
-              </div>
-              <button onClick={handleSignOut} className="app-shell-signout">
-                Sign out
-              </button>
-            </div>
+            <AccountBlock
+              avatarInitials={initials}
+              primaryLabel={profile?.full_name ?? "—"}
+              secondaryLabel={profile?.contributor_id ?? "Pending"}
+              onSignOut={handleSignOut}
+              accent="#C4892A"
+            />
           </div>
         </aside>
       )}
