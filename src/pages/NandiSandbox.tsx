@@ -67,27 +67,25 @@ background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5
 .nandi .nside-head .sub{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:2px}
 .nandi .nside-list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
 .nandi .nside-label{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:2px}
-.nandi .ncard{display:block;text-decoration:none;border:1px solid var(--accent-border);border-left:3px solid var(--accent);border-radius:5px;background:rgba(92,122,58,.04);padding:10px 12px;opacity:.9}
+.nandi .ncard{display:block;text-decoration:none;opacity:.9}
 .nandi .ncard:hover{opacity:1}
-.nandi .ncard[data-active="true"]{border-color:var(--accent);opacity:1;background:var(--accent-soft)}
-.nandi .ncard .nrow{display:flex;align-items:center;gap:10px}
-.nandi .ncard .nav-av{width:32px;height:32px;border-radius:50%;background:rgba(92,122,58,.12);border:1px solid rgba(92,122,58,.3);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.nandi .ncard .nm{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nandi .ncard .rl{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nandi .ncard .nstats{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.nandi .ncard .nstats .sv{font-family:var(--mono);font-size:11px}
-.nandi .ncard .nstats .sl{font-family:var(--mono);font-size:8px;color:var(--faint)}
-.nandi .ncard.meta{border-style:dashed;border-color:var(--line);background:transparent}
-.nandi .ncard.meta .nm{font-family:var(--display);font-weight:600;color:var(--muted)}
-.nandi .ncard.meta[data-active="true"]{border-style:solid;border-color:var(--ink);background:rgba(26,22,14,.04)}
-.nandi .ncard.meta[data-active="true"] .nm{color:var(--ink)}
-.nandi .nacct{margin-top:auto;flex-shrink:0;border-top:1px solid var(--line);padding:14px 20px;background:#fff;display:flex;align-items:center;gap:10px}
-.nandi .nacct .em{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nandi .nacct .subl{font-family:var(--mono);font-size:9px;color:var(--faint)}
-.nandi .signout{font-family:var(--mono);font-size:9px;color:var(--faint);background:none;border:none;padding:0;cursor:pointer}
-.nandi .signout:hover{text-decoration:underline}
-.nandi .nacct-mobile{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:8px 10px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--muted)}
-.nandi .nacct-mobile .em{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nandi .ncard[data-active="true"]{opacity:1}
+/* Local overrides for the shared SwitcherCard, preserving the Nandi look. */
+.nandi .sc-card[data-active="true"]{background:var(--accent-soft)}
+.nandi .sc-badge{display:none}
+.nandi .sc-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nandi .ncard.meta .sc-card{border-style:dashed;border-color:var(--line);background:transparent}
+.nandi .ncard.meta .sc-av{background:transparent;border-style:dashed}
+.nandi .ncard.meta .sc-title{font-family:var(--display);font-weight:600;color:var(--muted)}
+.nandi .ncard.meta .sc-card[data-active="true"]{border-style:solid;border-color:var(--ink);background:rgba(26,22,14,.04)}
+.nandi .ncard.meta .sc-card[data-active="true"] .sc-title{color:var(--ink)}
+.nandi .nacct{margin-top:auto;flex-shrink:0;border-top:1px solid var(--line);padding:14px 20px;background:#fff}
+/* Local overrides for the shared AccountBlock, preserving the Nandi look. */
+.nandi .nacct .sa-av{font-size:12px}
+.nandi .nacct .sa-primary{font-size:12px;font-weight:400}
+.nandi .sa-secondary{color:var(--faint)}
+.nandi .sa-signout{color:var(--faint)}
+.nandi .sa-acct.sa-compact{border-color:var(--line);color:var(--muted)}
 .nandi .tabs.mobile{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
 .nandi .tabs.mobile .tab{flex:0 0 auto}
 `;
