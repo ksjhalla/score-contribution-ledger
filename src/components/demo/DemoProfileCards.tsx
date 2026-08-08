@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useDemo } from "@/contexts/DemoContext";
+import { SwitcherCard } from "@/components/shared/SwitcherCard";
 import type { DemoKey } from "@/data/demoProfiles";
 
 type CardSpec = {
@@ -201,13 +202,11 @@ export const DemoProfileCards = ({ fullWidth = false }: { fullWidth?: boolean })
               type="button"
               onClick={() => setActiveDemo(isActive ? "none" : c.key)}
               style={{
-                position: "relative",
+                display: "block",
+                border: "none",
+                background: "none",
+                padding: 0,
                 textAlign: "left",
-                border: `1px solid ${isActive ? c.accent : c.accentBorder}`,
-                borderLeft: `3px solid ${c.accent}`,
-                borderRadius: 5,
-                background: c.accentBg,
-                padding: "10px 12px",
                 cursor: "pointer",
                 opacity: activeDemo === "none" || isActive ? 1 : 0.85,
                 width: "100%",
@@ -215,106 +214,26 @@ export const DemoProfileCards = ({ fullWidth = false }: { fullWidth?: boolean })
                 fontFamily: FONT_BODY,
               }}
             >
-              {isActive && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 6,
-                    right: 8,
-                    fontFamily: FONT_MONO,
-                    fontSize: 8,
-                    color: c.accent,
-                  }}
-                >
-                  ● Active
-                </span>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: c.avatarBg,
-                    border: `1px solid ${c.avatarBorder}`,
-                    color: c.accent,
-                    fontFamily: FONT_MONO,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {c.initials}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontFamily: FONT_BODY,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#1A1614",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {c.name}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: FONT_MONO,
-                      fontSize: 9,
-                      color: "#9A8F84",
-                      marginTop: 1,
-                    }}
-                  >
-                    {c.role}
-                  </div>
-                </div>
-                {!isActive && (
-                  <span
-                    style={{
-                      background: c.accentSoft,
-                      color: c.accent,
-                      fontFamily: FONT_MONO,
-                      fontSize: 8,
-                      borderRadius: 3,
-                      padding: "2px 6px",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {c.tag}
-                  </span>
-                )}
-              </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 6,
+              <SwitcherCard
+                initials={c.initials}
+                title={c.name}
+                subtitle={c.role}
+                tag={c.tag}
+                stats={c.stats.map((s) => ({
+                  value: s.value,
+                  label: s.label,
+                  color: s.settled ? "#2A6A45" : "#C4892A",
+                }))}
+                isActive={isActive}
+                theme={{
+                  accent: c.accent,
+                  accentSoft: c.accentSoft,
+                  accentBorder: c.accentBorder,
+                  accentBg: c.accentBg,
+                  avatarBg: c.avatarBg,
+                  avatarBorder: c.avatarBorder,
                 }}
-              >
-                {c.stats.map((s) => (
-                  <div key={s.label}>
-                    <div
-                      style={{
-                        fontFamily: FONT_MONO,
-                        fontSize: 11,
-                        color: s.settled ? "#2A6A45" : "#C4892A",
-                      }}
-                    >
-                      {s.value}
-                    </div>
-                    <div style={{ fontFamily: FONT_MONO, fontSize: 8, color: "#9A8F84" }}>
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              />
             </button>
           );
         })}
