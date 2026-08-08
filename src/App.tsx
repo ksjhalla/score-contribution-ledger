@@ -18,7 +18,6 @@ import Contracts from "./pages/Contracts.tsx";
 import Account from "./pages/Account.tsx";
 import Pricing from "./pages/Pricing.tsx";
 import Coffee from "./pages/Coffee.tsx";
-import VisualHarness from "./pages/__VisualHarness.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import EnvHelp from "./pages/EnvHelp.tsx";
 import EvidenceTriggers from "./pages/EvidenceTriggers.tsx";
@@ -47,7 +46,6 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/coffee" element={<Coffee />} />
-            <Route path="/__vh" element={<VisualHarness />} />
             <Route path="/invite" element={<Invite />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/passport/:contributorId" element={<PublicPassport />} />
