@@ -18,6 +18,8 @@ import {
   eudrReadiness,
   type NandiCooperative,
 } from "@/components/nandi/NandiCoopComparison";
+import { AccountBlock } from "@/components/shared/AccountBlock";
+import { SwitcherCard } from "@/components/shared/SwitcherCard";
 
 const FONT_DISPLAY = "'Playfair Display',Georgia,serif";
 const FONT_BODY = "'DM Sans',system-ui,sans-serif";
